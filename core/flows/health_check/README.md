@@ -45,7 +45,7 @@ The System Health Check Flow provides fast parallel assessment of Splunk infrast
 
 ### Via FlowPilot Agent
 ```python
-from splunk_ai_sidekick.core.agents.flow_pilot import create_health_check_flow_pilot
+from ai_sidekick_for_splunk.core.agents.flow_pilot import create_health_check_flow_pilot
 
 # Create health check agent
 health_agent = create_health_check_flow_pilot()
@@ -56,7 +56,7 @@ result = await health_agent.execute("Perform system health check")
 
 ### Via Direct Workflow
 ```python
-from splunk_ai_sidekick.core.flows_engine import AgentFlow, FlowEngine
+from ai_sidekick_for_splunk.core.flows_engine import AgentFlow, FlowEngine
 
 # Load workflow
 workflow = AgentFlow.load_from_json("health_check.json")

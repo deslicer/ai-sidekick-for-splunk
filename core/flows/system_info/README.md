@@ -55,7 +55,7 @@ The System Info Flow provides quick system information gathering workflow for Sp
 
 ### Via FlowPilot Agent
 ```python
-from splunk_ai_sidekick.core.agents.flow_pilot import create_system_info_flow_pilot
+from ai_sidekick_for_splunk.core.agents.flow_pilot import create_system_info_flow_pilot
 
 # Create system info agent
 info_agent = create_system_info_flow_pilot()
@@ -66,7 +66,7 @@ result = await info_agent.execute("Gather system information")
 
 ### Via Direct Workflow
 ```python
-from splunk_ai_sidekick.core.flows_engine import AgentFlow, FlowEngine
+from ai_sidekick_for_splunk.core.flows_engine import AgentFlow, FlowEngine
 
 # Load workflow
 workflow = AgentFlow.load_from_json("system_info.json")

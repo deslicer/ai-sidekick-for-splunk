@@ -62,7 +62,7 @@ The Index Analysis Flow provides advanced Guided Agent Flow for index analysis w
 
 ### Via FlowPilot Agent
 ```python
-from splunk_ai_sidekick.core.agents.flow_pilot import create_index_analysis_flow_pilot
+from ai_sidekick_for_splunk.core.agents.flow_pilot import create_index_analysis_flow_pilot
 
 # Create index analysis agent
 analysis_agent = create_index_analysis_flow_pilot()
@@ -76,7 +76,7 @@ result = await analysis_agent.execute("analyze index=main,security,web")
 
 ### Via Specialized Agent
 ```python
-from splunk_ai_sidekick.core.agents.index_analysis_flow import IndexAnalysisFlowAgent
+from ai_sidekick_for_splunk.core.agents.index_analysis_flow import IndexAnalysisFlowAgent
 
 # Create specialized agent
 agent = IndexAnalysisFlowAgent()

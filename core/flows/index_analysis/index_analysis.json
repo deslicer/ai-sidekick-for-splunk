@@ -1,0 +1,420 @@
+{
+  "workflow_id": "core.index_analysis",
+  "workflow_name": "IndexAnalysis Flow",
+  "workflow_type": "analysis",
+  "workflow_category": "data_analysis",
+  "source": "core",
+  "maintainer": "Deslicer",
+  "stability": "stable",
+  "complexity_level": "intermediate",
+  "estimated_duration": "5-15 minutes",
+  "version": "2.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "Advanced Guided Agent Flow for index analysis with bounded intelligence tasks, dynamic prompting, and embedded Splunk documentation context",
+  "target_audience": ["data_analyst", "splunk_admin", "performance_engineer"],
+  "prerequisites": ["splunk_mcp_server", "index_access", "search_guru_agent"],
+  "required_permissions": ["search", "list_indexes", "metadata_read"],
+  "business_value": "Identify data quality issues, optimize index performance, and improve search efficiency",
+  "use_cases": ["performance_tuning", "data_quality_assessment", "capacity_planning", "troubleshooting"],
+  "success_metrics": ["improved_search_performance", "reduced_storage_costs", "better_data_quality"],
+  "data_requirements": {
+    "minimum_events": 1000,
+    "required_sourcetypes": ["access_combined", "syslog", "application_logs"],
+    "optional_fields": ["status", "response_time", "user_agent", "bytes"]
+  },
+  "agent_dependencies": {
+    "search_guru": {
+      "agent_id": "search_guru",
+      "description": "SPL optimization and validation expert",
+      "required": true,
+      "capabilities": ["spl_validation", "query_optimization", "syntax_checking"],
+      "integration_points": ["validation_workflow"],
+      "tools": [
+        "get_spl_reference",
+        "get_splunk_documentation",
+        "get_splunk_cheat_sheet",
+        "list_spl_commands"
+      ]
+    },
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Splunk operations and search execution specialist",
+      "required": true,
+      "capabilities": ["search_execution", "system_information", "configuration"],
+      "integration_points": ["search_workflow"],
+      "tools": [
+        "run_oneshot_search",
+        "run_splunk_search",
+        "list_indexes",
+        "list_sourcetypes"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Production-ready business intelligence and actionable insight synthesis specialist",
+      "required": true,
+      "capabilities": ["result_interpretation", "business_insights", "dashboard_recommendations", "alert_generation", "persona_analysis"],
+      "integration_points": ["synthesis_workflow"],
+      "tools": []
+    }
+  },
+  "core_phases": {
+    "phase_1_intelligent_discovery": {
+      "name": "Intelligent Data Discovery",
+      "description": "Bounded intelligence-guided discovery of index structure and characteristics with embedded Splunk documentation",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": [
+        {
+          "task_id": "discover_index_structure",
+          "title": "Discover Index Structure",
+          "description": "Intelligently analyze index structure using LLM reasoning and Splunk documentation",
+          "goal": "Understand the complete structure, sourcetypes, and data patterns in the target index",
+          "tool": "run_oneshot_search",
+          "search_query": "| metadata type=sourcetypes index={INDEX_NAME} | eval index_name=\"{INDEX_NAME}\"",
+          "parameters": {
+            "earliest_time": "-7d@d",
+            "latest_time": "now"
+          },
+          "llm_loop": {
+            "enabled": true,
+            "max_iterations": 3,
+            "allowed_tools": [
+              "run_oneshot_search",
+              "list_sourcetypes",
+              "run_splunk_search(earliest={earliest_time}, latest={latest_time})",
+              "get_spl_reference",
+              "get_metadata(sourcetypes|hosts|sources)"
+            ],
+            "context_resources": [
+              "get_spl_reference",
+              "get_splunk_documentation"
+            ],
+            "prompt": "You are analyzing index {INDEX_NAME}. Use Splunk documentation and SPL reference to build optimal discovery queries. Start with metadata analysis, then drill down based on findings.",
+            "step_validation": true,
+            "bounded_execution": true,
+            "consistency_checks": ["validate_spl_syntax", "check_data_availability"]
+          },
+          "context_resources": [
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_spl_reference",
+              "description": "Official SPL command syntax and examples for metadata analysis",
+              "parameters": {
+                "commands": ["metadata", "eval", "stats"]
+              },
+              "priority": 3
+            },
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_splunk_documentation",
+              "description": "Current best practices for index analysis and data discovery",
+              "parameters": {
+                "topics": ["index_analysis", "metadata_commands", "sourcetype_discovery"]
+              },
+              "priority": 2
+            },
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_splunk_cheat_sheet",
+              "description": "Quick reference for common data discovery patterns",
+              "parameters": {
+                "category": "data_discovery"
+              },
+              "priority": 1
+            }
+          ],
+          "dynamic_instructions": "Use the embedded Splunk documentation to craft optimal discovery queries. Start broad, then focus based on what you find. Validate each query before execution.",
+          "step_constraints": {
+            "max_query_complexity": "moderate",
+            "require_validation": true,
+            "documentation_required": true
+          },
+          "timeout_sec": 300
+        }
+      ]
+    },
+    "phase_2_adaptive_sampling": {
+      "name": "Adaptive Data Sampling",
+      "description": "Bounded intelligence-driven adaptive sampling based on discovered data characteristics",
+      "mandatory": true,
+      "parallel": true,
+      "max_parallel": 3,
+      "tasks": [
+        {
+          "task_id": "adaptive_sample_analysis",
+          "title": "Adaptive Sample Analysis",
+          "description": "Dynamically sample data based on discovered patterns and bounded intelligence reasoning",
+          "goal": "Obtain representative samples that reveal key data patterns and anomalies",
+          "tool": "run_oneshot_search",
+          "search_query": "search index={INDEX_NAME} | head 100",
+          "llm_loop": {
+            "enabled": true,
+            "max_iterations": 4,
+            "allowed_tools": [
+              "run_oneshot_search",
+              "get_spl_reference",
+              "list_spl_commands"
+            ],
+            "context_resources": [
+              "get_spl_reference",
+              "get_splunk_cheat_sheet"
+            ],
+            "prompt": "Based on the index structure discovered in phase 1, create adaptive sampling queries. Use SPL documentation to build efficient sampling strategies for each sourcetype found.",
+            "step_validation": true,
+            "bounded_execution": true
+          },
+          "context_resources": [
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_spl_reference",
+              "description": "SPL sampling and statistical commands reference",
+              "parameters": {
+                "commands": ["sample", "head", "tail", "random", "stats"]
+              },
+              "priority": 3
+            },
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "list_spl_commands",
+              "description": "Discover optimal commands for data sampling scenarios",
+              "parameters": {
+                "use_case": "data_sampling"
+              },
+              "priority": 2
+            }
+          ],
+          "dynamic_instructions": "Create sampling strategies that adapt to the data characteristics found. Use different sampling methods for different sourcetypes. Ensure samples are representative.",
+          "execution_mode": "per_sourcetype",
+          "timeout_sec": 240
+        },
+        {
+          "task_id": "volume_sampling",
+          "title": "Volume-Based Sampling",
+          "description": "Sample data based on volume patterns to understand data distribution",
+          "goal": "Analyze data volume patterns across time periods",
+          "tool": "run_oneshot_search",
+          "search_query": "index={INDEX_NAME} | bucket _time span=1h | stats count by _time, sourcetype | sort _time",
+          "parameters": {
+            "earliest_time": "-7d@d",
+            "latest_time": "now"
+          },
+          "timeout_sec": 180
+        },
+        {
+          "task_id": "field_sampling",
+          "title": "Field Distribution Sampling",
+          "description": "Sample and analyze field distributions across sourcetypes",
+          "goal": "Understand field usage patterns and data structure variations",
+          "tool": "run_oneshot_search",
+          "search_query": "index={INDEX_NAME} | fieldsummary | head 50 | eval analysis_type=\"field_distribution\"",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 200
+        }
+      ]
+    },
+    "phase_3_intelligent_analysis": {
+      "name": "Intelligent Pattern Analysis",
+      "description": "Bounded intelligence-guided analysis with context-aware reasoning and documentation support",
+      "mandatory": true,
+      "parallel": true,
+      "max_parallel": 4,
+      "tasks": [
+        {
+          "task_id": "pattern_discovery",
+          "title": "Intelligent Pattern Discovery",
+          "description": "Use bounded intelligence reasoning with Splunk best practices to discover meaningful patterns",
+          "goal": "Identify significant patterns, trends, and anomalies using intelligent analysis techniques",
+          "tool": "run_oneshot_search",
+          "search_query": "search index={INDEX_NAME}",
+          "llm_loop": {
+            "enabled": true,
+            "max_iterations": 5,
+            "allowed_tools": [
+              "run_oneshot_search",
+              "get_spl_reference",
+              "get_splunk_documentation",
+              "list_spl_commands"
+            ],
+            "context_resources": [
+              "get_spl_reference",
+              "get_splunk_documentation",
+              "get_splunk_cheat_sheet"
+            ],
+            "prompt": "Analyze patterns in {INDEX_NAME} using advanced SPL techniques. Reference Splunk documentation for best practices. Build queries iteratively, starting with basic patterns and drilling down into anomalies.",
+            "step_validation": true,
+            "bounded_execution": true,
+            "consistency_checks": ["validate_pattern_significance", "check_statistical_validity"]
+          },
+          "context_resources": [
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_splunk_documentation",
+              "description": "Advanced analysis patterns and statistical techniques in Splunk",
+              "parameters": {
+                "topics": ["pattern_analysis", "statistical_commands", "anomaly_detection"]
+              },
+              "priority": 3
+            },
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "get_spl_reference",
+              "description": "Statistical and analytical SPL commands",
+              "parameters": {
+                "commands": ["stats", "eventstats", "streamstats", "timechart", "chart"]
+              },
+              "priority": 2
+            },
+            {
+              "resource_type": "mcp_tool",
+              "resource_id": "list_spl_commands",
+              "description": "Find specialized commands for pattern analysis",
+              "parameters": {
+                "use_case": "pattern_analysis"
+              },
+              "priority": 1
+            }
+          ],
+          "dynamic_instructions": "Use statistical rigor and Splunk best practices. Build analysis queries incrementally. Validate findings with multiple approaches. Focus on actionable insights.",
+          "step_constraints": {
+            "statistical_significance": true,
+            "multiple_validation_methods": true,
+            "actionable_insights_required": true
+          },
+          "timeout_sec": 360
+        },
+        {
+          "task_id": "anomaly_detection",
+          "title": "Anomaly Detection Analysis",
+          "description": "Detect anomalies and unusual patterns in the data",
+          "goal": "Identify statistical anomalies and outliers in data patterns",
+          "tool": "run_oneshot_search",
+          "search_query": "index={INDEX_NAME} | bucket _time span=1h | stats count by _time | eventstats avg(count) as avg_count, stdev(count) as stdev_count | eval anomaly_score=abs(count-avg_count)/stdev_count | where anomaly_score > 2",
+          "parameters": {
+            "earliest_time": "-30d@d",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300
+        },
+        {
+          "task_id": "correlation_analysis",
+          "title": "Cross-Field Correlation Analysis",
+          "description": "Analyze correlations between different fields and sourcetypes",
+          "goal": "Identify relationships and dependencies between data elements",
+          "tool": "run_oneshot_search",
+          "search_query": "index={INDEX_NAME} | eval common_fields=coalesce(host, src_ip, user, client_ip) | stats count by sourcetype, common_fields | sort -count",
+          "parameters": {
+            "earliest_time": "-7d@d",
+            "latest_time": "now"
+          },
+          "timeout_sec": 250
+        },
+        {
+          "task_id": "temporal_analysis",
+          "title": "Temporal Pattern Analysis",
+          "description": "Analyze time-based patterns and trends in the data",
+          "goal": "Understand temporal behavior and identify time-based patterns",
+          "tool": "run_oneshot_search",
+          "search_query": "index={INDEX_NAME} | eval hour=strftime(_time,\"%H\"), day_of_week=strftime(_time,\"%A\") | stats count by hour, day_of_week, sourcetype | sort -count",
+          "parameters": {
+            "earliest_time": "-30d@d",
+            "latest_time": "now"
+          },
+          "timeout_sec": 280
+        }
+      ]
+    },
+    "phase_4_contextual_synthesis": {
+      "name": "Contextual Result Synthesis",
+      "description": "Bounded intelligence-powered synthesis with business context and documentation-backed recommendations",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": [
+        {
+          "task_id": "intelligent_synthesis",
+          "title": "Intelligent Result Synthesis",
+          "description": "Synthesize findings into actionable business insights using bounded intelligence reasoning and Splunk best practices",
+          "goal": "Create comprehensive, actionable analysis report with dashboard and alert recommendations",
+          "tool": "run_oneshot_search",
+          "search_query": "| makeresults | eval synthesis_status=\"Phase-level synthesis handles result aggregation\", phase=\"Contextual Result Synthesis\", note=\"Individual task synthesis delegated to phase-level ResultSynthesizer agent\"",
+          "parameters": {
+            "earliest_time": "now",
+            "latest_time": "now"
+          },
+          "timeout_sec": 30
+        }
+      ]
+    }
+  },
+  "execution_flow": {
+    "sequential_phases": [
+      "phase_1_intelligent_discovery",
+      "phase_2_adaptive_sampling",
+      "phase_3_intelligent_analysis",
+      "phase_4_contextual_synthesis"
+    ],
+    "parallel_execution": {
+      "phase_2_adaptive_sampling": false,
+      "phase_3_intelligent_analysis": true
+    },
+    "validation_workflow": {
+      "pre_execution": "SearchGuru",
+      "post_execution": "ResultSynthesizer"
+    },
+    "adaptive_behavior": {
+      "context_aware_prompting": true,
+      "documentation_integration": true,
+      "iterative_refinement": true,
+      "bounded_execution": true
+    }
+  },
+  "placeholders": {
+    "INDEX_NAME": {
+      "description": "Target index for analysis",
+      "required": true,
+      "type": "string"
+    },
+    "TIME_RANGE": {
+      "description": "Analysis time range",
+      "required": false,
+      "default": "-7d@d",
+      "type": "string"
+    }
+  },
+  "output_schema": {
+    "discovery_results": {
+      "index_structure": "object",
+      "sourcetype_analysis": "array",
+      "data_characteristics": "object"
+    },
+    "sampling_results": {
+      "representative_samples": "array",
+      "sampling_strategies": "object",
+      "data_quality_metrics": "object"
+    },
+    "analysis_results": {
+      "patterns_discovered": "array",
+      "anomalies_identified": "array",
+      "statistical_insights": "object"
+    },
+    "synthesis_results": {
+      "business_insights": "object",
+      "dashboard_recommendations": "array",
+      "alert_strategies": "array",
+      "implementation_roadmap": "array"
+    },
+    "llm_execution_metadata": {
+      "steps_per_task": "object",
+      "context_resources_used": "array",
+      "validation_results": "object",
+      "bounded_execution_stats": "object"
+    }
+  }
+}

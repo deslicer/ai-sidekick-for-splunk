@@ -1,0 +1,177 @@
+{
+  "workflow_id": "contrib.example.basic_template",
+  "workflow_name": "Basic Workflow Template",
+  "workflow_type": "analysis",
+  "workflow_category": "example",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "2-5 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "Basic workflow template for community contributions. Customize this template for your specific use case.",
+
+  "target_audience": ["splunk_admin", "developer", "analyst"],
+  "prerequisites": ["splunk_mcp_server"],
+  "required_permissions": ["search"],
+  "business_value": "Template for creating custom workflows",
+  "use_cases": ["workflow_development", "community_contribution", "learning"],
+  "success_metrics": ["successful_execution", "clear_output"],
+
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": [],
+    "optional_fields": []
+  },
+
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "description": "Splunk MCP agent for search operations",
+      "required": true,
+      "fallback_behavior": "fail"
+    },
+    "result_synthesizer": {
+      "description": "Result synthesis and business intelligence",
+      "required": true,
+      "fallback_behavior": "skip_synthesis"
+    }
+  },
+
+  "workflow_type": "guided_agent_flow",
+  "workflow_instructions": {
+    "persona": "You are executing a basic workflow template. This is a starting point for custom workflow development.",
+    "approach": "Follow the defined phases sequentially, ensuring each task completes successfully before proceeding.",
+    "success_criteria": [
+      "All phases complete successfully",
+      "Clear output is generated",
+      "No critical errors occur"
+    ],
+    "error_handling": "Log errors and attempt graceful recovery where possible"
+  },
+
+  "core_phases": {
+    "initialization": {
+      "name": "Workflow Initialization",
+      "description": "Initialize the workflow and validate prerequisites",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "validate_environment": {
+          "task_id": "validate_env",
+          "title": "Validate Environment",
+          "goal": "Ensure all prerequisites are met for workflow execution",
+          "tool": "splunk_mcp",
+          "description": "Check system connectivity and permissions",
+          "search_query": "| rest /services/server/info | head 1",
+          "parameters": {
+            "timeout_sec": 30
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "System information retrieved successfully"
+          }
+        }
+      }
+    },
+
+    "data_collection": {
+      "name": "Data Collection",
+      "description": "Collect required data for analysis",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "collect_sample_data": {
+          "task_id": "collect_data",
+          "title": "Collect Sample Data",
+          "goal": "Gather sample data for processing",
+          "tool": "splunk_mcp",
+          "description": "Collect sample data from Splunk",
+          "search_query": "search index=_internal earliest=-1h | head 100 | stats count by sourcetype",
+          "parameters": {
+            "timeout_sec": 60
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Sample data collected successfully"
+          }
+        }
+      }
+    },
+
+    "analysis": {
+      "name": "Data Analysis",
+      "description": "Analyze the collected data",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "analyze_data": {
+          "task_id": "analyze",
+          "title": "Analyze Data",
+          "goal": "Process and analyze the collected data",
+          "tool": "splunk_mcp",
+          "description": "Perform basic analysis on collected data",
+          "search_query": "search index=_internal earliest=-1h | stats count by host, sourcetype | sort -count",
+          "parameters": {
+            "timeout_sec": 90
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Data analysis completed successfully"
+          }
+        }
+      }
+    },
+
+    "synthesis": {
+      "name": "Result Synthesis",
+      "description": "Synthesize results into actionable insights",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "synthesize_results": {
+          "task_id": "synthesize",
+          "title": "Synthesize Results",
+          "goal": "Convert technical results into business insights",
+          "tool": "result_synthesizer",
+          "description": "Generate executive summary and recommendations",
+          "parameters": {
+            "synthesis_type": "executive_summary",
+            "include_recommendations": true,
+            "format": "structured"
+          },
+          "result_interpretation": {
+            "agent": "result_synthesizer",
+            "context": "Basic workflow template execution results",
+            "focus": ["summary", "insights", "next_steps"]
+          }
+        }
+      }
+    }
+  },
+
+  "execution_flow": {
+    "sequential_phases": true,
+    "allow_phase_skip": false,
+    "error_recovery": "log_and_continue",
+    "timeout_behavior": "graceful_termination"
+  },
+
+  "output_structure": {
+    "format": "structured_json",
+    "sections": [
+      "executive_summary",
+      "technical_details",
+      "recommendations",
+      "next_steps"
+    ],
+    "include_metadata": true,
+    "include_execution_stats": true
+  }
+}

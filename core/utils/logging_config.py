@@ -39,7 +39,7 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
     else:
         root_logger.setLevel(resolved_level)
 
-    logging.getLogger("splunk_ai_sidekick").setLevel(resolved_level)
+    logging.getLogger("ai_sidekick_for_splunk").setLevel(resolved_level)
     logging.getLogger("google_adk").setLevel(resolved_level)
     logging.getLogger("google").setLevel(resolved_level)
 

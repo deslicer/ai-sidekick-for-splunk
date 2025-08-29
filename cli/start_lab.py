@@ -193,7 +193,7 @@ def main() -> None:
     # Ensure no previous instance (best-effort): call our stop-lab entry if available
     try:
         # Use this same interpreter to invoke package entry
-        subprocess.run([sys.executable, "-m", "splunk_ai_sidekick.cli.stop_lab"], cwd=str(project_root), check=False)
+        subprocess.run([sys.executable, "-m", "ai_sidekick_for_splunk.cli.stop_lab"], cwd=str(project_root), check=False)
     except OSError:
         pass
 
@@ -233,7 +233,7 @@ def main() -> None:
 
     print(f"ADK agent attempted start on port {sidekick_port}")
     print(f"Web interface: http://localhost:{sidekick_port}")
-    dev_ui_url = f"http://127.0.0.1:{sidekick_port}/dev-ui/?app=splunk_ai_sidekick"
+    dev_ui_url = f"http://127.0.0.1:{sidekick_port}/dev-ui/?app=ai_sidekick_for_splunk"
     print(f"Dev UI (agent preselected): {dev_ui_url}")
 
     # Best-effort attempt to open the Dev UI in the default browser

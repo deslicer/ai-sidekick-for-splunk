@@ -61,12 +61,12 @@ class SplunkOrchestrator:
         # Define discovery paths avoiding 'src.' namespace collision
         # Import directly from the module hierarchy
         agent_paths = [
-            "splunk_ai_sidekick.contrib.agents",
-            "splunk_ai_sidekick.core.agents"  # Includes all core agents (flow_pilot, index_analysis_flow, etc.)
+            "ai_sidekick_for_splunk.contrib.agents",
+            "ai_sidekick_for_splunk.core.agents"  # Includes all core agents (flow_pilot, index_analysis_flow, etc.)
         ]
         tool_paths = [
-            "splunk_ai_sidekick.contrib.tools",
-            "splunk_ai_sidekick.core.tools"
+            "ai_sidekick_for_splunk.contrib.tools",
+            "ai_sidekick_for_splunk.core.tools"
         ]
 
         # Use enhanced discovery with tool-to-agent mapping
@@ -102,7 +102,7 @@ class SplunkOrchestrator:
             from google.adk.agents import LlmAgent
             self._adk_agent = LlmAgent(
                 model=self.config.model.primary_model,  # Use Gemini 2.0 model for Google Search compatibility
-                name="splunk_ai_sidekick",
+                name="ai_sidekick_for_splunk",
                 description="Splunk AI Sidekick orchestrator with specialized agent tools for collaborative workflows",
                 instruction=self._get_main_agent_instructions(),
                 tools=all_tools

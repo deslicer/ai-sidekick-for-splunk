@@ -37,12 +37,12 @@ class ModelConfig:
 class DiscoveryConfig:
     """Configuration for agent and tool discovery."""
     contrib_agents_paths: list[str] = field(default_factory=lambda: [
-        "src/splunk_ai_sidekick/contrib/agents",
-        "src/splunk_ai_sidekick/agents"
+        "src/ai_sidekick_for_splunk/contrib/agents",
+        "src/ai_sidekick_for_splunk/agents"
     ])
     contrib_tools_paths: list[str] = field(default_factory=lambda: [
-        "src/splunk_ai_sidekick/contrib/tools",
-        "src/splunk_ai_sidekick/tools"
+        "src/ai_sidekick_for_splunk/contrib/tools",
+        "src/ai_sidekick_for_splunk/tools"
     ])
     auto_discover: bool = True
     discovery_patterns: list[str] = field(default_factory=lambda: [

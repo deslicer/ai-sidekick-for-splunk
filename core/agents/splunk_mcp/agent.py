@@ -12,7 +12,7 @@ from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata, BaseAgent
 
 from .prompt import SPLUNK_MCP_PROMPT
 
@@ -61,7 +61,7 @@ class SplunkMCPAgent(BaseAgent):
             tools: List of tools available to the agent
             session_state: Session state for the agent
         """
-        from splunk_ai_sidekick.core.config import Config
+        from ai_sidekick_for_splunk.core.config import Config
 
         # Use default config if none provided
         if config is None:

@@ -291,7 +291,7 @@ def main(argv: list[str] | None = None) -> None:
     print("")
 
     project_root = find_project_root()
-    agent_dir = project_root / "src" / "splunk_ai_sidekick" / "contrib" / "agents" / agent_name
+    agent_dir = project_root / "src" / "ai_sidekick_for_splunk" / "contrib" / "agents" / agent_name
     agent_file = agent_dir / "agent.py"
     prompt_file = agent_dir / "prompt.py"
 
@@ -334,7 +334,7 @@ def main(argv: list[str] | None = None) -> None:
     print("")
     echo_info("🎯 Next Steps:")
     print(
-        f"  1. Test the specific implementation: uv run python -c \"from splunk_ai_sidekick.contrib.agents.{agent_name} import {agent_name}_agent; print({agent_name}_agent.execute('analyze index=pas'))\""
+        f"  1. Test the specific implementation: uv run python -c \"from ai_sidekick_for_splunk.contrib.agents.{agent_name} import {agent_name}_agent; print({agent_name}_agent.execute('analyze index=pas'))\""
     )
     print(f"  2. Integrate with orchestrator: uv run integrate-agent {agent_name}")
     print("  3. Test full workflow: uv run start-lab")

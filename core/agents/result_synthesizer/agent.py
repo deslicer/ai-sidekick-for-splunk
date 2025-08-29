@@ -12,7 +12,7 @@ from typing import Any
 
 from google.adk.agents import LlmAgent
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata, BaseAgent
 
 from .prompt import RESULT_SYNTHESIZER_INSTRUCTIONS
 
@@ -56,7 +56,7 @@ class ResultSynthesizerAgent(BaseAgent):
         session_state: dict[str, Any] | None = None
     ) -> None:
         """Initialize the ResultSynthesizer agent."""
-        from splunk_ai_sidekick.core.config import Config
+        from ai_sidekick_for_splunk.core.config import Config
 
         # Use default config if none provided
         if config is None:

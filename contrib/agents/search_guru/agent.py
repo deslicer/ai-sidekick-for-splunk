@@ -10,7 +10,7 @@ import re
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata, BaseAgent
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class SearchGuru(BaseAgent):
     def __init__(self, config: Any | None = None, metadata: AgentMetadata | None = None,
                  tools: list[Any] | None = None, session_state: dict[str, Any] | None = None):
         """Initialize the Search Guru."""
-        from splunk_ai_sidekick.core.config import Config
+        from ai_sidekick_for_splunk.core.config import Config
 
         # Use default config if none provided
         if config is None:

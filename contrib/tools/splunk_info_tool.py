@@ -7,7 +7,7 @@ This tool provides basic Splunk environment information.
 import logging
 from typing import Any
 
-from splunk_ai_sidekick.core.base_tool import BaseTool, ToolMetadata
+from ai_sidekick_for_splunk.core.base_tool import BaseTool, ToolMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SplunkInfoTool(BaseTool):
 
     def __init__(self, config: Any = None, metadata: ToolMetadata | None = None):
         """Initialize the Splunk Info Tool."""
-        from splunk_ai_sidekick.core.config import Config
+        from ai_sidekick_for_splunk.core.config import Config
 
         if config is None:
             config = Config()

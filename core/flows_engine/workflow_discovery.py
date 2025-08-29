@@ -137,12 +137,12 @@ class WorkflowDiscovery:
     def _get_default_paths(self) -> list[Path]:
         """Get default workflow discovery paths"""
         current_file = Path(__file__)
-        # From workflow_discovery.py -> flows_engine -> core -> splunk_ai_sidekick -> src
-        splunk_ai_sidekick_root = current_file.parent.parent.parent  # Go up to splunk_ai_sidekick/
+        # From workflow_discovery.py -> flows_engine -> core -> ai_sidekick_for_splunk -> src
+        ai_sidekick_for_splunk_root = current_file.parent.parent.parent  # Go up to ai_sidekick_for_splunk/
 
         return [
-            splunk_ai_sidekick_root / "core" / "flows",
-            splunk_ai_sidekick_root / "contrib" / "flows"
+            ai_sidekick_for_splunk_root / "core" / "flows",
+            ai_sidekick_for_splunk_root / "contrib" / "flows"
         ]
 
     def discover_workflows(self, force_refresh: bool = False) -> dict[str, WorkflowInfo]:

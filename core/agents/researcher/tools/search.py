@@ -14,7 +14,7 @@ from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from google.adk.tools.google_search_tool import google_search
 
-from splunk_ai_sidekick.core.config import Config
+from ai_sidekick_for_splunk.core.config import Config
 
 logger = logging.getLogger(__name__)
 

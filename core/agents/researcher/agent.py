@@ -10,7 +10,7 @@ from typing import Any
 
 from google.adk.agents import Agent
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata, BaseAgent
 
 from .prompt import RESEARCHER_PROMPT
 from .tools.search import google_search_grounding
@@ -54,7 +54,7 @@ class ResearcherAgent(BaseAgent):
             tools: List of tools available to the agent
             session_state: Session state for the agent
         """
-        from splunk_ai_sidekick.core.config import Config
+        from ai_sidekick_for_splunk.core.config import Config
 
         # Use default config if none provided
         if config is None:

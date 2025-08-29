@@ -9,7 +9,7 @@ import logging
 
 from google.adk.agents import LlmAgent
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata
 
 logger = logging.getLogger(__name__)
 

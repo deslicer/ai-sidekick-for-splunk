@@ -44,7 +44,7 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
         root_logger.setLevel(resolved_level)
 
     # Ensure our package and ADK loggers honor desired levels
-    logging.getLogger("splunk_ai_sidekick").setLevel(resolved_level)
+    logging.getLogger("ai_sidekick_for_splunk").setLevel(resolved_level)
     # ADK logs appear under this hierarchy in this project
     logging.getLogger("google_adk").setLevel(resolved_level)
     logging.getLogger("google").setLevel(resolved_level)

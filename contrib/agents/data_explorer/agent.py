@@ -10,8 +10,8 @@ from typing import Any
 
 from google.adk.agents import LlmAgent
 
-from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
-from splunk_ai_sidekick.core.config import Config
+from ai_sidekick_for_splunk.core.base_agent import AgentMetadata, BaseAgent
+from ai_sidekick_for_splunk.core.config import Config
 
 logger = logging.getLogger(__name__)
 

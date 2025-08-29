@@ -32,7 +32,7 @@ def _configure_adk_web_logging():
 
     # Configure specific loggers
     loggers_to_configure = [
-        'splunk_ai_sidekick',
+        'ai_sidekick_for_splunk',
         # Ensure ADK logs are visible regardless of package name used
         'google_adk',
         'google.adk',

@@ -18,7 +18,7 @@ Key Features:
 - Error recovery and fallback mechanisms
 
 Usage:
-    from splunk_ai_sidekick.core.agents.index_analysis_flow import IndexAnalysisFlowAgent
+    from ai_sidekick_for_splunk.core.agents.index_analysis_flow import IndexAnalysisFlowAgent
 
     # Create specialized index analysis agent
     agent = IndexAnalysisFlowAgent()

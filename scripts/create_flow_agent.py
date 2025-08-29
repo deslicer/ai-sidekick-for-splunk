@@ -303,7 +303,7 @@ def main():
     print("=" * 60)
     print()
     
-    # Determine the base path (src/splunk_ai_sidekick)
+    # Determine the base path (src/ai_sidekick_for_splunk)
     script_dir = Path(__file__).parent
     base_path = script_dir.parent
     

@@ -370,7 +370,7 @@ def main():
 
         # Get the correct base path relative to the script location
         script_dir = Path(__file__).parent  # scripts/
-        src_root = script_dir.parent  # src/splunk_ai_sidekick/
+        src_root = script_dir.parent  # src/ai_sidekick_for_splunk/
 
         if template["source"] == "core":
             output_dir = src_root / "core" / "flows" / workflow_dir_name

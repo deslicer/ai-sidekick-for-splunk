@@ -1,0 +1,119 @@
+{
+  "workflow_id": "contrib.simple.basic_api",
+  "workflow_name": "Simple API Example",
+  "workflow_type": "analysis",
+  "workflow_category": "data_analysis",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "intermediate",
+  "estimated_duration": "3-5 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "README.md",
+  "description": "A simple example showing how to get data from Splunk and then use an external API to add more information.",
+
+  "business_value": "Learn how to combine Splunk data with external information",
+  "use_cases": ["data_enrichment", "learning_apis", "basic_integration"],
+  "success_metrics": ["successful_data_retrieval", "successful_api_call"],
+
+  "prerequisites": ["splunk_mcp_server", "external_api_access"],
+  "required_permissions": ["search"],
+  "supported_splunk_versions": ["8.0+", "9.0+"],
+  "data_requirements": {
+    "minimum_events": 10,
+    "required_sourcetypes": ["access_logs"],
+    "optional_fields": ["src_ip"]
+  },
+
+  "target_audience": ["developers", "integration_learners"],
+
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Gets IP addresses from Splunk logs",
+      "required": true,
+      "capabilities": ["search", "data_extraction"],
+      "integration_points": ["data_collection"]
+    },
+    "simple_api_agent": {
+      "agent_id": "simple_api_agent",
+      "description": "Calls an external API to get location info (you need to create this)",
+      "required": true,
+      "capabilities": ["api_calls", "location_lookup"],
+      "integration_points": ["external_data_retrieval"]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Combines the data into a simple report",
+      "required": true,
+      "capabilities": ["data_combination", "simple_reporting"],
+      "integration_points": ["final_report"]
+    }
+  },
+
+  "core_phases": {
+    "get_ip_addresses": {
+      "name": "Get IP Addresses",
+      "description": "Find IP addresses in the logs",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "extract_ips": {
+          "task_id": "find_ip_addresses",
+          "title": "Find IP Addresses",
+          "description": "Look for IP addresses in web logs",
+          "agent": "splunk_mcp",
+          "type": "search",
+          "goal": "Get a list of IP addresses to look up",
+          "tool": "splunk_mcp"
+        }
+      }
+    },
+
+    "lookup_locations": {
+      "name": "Look Up Locations",
+      "description": "Use an API to find where the IP addresses are located",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "api_lookup": {
+          "task_id": "get_ip_locations",
+          "title": "Get IP Locations",
+          "description": "Call an external API to find the location of each IP",
+          "agent": "simple_api_agent",
+          "type": "api_call",
+          "goal": "Add location information to our IP addresses",
+          "tool": "simple_api_agent"
+        }
+      }
+    },
+
+    "create_report": {
+      "name": "Create Report",
+      "description": "Make a simple report combining Splunk data with API results",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "combine_data": {
+          "task_id": "create_combined_report",
+          "title": "Create Combined Report",
+          "description": "Put together the IP addresses and their locations into one report",
+          "agent": "result_synthesizer",
+          "type": "synthesis",
+          "goal": "Create an easy-to-read report with IP locations",
+          "tool": "result_synthesizer"
+        }
+      }
+    }
+  },
+
+  "capabilities": ["ip_extraction", "location_lookup", "simple_integration"],
+
+  "notes": {
+    "custom_agent_needed": "You'll need to create the 'simple_api_agent' to call your chosen API",
+    "api_suggestions": ["ipapi.co", "ipinfo.io", "freegeoip.app"],
+    "learning_focus": "This example teaches the basics of combining Splunk data with external APIs"
+  }
+}

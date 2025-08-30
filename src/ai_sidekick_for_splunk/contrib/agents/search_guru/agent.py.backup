@@ -1,0 +1,510 @@
+"""
+Search Guru implementation for AI Sidekick for Splunk.
+
+A specialized agent for Splunk search operations, SPL guidance, search optimization,
+and comprehensive index data analysis with insights generation.
+"""
+
+import logging
+import re
+from typing import Any, Optional, List, Dict, AsyncGenerator, Union
+
+from splunk_ai_sidekick.core.base_agent import AgentMetadata, BaseAgent
+
+logger = logging.getLogger(__name__)
+
+
+class SearchGuru(BaseAgent):
+    """
+    A comprehensive Splunk search specialist agent.
+
+    This agent provides complete search lifecycle support including:
+    - SPL Generation with documentation references
+    - SPL Optimization using best practices
+    - Search execution via ADK transfer to splunk_mcp
+    - Result analysis and interpretation
+    - Index Data Insights with automated workflow
+    """
+
+    # Class metadata for discovery system
+    METADATA = AgentMetadata(
+        name="SearchGuru",
+        description="SPL Expert & Performance Consultant for search optimization and strategy",
+        version="4.0.0",
+        author="Saikrishna Gundeti",
+        tags=["search", "spl", "optimization", "performance",""],
+        dependencies=["SplunkMCP"]
+    )
+
+    def __init__(self, config: Optional[Any] = None, metadata: Optional[AgentMetadata] = None,
+                 tools: Optional[List[Any]] = None, session_state: Optional[dict[str, Any]] = None):
+        """Initialize the Search Guru."""
+        from splunk_ai_sidekick.core.config import Config
+
+        # Use default config if none provided
+        if config is None:
+            config = Config()
+
+        # Create metadata if not provided
+        if metadata is None:
+            metadata = AgentMetadata(
+                name="search_guru",
+                description="Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights",
+                version="3.0.0",
+                author="Saikrishna Gundeti",
+                tags=["search", "spl", "optimization", "insights", "analysis"],
+                dependencies=["splunk_mcp"]
+            )
+
+        super().__init__(config, metadata, tools, session_state)
+        self.name = "search_guru"
+        self.description = "Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights"
+
+    def get_metadata(self) -> AgentMetadata:
+        """Get agent metadata for registration."""
+        return self.metadata
+
+    @property
+    def instructions(self) -> str:
+        """Get the comprehensive agent instructions/prompt."""
+        # Import and return the updated prompt
+        from .prompt import SEARCH_GURU_INSTRUCTIONS
+        return SEARCH_GURU_INSTRUCTIONS
+
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> Union[dict[str, Any], AsyncGenerator[dict[str, Any], None]]:
+        """
+        Execute a comprehensive search-related task using ADK native transfers.
+
+        Args:
+            task: The task description
+            context: Optional context for the task
+
+        Returns:
+            Dictionary containing the result for simple tasks, or AsyncGenerator for streaming workflows
+        """
+        try:
+            logger.info(f"SearchGuru executing task: {task}")
+
+            # Check for Data Explorer workflow - handle as streaming
+            if self._is_data_explorer_request(task):
+                # For streaming support, return an async generator wrapper
+                return self._handle_index_insights_workflow_streaming(task, context)
+
+            # Route to specific capability handlers (non-streaming)
+            task_lower = task.lower()
+            if any(keyword in task_lower for keyword in ["optimize", "performance", "improve"]):
+                return await self._handle_spl_optimization(task, context)
+            elif any(keyword in task_lower for keyword in ["generate", "create", "build", "write"]):
+                return await self._handle_spl_generation(task, context)
+            elif any(keyword in task_lower for keyword in ["run", "execute", "search"]):
+                return await self._handle_search_transfer(task, context)
+            elif any(keyword in task_lower for keyword in ["analyze", "interpret", "results"]):
+                return await self._handle_result_analysis(task, context)
+            else:
+                return await self._handle_general_task(task, context)
+
+        except Exception as e:
+            logger.error(f"SearchGuru execution failed: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to execute search task",
+                "task_type": "error"
+            }
+
+
+
+
+
+
+        """Generate ADK transfer instruction for sourcetype discovery."""
+        return f"""
+I need to analyze index={index_name}. Let me transfer to the splunk_mcp specialist for initial data discovery:
+
+@splunk_mcp: I need to understand the data structure in index={index_name}. Please execute these discovery searches:
+
+1. **Sourcetype Distribution:**
+   ```
+   index={index_name} | stats count by sourcetype | sort -count
+   ```
+
+2. **Sample Events:**
+   ```
+   index={index_name} | head 5 | table _time, _raw, sourcetype
+   ```
+
+3. **Time Range Analysis:**
+   ```
+   index={index_name} | stats earliest(_time) as first_event, latest(_time) as last_event, count as total_events
+   ```
+
+Please return:
+- Sourcetype distribution with counts
+- Sample raw events for pattern analysis
+- Data volume and time range information
+
+Once you complete this, return the results to me so I can determine log types, structure, and generate appropriate insights for this index.
+
+**Expected Return Format:**
+- Sourcetype breakdown
+- Log type classification
+- Data volume metrics
+- Sample event patterns
+"""
+
+    def _generate_data_discovery_transfer(self, index_name: str) -> str:
+        """Generate ADK transfer instruction for data discovery (after sourcetype analysis)."""
+        return f"""
+Based on the sourcetype analysis results, I need detailed field analysis:
+
+@splunk_mcp: Please execute comprehensive field discovery for index={index_name}:
+
+1. **Field Summary Analysis:**
+   ```
+   index={index_name} | head 1000 | fieldsummary maxvals=10
+   ```
+
+2. **Field Extraction Opportunities:**
+   ```
+   index={index_name} | head 100 | table _raw | eval interesting_patterns=if(match(_raw, "\\w+=\\w+"), "key-value", if(match(_raw, "\\d{{4}}-\\d{{2}}-\\d{{2}}"), "timestamp", "other"))
+   ```
+
+3. **Data Quality Assessment:**
+   ```
+   index={index_name} | stats dc(_raw) as unique_events, count as total_events | eval duplicate_ratio=round((total_events-unique_events)/total_events*100,2)
+   ```
+
+Return structured field analysis so I can identify:
+- Available fields and their patterns
+- Field extraction opportunities
+- Data quality metrics
+- Search optimization possibilities
+"""
+
+    def _generate_insights_strategy(self, index_name: str) -> dict[str, Any]:
+        """Generate insights strategy framework based on common log analysis patterns."""
+        return {
+            "index_name": index_name,
+            "strategy_type": "data_driven_insights",
+            "insights_templates": [
+                {
+                    "category": "Volume & Trends",
+                    "persona": "Data Engineer",
+                    "use_case": "Monitor data ingestion patterns and identify anomalies",
+                    "spl_template": f"index={index_name} | timechart span=1h count",
+                    "enhancement_needed": "sourcetype_specific_analysis"
+                },
+                {
+                    "category": "Error Analysis",
+                    "persona": "Operations Team",
+                    "use_case": "Identify error patterns and failure events",
+                    "spl_template": f"index={index_name} (error OR fail OR exception OR critical)",
+                    "enhancement_needed": "field_based_filtering"
+                },
+                {
+                    "category": "Performance Monitoring",
+                    "persona": "System Administrator",
+                    "use_case": "Track performance metrics and resource usage",
+                    "spl_template": f"index={index_name} | stats avg(response_time) by service",
+                    "enhancement_needed": "actual_field_discovery"
+                },
+                {
+                    "category": "Security Analysis",
+                    "persona": "Security Analyst",
+                    "use_case": "Monitor authentication and access patterns",
+                    "spl_template": f"index={index_name} (login OR auth OR access)",
+                    "enhancement_needed": "security_field_identification"
+                },
+                {
+                    "category": "Business Intelligence",
+                    "persona": "Business Analyst",
+                    "use_case": "Extract business metrics and user behavior",
+                    "spl_template": f"index={index_name} | stats count by user_id",
+                    "enhancement_needed": "business_context_fields"
+                }
+            ],
+            "enhancement_strategy": "Enhance templates with actual field discovery results",
+            "mcp_tools_needed": [
+                "get_spl_reference: For optimized query syntax",
+                "get_troubleshooting_guide: For performance optimization",
+                "get_splunk_documentation: For best practices"
+            ]
+        }
+
+    def _generate_search_validation_transfer(self) -> str:
+        """Generate ADK transfer instruction for search validation."""
+        return """
+I need to validate and optimize the generated SPL searches:
+
+@splunk_mcp: Please validate these SPL queries for syntax correctness and basic performance:
+
+**Validation Tasks:**
+1. Syntax check each generated query
+2. Verify field references are valid
+3. Test basic execution (with head 1 for performance)
+4. Suggest performance optimizations
+
+**MCP Tools to Use:**
+- get_spl_reference: Validate SPL syntax
+- get_troubleshooting_guide: Performance optimization
+- run_one_shot: Test query execution
+
+Return validation results with:
+- Syntax status (valid/invalid)
+- Performance recommendations
+- Field validation results
+- Optimized query versions
+"""
+
+    def _extract_index_name(self, task: str) -> Optional[str]:
+        """Extract index name from the task description."""
+        patterns = [
+            r"index\s*=\s*(\w+)",
+            r"index\s+['\"]?(\w+)['\"]?",
+            r"analyze\s+['\"]?(\w+)['\"]?\s+index"
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, task.lower())
+            if match:
+                return match.group(1)
+        return None
+
+    async def _handle_spl_generation(self, task: str, context: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Handle SPL generation tasks with MCP tool references."""
+        return {
+            "success": True,
+            "task_type": "spl_generation",
+            "approach": "Use MCP tools for documentation-backed SPL generation",
+            "mcp_tools_recommended": {
+                "get_spl_reference": "Get official SPL command syntax and examples",
+                "get_splunk_documentation": "Access current best practices and patterns",
+                "get_splunk_cheat_sheet": "Quick reference for common SPL patterns",
+                "list_spl_commands": "Discover available commands for specific use cases"
+            },
+            "transfer_suggestion": """
+For complex SPL generation, transfer to @splunk_mcp:
+
+@splunk_mcp: I need help generating SPL for [specific use case]. Please use:
+- get_spl_reference for syntax validation
+- get_splunk_documentation for best practices
+- Return optimized SPL with explanations
+""",
+            "best_practices": [
+                "Start with specific index and sourcetype filters",
+                "Use time range filtering for performance",
+                "Apply field filters early in the search pipeline",
+                "Leverage statistical commands efficiently"
+            ]
+        }
+
+    async def _handle_spl_optimization(self, task: str, context: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Handle SPL optimization tasks with orchestrator coordination when needed."""
+
+        # Check if task contains a specific SPL query that needs optimization
+        if any(keyword in task.lower() for keyword in ["index=", "search", "|"]):
+            # Return ORCHESTRATOR REQUEST for SPL validation and optimization
+            orchestrator_request = f"""ORCHESTRATOR REQUEST:
+Agent: splunk_mcp
+Action: Analyze SPL query for optimization opportunities and performance validation
+Context: User requested SPL optimization for: {task}
+Expected_Result: Performance analysis, optimization recommendations, and validated improved SPL
+Next_Step: I'll provide strategic optimization guidance and best practices based on the analysis"""
+
+            return {
+                "success": True,
+                "task_type": "spl_optimization",
+                "approach": "Orchestrator-coordinated performance analysis",
+                "orchestrator_request": orchestrator_request,
+                "message": f"🔧 Optimization analysis requested for SPL\n\n{orchestrator_request}"
+            }
+        else:
+            # For general optimization guidance, provide strategic advice directly
+            return {
+                "success": True,
+                "task_type": "spl_optimization",
+                "approach": "Strategic optimization guidance",
+                "mcp_tools_available": {
+                    "get_troubleshooting_guide": "Performance optimization best practices",
+                    "get_admin_guide": "Administrative optimizations and efficiency tips",
+                    "list_troubleshooting_topics": "Find specific performance topics",
+                    "list_admin_topics": "Access administrative guidance"
+                },
+                "optimization_principles": [
+                    "Search-time vs index-time operations optimization",
+                    "Statistical command efficiency and placement",
+                    "Memory usage and resource optimization",
+                    "Search acceleration and indexing strategies"
+                ],
+                "message": "🧠 I can provide strategic SPL optimization guidance. For specific query analysis, please provide the SPL query you'd like optimized."
+            }
+
+    async def _handle_search_transfer(self, task: str, context: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Handle search execution by requesting orchestrator coordination."""
+        search_query = self._extract_search_query(task)
+
+        # Return proper ORCHESTRATOR REQUEST format
+        orchestrator_request = f"""ORCHESTRATOR REQUEST:
+Agent: splunk_mcp
+Action: Execute Splunk search and return formatted results
+Context: User requested search execution: {search_query}
+Expected_Result: Search results with execution status, result count, key findings, and performance metrics
+Next_Step: I'll analyze the search results and provide insights and recommendations"""
+
+        return {
+            "success": True,
+            "task_type": "search_execution",
+            "search_query": search_query,
+            "orchestrator_request": orchestrator_request,
+            "approach": "Orchestrator-coordinated execution",
+            "message": f"🔍 Search ready for execution: {search_query}\n\n{orchestrator_request}"
+        }
+
+    def _extract_search_query(self, task: str) -> str:
+        """Extract SPL search query from task description."""
+        # Simple extraction - look for patterns like "run search:" or "execute:"
+        import re
+
+        # Look for explicit search commands
+        search_patterns = [
+            r"(?:run|execute)\s+(?:search:?\s*)?(.+)",
+            r"search:?\s*(.+)",
+            r"index=\w+.*"
+        ]
+
+        for pattern in search_patterns:
+            match = re.search(pattern, task, re.IGNORECASE)
+            if match:
+                return match.group(1) if match.groups() else match.group(0)
+
+        # If no explicit search found, return the task as potential SPL
+        return task.strip()
+
+    async def _handle_result_analysis(self, task: str, context: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Handle result analysis tasks."""
+        return {
+            "success": True,
+            "task_type": "result_analysis",
+            "analysis_capabilities": [
+                "Pattern recognition and trend identification",
+                "Anomaly detection and outlier analysis",
+                "Statistical analysis of search results",
+                "Business context interpretation"
+            ],
+            "approach": "SearchGuru expertise with data-driven insights",
+            "value_proposition": [
+                "Transform raw search results into actionable insights",
+                "Identify business-relevant patterns and trends",
+                "Provide context-aware interpretation",
+                "Generate follow-up search recommendations"
+            ]
+        }
+
+    async def _handle_general_task(self, task: str, context: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """Handle general search-related tasks."""
+        return {
+            "success": True,
+            "task_type": "general",
+            "message": "Comprehensive search assistance available with ADK native transfers",
+            "capabilities": [
+                "SPL Generation with MCP documentation support",
+                "SPL Optimization with performance analysis",
+                "Search Execution via @splunk_mcp transfers",
+                "Result Analysis with business context",
+                "Index Data Insights automated workflow"
+            ],
+            "mcp_integration": {
+                "documentation_tools": ["get_spl_reference", "get_splunk_documentation", "get_splunk_cheat_sheet"],
+                "troubleshooting_tools": ["get_troubleshooting_guide", "get_admin_guide"],
+                "execution_tools": ["run_one_shot", "run_splunk_search"],
+                "discovery_tools": ["list_spl_commands", "list_troubleshooting_topics", "list_admin_topics"]
+            },
+            "transfer_pattern": "Use @splunk_mcp for all Splunk environment operations"
+        }
+
+    def get_capabilities(self) -> List[str]:
+        """Get comprehensive agent capabilities."""
+        return [
+            "spl_generation",
+            "spl_optimization",
+            "search_execution_transfer",
+            "result_analysis",
+            "index_data_insights",
+            "performance_tuning",
+            "documentation_integration",
+            "adk_native_transfers"
+        ]
+
+    def get_adk_agent(self, tools: Optional[List[Any]] = None) -> Any:
+        """
+        Get ADK-compatible agent for sub-agent delegation.
+
+        This version uses ADK's native transfer mechanism instead of custom delegation.
+        """
+        try:
+            from google.adk.agents import LlmAgent
+
+            # Store tools in the agent instance
+            if tools:
+                self.tools = tools
+                logger.debug(f"SearchGuru agent received {len(tools)} tools")
+
+            # Use provided tools or empty list
+            agent_tools = tools or []
+
+            # Create ADK agent with native transfer support
+            adk_agent = LlmAgent(
+                model=self.config.model.primary_model,
+                name=self.name,
+                description=f"{self.description} - Uses ADK native transfers to splunk_mcp",
+                instruction=self.instructions,
+                tools=agent_tools
+            )
+
+            logger.debug(f"Created ADK agent for {self.name} with native transfer support")
+            return adk_agent
+
+        except ImportError:
+            logger.warning(f"Google ADK not available - {self.name} cannot be used as sub-agent")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to create ADK sub-agent for {self.name}: {e}")
+            return None
+
+    def supports_streaming(self, task: str) -> bool:
+        """Check if the given task supports streaming responses."""
+        return self._is_data_explorer_request(task)
+
+    def validate_input(self, input_data: dict[str, Any]) -> bool:
+        """Validate input data for the agent."""
+        if not isinstance(input_data, dict):
+            return False
+
+        # Check for required task or query field
+        has_task = "task" in input_data or "query" in input_data
+
+        # For data explorer, validate index specification
+        if "index" in str(input_data).lower():
+            return has_task and self._is_data_explorer_request(str(input_data))
+
+        return has_task
+
+    async def cleanup(self) -> None:
+        """Cleanup agent resources."""
+        logger.info("SearchGuru cleanup completed")
+        pass
+
+
+# Factory function for easy instantiation
+def create_search_guru_agent() -> SearchGuru:
+    """
+    Create and return a configured Search Guru agent instance.
+
+    Returns:
+        SearchGuru: Configured agent ready for SPL optimization and search strategy.
+    """
+    return SearchGuru()
+
+
+# Export the main agent for discovery system
+search_guru_agent = create_search_guru_agent()

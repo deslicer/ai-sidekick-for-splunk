@@ -1,0 +1,140 @@
+{
+  "workflow_id": "core.performance_monitor",
+  "workflow_name": "Performance Monitor",
+  "workflow_type": "performance",
+  "workflow_category": "performance_tuning",
+  "source": "core",
+  "maintainer": "Community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "5-10 minutes",
+  "version": "1.0.0",
+  "splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "last_updated": "2025-08-28",
+  "documentation_url": "./README.md",
+  "description": "Monitor system performance metrics",
+  "agent": "FlowPilot_Performance_Monitor",
+  "target_audience": [
+    "splunk_admin",
+    "data_analyst"
+  ],
+  "prerequisites": [
+    "splunk_mcp_server"
+  ],
+  "required_permissions": [
+    "search"
+  ],
+  "business_value": "Provides insights for Performance Monitor",
+  "use_cases": ["system_monitoring", "performance_analysis", "capacity_planning"],
+  "success_metrics": ["improved_performance", "reduced_response_time", "optimized_resource_usage"],
+  "industry_focus": [],
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": [],
+    "optional_fields": []
+  },
+  "workflow_instructions": {
+    "specialization": "PERFORMANCE MONITOR SPECIALIZATION",
+    "focus_areas": [],
+    "execution_style": "sequential",
+    "domain": "performance_tuning"
+  },
+  "agent_dependencies": {
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Synthesize and format results",
+      "required": true,
+      "capabilities": [
+        "result_synthesis",
+        "report_generation"
+      ],
+      "integration_points": [
+        "final_report_generation"
+      ]
+    },
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Execute Splunk searches and operations",
+      "required": true,
+      "capabilities": [
+        "search_execution",
+        "system_information"
+      ],
+      "integration_points": [
+        "data_collection"
+      ]
+    }
+  },
+  "core_phases": {
+    "data_collection": {
+      "name": "Data Collection",
+      "description": "Gather required data from Splunk",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "collect_data",
+          "title": "Collect Data",
+          "description": "Execute searches to collect required data",
+          "goal": "Gather data for analysis",
+          "agent": "splunk_mcp",
+          "tool": "execute_search",
+          "type": "data_collection"
+        }
+      ]
+    },
+    "analysis": {
+      "name": "Analysis",
+      "description": "Analyze collected data",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "analyze_data",
+          "title": "Analyze Data",
+          "description": "Process and analyze the collected data",
+          "goal": "Extract insights from data",
+          "agent": "result_synthesizer",
+          "tool": "synthesize_results",
+          "type": "analysis"
+        }
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": 1,
+      "name": "collect_data",
+      "description": "Collect required data from Splunk",
+      "type": "data_collection",
+      "agent": "splunk_mcp",
+      "prompt": "Execute searches to collect the required data for analysis",
+      "expected_output": "Search results and data",
+      "dependencies": []
+    },
+    {
+      "id": 2,
+      "name": "analyze_results",
+      "description": "Analyze and synthesize the collected data",
+      "type": "synthesis",
+      "agent": "result_synthesizer",
+      "prompt": "Analyze the collected data and provide insights and recommendations",
+      "expected_output": "Analysis report with insights",
+      "dependencies": [
+        1
+      ]
+    }
+  ],
+  "expected_outcome": "Successfully complete Performance Monitor workflow",
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "No data found",
+        "solution": "Check data availability and search time range"
+      }
+    ]
+  }
+}

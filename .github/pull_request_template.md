@@ -5,7 +5,7 @@
 
 ## Type of Change
 - [ ] 🐛 Bug fix
-- [ ] ✨ New feature  
+- [ ] ✨ New feature
 - [ ] 💥 Breaking change
 - [ ] 📚 Documentation update
 

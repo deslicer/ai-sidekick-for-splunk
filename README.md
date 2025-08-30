@@ -63,48 +63,57 @@
 
 ## 🚀 **Quick Start**
 
-### **1. Prerequisites Check**
+### **1. Clone Repository**
 
 ```bash
-# Download and run prerequisites checker
-curl -O https://raw.githubusercontent.com/your-org/ai-sidekick-for-splunk/main/scripts/check-prerequisites.py
-python check-prerequisites.py
-```
-
-### **2. Installation**
-
-```bash
-# Minimal installation (recommended)
-pip install ai-sidekick-for-splunk
-
-# With web interface
-pip install ai-sidekick-for-splunk[web]
-
-# For development
-pip install ai-sidekick-for-splunk[dev]
-
-# From source
-git clone https://github.com/your-org/ai-sidekick-for-splunk.git
+git clone https://github.com/deslicer/ai-sidekick-for-splunk.git
 cd ai-sidekick-for-splunk
-uv venv && source .venv/bin/activate
-uv pip install -e .
 ```
 
-### **3. Configuration**
+### **2. Install Prerequisites**
+
+**Cross-Platform (Python):**
+```bash
+python scripts/check-prerequisites.py
+```
+
+**macOS/Linux:**
+```bash
+./scripts/lab/check-prerequisites.sh
+```
+
+**Windows:**
+```powershell
+.\scripts\lab\check-prerequisites.ps1
+```
+
+This will:
+- ✅ Install Python 3.11+ and uv if needed
+- ✅ Create virtual environment using uv
+- ✅ Install all dependencies
+- ✅ Verify Git installation
+
+### **3. Activate Environment & Setup**
 
 ```bash
-# Copy environment template
-cp .env.example .env
+# Activate virtual environment
+source .venv/bin/activate  # macOS/Linux
+# or
+.venv\Scripts\activate     # Windows
 
-# Edit with your settings
-# GOOGLE_API_KEY=your_gemini_api_key
-# SPLUNK_MCP_SERVER_URL=http://localhost:8003
+# Sync dependencies
+uv sync
+
+# Configure environment (copy and edit .env.example)
+cp .env.example .env
+# Edit .env with your Google API key and Splunk settings
 ```
 
 ### **4. Start AI Sidekick**
 
 ```bash
-ai-sidekick
+# Start the system
+uv run ai-sidekick --start
 ```
 
 Open `http://localhost:8087` and start using your AI agents!

@@ -26,6 +26,13 @@ jobs:
 
     - name: Run comprehensive linting
       run: |
+        echo "🔍 Checking environment..."
+        uv --version
+        uv run python --version
+        
+        echo "🔍 Checking ruff installation..."
+        uv run python -c "import ruff; print('✅ Ruff module found')" || echo "⚠️ Ruff module not found, but continuing with uv run"
+        
         echo "🔍 Running Ruff linting..."
         uv run ruff check src/ --output-format=github
 

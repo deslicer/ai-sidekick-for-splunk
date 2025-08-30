@@ -46,7 +46,7 @@ jobs:
 
     - name: Test CLI commands
       run: |
-        uv run ai-sidekick-create-agent --help
+        uv run ai-sidekick --help
         echo "✅ CLI commands working"
 
   security-scan:

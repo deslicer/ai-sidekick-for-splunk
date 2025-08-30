@@ -106,5 +106,5 @@ jobs:
 
     - name: Test CLI on ${{ matrix.os }}
       run: |
-        uv run ai-sidekick-create-agent --help
+        uv run ai-sidekick --help
         echo "✅ CLI working on ${{ matrix.os }}"

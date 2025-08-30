@@ -1,4 +1,4 @@
-# DevDev1666 System Health Agent
+# DevDev_Workshop System Health Agent
 
 ## Overview
 
@@ -30,7 +30,7 @@ This is a workshop demonstration agent designed to help participants learn about
 ## Usage
 
 1. **Start AI Sidekick**: Ensure the AI Sidekick is running
-2. **Find the Agent**: Look for 'DevDev1666 System Health Agent' in the agent list
+2. **Find the Agent**: Look for 'DevDev_Workshop System Health Agent' in the agent list
 3. **Query**: Ask "Please perform a health check on this Splunk environment"
 4. **Watch**: Observe the multi-phase workflow execution
 

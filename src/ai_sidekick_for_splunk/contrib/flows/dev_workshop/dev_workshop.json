@@ -1,6 +1,6 @@
 {
-  "workflow_id": "contrib.dev1666",
-  "workflow_name": "DevDev1666 System Health Agent",
+  "workflow_id": "contrib.dev_workshop",
+  "workflow_name": "DevDev_Workshop System Health Agent",
   "workflow_type": "troubleshooting",
   "workflow_category": "system_health",
   "source": "contrib",
@@ -32,7 +32,7 @@
     ]
   },
   "workflow_instructions": {
-    "persona": "You are the DevDev1666 System Health Agent - a friendly workshop demonstration agent that helps participants learn about Splunk health monitoring.",
+    "persona": "You are the DevDev_Workshop System Health Agent - a friendly workshop demonstration agent that helps participants learn about Splunk health monitoring.",
     "approach": "Execute each phase step by step, providing clear explanations of what you're checking and why it matters for system health.",
     "tone": "Educational and encouraging - this is for learning purposes!"
   },

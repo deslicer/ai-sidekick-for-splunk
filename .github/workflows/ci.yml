@@ -24,15 +24,16 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
 
-    - name: Create virtual environment
-      run: uv venv --python ${{ matrix.python-version }}
-
     - name: Install dependencies
       run: uv sync --dev
 
     - name: Lint with ruff
       run: |
+        echo "🔍 Checking ruff installation..."
+        uv run python -c "import ruff; print('✅ Ruff module found')" || echo "⚠️ Ruff module not found, but continuing with uv run"
+        echo "🔍 Running ruff check..."
         uv run ruff check src/
+        echo "🎨 Running ruff format check..."
         uv run ruff format --check src/
 
     - name: Type check with mypy

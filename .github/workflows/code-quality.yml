@@ -1,0 +1,110 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly security scan
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
+    - name: Set up Python
+      run: uv python install 3.11
+
+    - name: Install dependencies
+      run: uv sync --dev
+
+    - name: Run comprehensive linting
+      run: |
+        echo "🔍 Running Ruff linting..."
+        uv run ruff check src/ --output-format=github
+
+        echo "🎨 Checking code formatting..."
+        uv run ruff format --check src/
+
+        echo "🔧 Running type checking..."
+        uv run mypy src/ --show-error-codes
+
+    - name: Check dependencies for security issues
+      run: |
+        echo "🔒 Scanning dependencies for security issues..."
+        uv run pip-audit --desc --output-format=json --output-file=security-report.json || true
+
+        if [ -f security-report.json ]; then
+          echo "Security scan completed. Check artifacts for details."
+        fi
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: security-report.json
+
+  documentation-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check documentation completeness
+      run: |
+        echo "📚 Checking documentation..."
+
+        # Check required files exist
+        required_files=("README.md" "CONTRIBUTING.md" "LICENSE" "docs/GETTING_STARTED.md")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "❌ Missing required file: $file"
+            exit 1
+          else
+            echo "✅ Found: $file"
+          fi
+        done
+
+        # Check README has basic sections
+        if ! grep -q "## Installation" README.md; then
+          echo "⚠️  README.md should have Installation section"
+        fi
+
+        if ! grep -q "## Usage" README.md; then
+          echo "⚠️  README.md should have Usage section"
+        fi
+
+        echo "📚 Documentation check completed"
+
+  compatibility-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Test installation
+      run: |
+        uv sync
+        uv run python -c "import ai_sidekick_for_splunk; print('✅ Cross-platform import successful')"
+
+    - name: Test CLI on ${{ matrix.os }}
+      run: |
+        uv run ai-sidekick-create-agent --help
+        echo "✅ CLI working on ${{ matrix.os }}"

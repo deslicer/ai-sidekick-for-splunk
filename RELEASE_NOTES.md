@@ -8,7 +8,7 @@ We use [Release Please](https://github.com/googleapis/release-please) for automa
 
 ### Commit Types
 - `feat:` - New features (minor version bump)
-- `fix:` - Bug fixes (patch version bump)  
+- `fix:` - Bug fixes (patch version bump)
 - `feat!:` or `fix!:` - Breaking changes (major version bump)
 
 ## Released Versions

@@ -1,0 +1,121 @@
+{
+  "workflow_id": "dev1666_agent",
+  "workflow_name": "Dev1666 System Health Agent",
+  "workflow_type": "troubleshooting",
+  "workflow_category": "system_health",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "2-3 minutes",
+  "version": "1.0.0",
+  "splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "last_updated": "2025-08-29",
+  "documentation_url": "README.md",
+  "description": "A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
+  "business_value": "Provides quick health assessment of Splunk environment for workshop participants to understand system status and learn workflow execution patterns.",
+  "use_cases": [
+    "workshop_demonstration",
+    "basic_health_monitoring",
+    "system_status_overview",
+    "learning_workflow_patterns"
+  ],
+  "success_metrics": [
+    "successful_health_check_completion",
+    "system_info_retrieval",
+    "clear_status_reporting"
+  ],
+  "target_audience": [
+    "workshop_participants",
+    "splunk_beginners",
+    "workflow_learners"
+  ],
+  "prerequisites": [
+    "splunk_mcp_server",
+    "basic_splunk_access"
+  ],
+  "required_permissions": [
+    "search",
+    "list_indexes"
+  ],
+  "supported_splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": [],
+    "optional_fields": []
+  },
+  "agent": "FlowPilot",
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "required": true,
+      "description": "Splunk MCP server for executing searches and gathering system information",
+      "capabilities": [
+        "search_execution",
+        "index_listing",
+        "system_info_retrieval"
+      ]
+    }
+  },
+  "workflow_instructions": "You are the Dev1666 System Health Agent - a friendly workshop demonstration agent that helps participants learn about Splunk health monitoring. Execute each phase step by step, providing clear explanations of what you're checking and why it matters for system health.",
+  "core_phases": {
+    "system_info": {
+      "phase_name": "System Information Gathering",
+      "description": "Collect basic Splunk system information and configuration details",
+      "tasks": [
+        {
+          "task_name": "gather_splunk_version",
+          "agent": "splunk_mcp",
+          "goal": "Get Splunk version and basic system information",
+          "prompt": "Please retrieve the Splunk version information and basic system details. This helps us understand what Splunk environment we're working with.",
+          "expected_output": "Splunk version, build information, and system configuration summary"
+        },
+        {
+          "task_name": "list_available_indexes",
+          "agent": "splunk_mcp",
+          "goal": "List all available indexes to understand data landscape",
+          "prompt": "List all available Splunk indexes. This gives us an overview of what data sources are configured in this environment.",
+          "expected_output": "Complete list of indexes with basic metadata"
+        }
+      ]
+    },
+    "health_checks": {
+      "phase_name": "Basic Health Assessment",
+      "description": "Perform fundamental health checks on the Splunk environment",
+      "tasks": [
+        {
+          "task_name": "check_recent_data",
+          "agent": "splunk_mcp",
+          "goal": "Verify that recent data is being indexed",
+          "prompt": "Search for events from the last 24 hours across all indexes to verify data is flowing. Use a simple search like: search earliest=-24h | head 10 | stats count. This confirms the system is actively receiving and indexing data.",
+          "expected_output": "Count of recent events and confirmation of data flow"
+        },
+        {
+          "task_name": "check_system_performance",
+          "agent": "splunk_mcp",
+          "goal": "Basic performance indicators check",
+          "prompt": "Check basic system performance by running a simple search to measure response time. Search for: | rest /services/server/info | eval response_time=now() | table response_time. This gives us a baseline performance indicator.",
+          "expected_output": "Basic performance metrics and response time information"
+        }
+      ]
+    },
+    "summary_report": {
+      "phase_name": "Health Summary Report",
+      "description": "Compile findings into a clear, actionable summary",
+      "tasks": [
+        {
+          "task_name": "generate_health_summary",
+          "agent": "result_synthesizer",
+          "goal": "Create a comprehensive but beginner-friendly health report",
+          "prompt": "Based on the system information and health checks performed, create a clear and friendly summary report. Include: 1) System overview (version, indexes), 2) Health status (data flow, performance), 3) Any recommendations for workshop participants. Keep it educational and encouraging - this is for learning purposes!",
+          "expected_output": "Comprehensive health report with educational insights for workshop participants"
+        }
+      ]
+    }
+  }
+}

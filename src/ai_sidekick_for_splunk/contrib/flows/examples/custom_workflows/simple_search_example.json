@@ -1,0 +1,87 @@
+{
+  "workflow_id": "contrib.simple.basic_search",
+  "workflow_name": "Simple Search Example",
+  "workflow_type": "analysis",
+  "workflow_category": "data_analysis",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "stable",
+  "complexity_level": "beginner",
+  "estimated_duration": "2-3 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "README.md",
+  "description": "A simple workflow that searches for data and creates a basic report. Perfect for learning how workflows work.",
+
+  "business_value": "Learn how to create basic workflows and search for data",
+  "use_cases": ["learning", "basic_analysis", "getting_started"],
+  "success_metrics": ["successful_search", "clear_results"],
+  "target_audience": ["new_users", "beginners"],
+
+  "prerequisites": ["splunk_mcp_server"],
+  "required_permissions": ["search"],
+  "supported_splunk_versions": ["8.0+", "9.0+"],
+  "data_requirements": {
+    "minimum_events": 10,
+    "required_sourcetypes": ["access_combined"],
+    "optional_fields": ["status", "method"]
+  },
+
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Runs the search and gets data",
+      "required": true,
+      "capabilities": ["search"],
+      "integration_points": ["search_execution"]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Creates a simple summary of the results",
+      "required": true,
+      "capabilities": ["summary_creation"],
+      "integration_points": ["result_summary"]
+    }
+  },
+
+  "core_phases": {
+    "search_data": {
+      "name": "Search for Data",
+      "description": "Run a simple search to find some data",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "basic_search": {
+          "task_id": "run_basic_search",
+          "title": "Run Basic Search",
+          "description": "Search for web access logs in the last hour",
+          "agent": "splunk_mcp",
+          "type": "search",
+          "goal": "Find recent web access data",
+          "tool": "splunk_mcp"
+        }
+      }
+    },
+
+    "create_summary": {
+      "name": "Create Summary",
+      "description": "Make a simple summary of what we found",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "summarize_results": {
+          "task_id": "create_simple_summary",
+          "title": "Create Simple Summary",
+          "description": "Make an easy-to-read summary of the search results",
+          "agent": "result_synthesizer",
+          "type": "summary",
+          "goal": "Create a clear summary for the user",
+          "tool": "result_synthesizer"
+        }
+      }
+    }
+  },
+
+  "capabilities": ["basic_search", "simple_reporting"]
+}

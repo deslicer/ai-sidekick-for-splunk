@@ -1,0 +1,164 @@
+{
+  "workflow_id": "contrib.helloworld",
+  "workflow_name": "Hello World Demo",
+  "workflow_type": "onboarding",
+  "workflow_category": "system_health",
+  "source": "contrib",
+  "maintainer": "Community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "1-2 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "A simple Hello World workflow to demonstrate the FlowPilot system and workflow discovery capabilities",
+  "agent": "FlowPilot_HelloWorld",
+  "target_audience": ["new_users", "developers", "workshop_attendees"],
+  "prerequisites": ["basic_splunk_knowledge"],
+  "required_permissions": ["search"],
+  "business_value": "Demonstrates FlowPilot capabilities and provides a starting point for new users to understand workflow creation",
+  "use_cases": ["onboarding", "training", "system_demonstration"],
+  "success_metrics": ["user_understanding", "successful_execution"],
+  "industry_focus": ["education", "training"],
+  "data_requirements": {
+    "minimum_events": 0,
+    "required_sourcetypes": [],
+    "optional_fields": []
+  },
+  "workflow_instructions": {
+    "specialization": "HELLO WORLD DEMONSTRATION",
+    "focus_areas": [
+      "Provide friendly introduction to FlowPilot",
+      "Demonstrate basic system interaction",
+      "Educate users about workflow capabilities",
+      "Show how easy it is to add new workflows"
+    ],
+    "execution_style": "educational",
+    "domain": "onboarding_demonstration"
+  },
+  "agent_dependencies": {
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Generate welcome messages and educational summaries",
+      "required": true,
+      "capabilities": [
+        "message_generation",
+        "educational_content_creation",
+        "summary_synthesis"
+      ],
+      "integration_points": [
+        "welcome_message_generation",
+        "educational_summary_creation"
+      ]
+    },
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Gather basic system information for demonstration",
+      "required": true,
+      "capabilities": [
+        "system_information_retrieval",
+        "basic_search_execution",
+        "server_info_access"
+      ],
+      "integration_points": [
+        "system_info_collection",
+        "demonstration_data_gathering"
+      ]
+    }
+  },
+  "core_phases": {
+    "demo_introduction": {
+      "name": "Demo Introduction",
+      "description": "Welcome user and introduce FlowPilot capabilities",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "welcome_message",
+          "title": "Welcome Message",
+          "description": "Display friendly introduction to FlowPilot",
+          "goal": "Introduce user to FlowPilot system and this demo workflow",
+          "agent": "result_synthesizer",
+          "tool": "synthesize_results",
+          "type": "information"
+        }
+      ]
+    },
+    "system_demonstration": {
+      "name": "System Demonstration",
+      "description": "Demonstrate basic system interaction capabilities",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "system_info",
+          "title": "Basic System Info",
+          "description": "Gather simple system information for demonstration",
+          "goal": "Show how FlowPilot can interact with Splunk systems",
+          "agent": "splunk_mcp",
+          "tool": "get_server_info",
+          "type": "data_collection"
+        }
+      ]
+    },
+    "educational_summary": {
+      "name": "Educational Summary",
+      "description": "Provide educational summary about FlowPilot system",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "summary_report",
+          "title": "Educational Summary",
+          "description": "Create educational summary explaining workflow system",
+          "goal": "Educate user about FlowPilot capabilities and workflow creation",
+          "agent": "result_synthesizer",
+          "tool": "synthesize_results",
+          "type": "synthesis"
+        }
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "id": 1,
+      "name": "welcome_message",
+      "description": "Display a welcome message to introduce the user to FlowPilot",
+      "type": "information",
+      "agent": "result_synthesizer",
+      "prompt": "Create a friendly welcome message explaining that this is a Hello World demonstration of the FlowPilot workflow system. Mention that this workflow was automatically discovered and is running through the FlowPilot agent.",
+      "expected_output": "Welcome message text",
+      "dependencies": []
+    },
+    {
+      "id": 2,
+      "name": "system_info",
+      "description": "Gather basic system information to demonstrate data collection",
+      "type": "data_collection",
+      "agent": "splunk_mcp",
+      "prompt": "Get basic Splunk system information like server info and available indexes. Keep it simple for demonstration purposes.",
+      "expected_output": "Basic system information",
+      "dependencies": [1]
+    },
+    {
+      "id": 3,
+      "name": "summary_report",
+      "description": "Create a summary report of the Hello World workflow execution",
+      "type": "synthesis",
+      "agent": "result_synthesizer",
+      "prompt": "Create a summary report of this Hello World workflow execution. Include: 1) Welcome message confirmation, 2) Basic system info gathered, 3) Explanation that this demonstrates how new workflows can be added to FlowPilot by simply dropping JSON files in the contrib/flows directory. Make it educational and encouraging.",
+      "expected_output": "Summary report with educational content",
+      "dependencies": [1, 2]
+    }
+  ],
+  "expected_outcome": "User understands how FlowPilot works and how easy it is to add new workflows",
+  "troubleshooting": {
+    "common_issues": [
+      {
+        "issue": "Workflow not discovered",
+        "solution": "Ensure JSON file is valid and in correct directory structure"
+      }
+    ]
+  }
+}

@@ -1,0 +1,110 @@
+[project]
+name = "ai-sidekick-for-splunk"
+version = "0.1.0"
+description = "AI Sidekick for Splunk - Multi-Agent System"
+authors = [{ name = "Saikrishna Gundeti" }]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  # Core AI/Agent framework
+  "google-adk>=1.11.0",
+
+  # Data validation and configuration
+  "pydantic>=2.11.0",
+  "python-dotenv>=1.0.0",
+
+  # HTTP client for MCP and API calls
+  "httpx>=0.28.0",
+  "requests>=2.31.0",
+
+  # Logging
+  "structlog>=24.1.0",
+]
+
+[project.optional-dependencies]
+# Development dependencies
+dev = [
+  "ruff>=0.11.8",
+  "pytest>=7.0.0",
+  "pytest-asyncio>=0.21.0",
+  "mypy>=1.0.0",
+]
+
+# Web interface dependencies (optional)
+web = [
+  "fastapi>=0.116.0",
+  "uvicorn[standard]>=0.35.0",
+]
+
+# Database dependencies (optional for advanced features)
+database = [
+  "sqlalchemy>=2.0.0",
+  "alembic>=1.13.0",
+  "pydantic-settings>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_sidekick_for_splunk"]
+
+[tool.uv]
+# lockfile support
+
+[project.scripts]
+ai-sidekick = "ai_sidekick_for_splunk.cli.start_lab:main"
+ai-sidekick-stop = "ai_sidekick_for_splunk.cli.stop_lab:main"
+ai-sidekick-create-agent = "ai_sidekick_for_splunk.cli.create_agent_cli:main"
+ai-sidekick-add-agent = "ai_sidekick_for_splunk.cli.add_agent:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP"]
+ignore = [
+    "E501",  # Line too long (handled by formatter)
+    "N818",  # Exception name should end with Error (HTTPException is for FastAPI compatibility)
+    "E402",  # Module level import not at top (needed for test files with sys.path modifications)
+    "N805",  # First argument should be named self (Pydantic validators correctly use cls)
+    "UP007", # Use X | Y instead of Union[X, Y] (conflicts with ADK compatibility)
+    "UP045", # Use X | None instead of Optional[X] (conflicts with ADK compatibility)
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.mypy]
+python_version = "3.11"
+# Disable strict checking for now - too many errors to fix
+strict = false
+warn_unused_configs = false
+disallow_untyped_defs = false
+ignore_missing_imports = true
+show_error_codes = false
+# Skip mypy checking entirely for CI - focus on ruff linting
+follow_imports = "skip"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "mypy>=1.8.0",
+]

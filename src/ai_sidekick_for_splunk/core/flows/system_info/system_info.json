@@ -1,0 +1,207 @@
+{
+  "workflow_id": "core.system_info",
+  "workflow_name": "System Info Flow",
+  "workflow_type": "monitoring",
+  "workflow_category": "system_health",
+  "source": "core",
+  "maintainer": "Deslicer",
+  "stability": "stable",
+  "complexity_level": "beginner",
+  "estimated_duration": "1-3 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "Quick system information gathering workflow for Splunk infrastructure monitoring",
+  "agent": "FlowPilot_System_Info",
+  "target_audience": ["splunk_admin", "devops_engineer", "system_administrator"],
+  "prerequisites": ["splunk_mcp_server"],
+  "required_permissions": ["search", "rest_access"],
+  "business_value": "Quick system overview for operational awareness and baseline establishment",
+  "use_cases": ["system_monitoring", "baseline_establishment", "quick_diagnostics", "onboarding"],
+  "success_metrics": ["faster_system_assessment", "improved_operational_awareness"],
+  "data_requirements": {
+    "minimum_events": 10,
+    "required_sourcetypes": ["splunkd"],
+    "optional_fields": ["host", "component"]
+  },
+  "workflow_instructions": {
+    "specialization": "\ud83d\udda5\ufe0f SYSTEM INFO SPECIALIZATION",
+    "focus_areas": [
+      "Focus on essential system metrics and status",
+      "Prioritize quick, lightweight queries",
+      "Provide clear system health indicators",
+      "Highlight any system issues or warnings"
+    ],
+    "execution_style": "fast_lightweight",
+    "domain": "system_monitoring"
+  },
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Splunk operations and system information specialist",
+      "required": true,
+      "capabilities": [
+        "search_execution",
+        "system_information",
+        "rest_api_access"
+      ],
+      "integration_points": [
+        "system_info_workflow"
+      ],
+      "tools": [
+        "execute_search",
+        "get_server_info",
+        "list_indexes"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Business intelligence and actionable insights generator",
+      "required": true,
+      "capabilities": [
+        "system_status_interpretation",
+        "performance_analysis",
+        "dashboard_recommendations",
+        "alert_generation"
+      ],
+      "integration_points": [
+        "result_interpretation"
+      ],
+      "tools": [
+        "synthesize_results"
+      ]
+    }
+  },
+  "core_phases": {
+    "system_overview": {
+      "name": "\ud83d\udda5\ufe0f System Overview",
+      "description": "Gather basic Splunk system information and status",
+      "mandatory": true,
+      "parallel": true,
+      "max_parallel": 3,
+      "tasks": [
+        {
+          "task_id": "splunk_version_check",
+          "name": "splunk_version_check",
+          "title": "Splunk Version & System Info",
+          "description": "Get Splunk version and build information",
+          "goal": "Retrieve Splunk server version, build info, and basic system specifications",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/server/info | eval version_info=version.\" (Build \".build.\")\" | eval startup_time=strftime(startup_time, \"%Y-%m-%d %H:%M:%S\") | table serverName, product_type, version_info, health_info, licenseState, os_name, os_version, numberOfCores, numberOfVirtualCores, physicalMemoryMB, startup_time, kvStoreStatus, server_roles",
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_fields": [
+              "version_info",
+              "server_name",
+              "os_name"
+            ],
+            "min_results": 1
+          }
+        },
+        {
+          "task_id": "license_usage_check",
+          "name": "license_usage_check",
+          "title": "License Usage Status",
+          "description": "Check current license usage and status",
+          "goal": "Monitor license consumption and identify usage patterns",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/licenser/usage/license_usage | eval usage_gb=round(used_bytes/1024/1024/1024, 2), quota_gb=round(quota_bytes/1024/1024/1024, 2) | table pool, usage_gb, quota_gb, used_bytes, quota_bytes",
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_fields": [
+              "pool",
+              "usage_gb",
+              "quota_gb"
+            ],
+            "min_results": 1
+          }
+        },
+        {
+          "task_id": "indexer_status_check",
+          "name": "indexer_status_check",
+          "title": "Disk Space & Storage Status",
+          "description": "Check indexer status and performance",
+          "goal": "Assess disk space utilization and storage health",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/server/status/partitions-space | eval free_gb=round(free/1024, 2), capacity_gb=round(capacity/1024, 2), used_percent=round((capacity-free)/capacity*100, 1) | table mount_point, fs_type, free_gb, capacity_gb, used_percent, splunk_server | sort -used_percent",
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_fields": [
+              "mount_point",
+              "free_gb",
+              "capacity_gb",
+              "used_percent"
+            ],
+            "min_results": 1
+          }
+        }
+      ]
+    },
+    "system_health_synthesis": {
+      "name": "\ud83d\udcca System Health Summary",
+      "description": "Synthesize system information into actionable insights",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": [
+        {
+          "task_id": "system_health_analysis",
+          "name": "system_health_analysis",
+          "title": "System Health Analysis & Recommendations",
+          "description": "Generate system health summary and recommendations",
+          "goal": "Synthesize system data into actionable operational insights",
+          "tool": "synthesize_results",
+          "result_interpretation": {
+            "agent": "result_synthesizer",
+            "synthesis_context": "System Information Analysis - Focus on system health, capacity planning, and operational recommendations",
+            "output_format": "structured_json"
+          }
+        }
+      ]
+    }
+  },
+  "execution_flow": {
+    "phase_order": [
+      "system_overview",
+      "system_health_synthesis"
+    ],
+    "parallel_execution": {
+      "system_overview": {
+        "parallel_tasks": [
+          "splunk_version_check",
+          "license_usage_check",
+          "indexer_status_check"
+        ],
+        "wait_for_all": true
+      }
+    },
+    "validation_workflow": {
+      "validate_system_data": true,
+      "require_license_info": true,
+      "require_disk_info": true
+    },
+    "adaptive_behavior": {
+      "retry_failed_queries": true,
+      "graceful_degradation": true,
+      "timeout_per_task": 30
+    }
+  },
+  "output_structure": {
+    "format": "structured_summary",
+    "include_raw_data": false,
+    "business_context": true,
+    "actionable_insights": true
+  },
+  "metadata": {
+    "version": "1.0.0",
+    "created_by": "FlowPilot System",
+    "workflow_category": "system_monitoring",
+    "estimated_duration": "30-60 seconds",
+    "complexity_level": "low",
+    "required_permissions": [
+      "rest_api_access",
+      "server_info_access"
+    ]
+  }
+}

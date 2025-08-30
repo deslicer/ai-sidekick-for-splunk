@@ -72,10 +72,18 @@ cp .env.example .env
 ```bash
 # Test CLI installation
 uv run ai-sidekick --help
-uv run ai-sidekick-create-agent --help
 
 # Test Python package import
 uv run python -c "import ai_sidekick_for_splunk; print('✅ Package imported successfully')"
+```
+
+### 7. Start AI Sidekick
+
+```bash
+# Start the AI Sidekick system
+uv run ai-sidekick --start
+
+# Access web interface at http://localhost:8087
 ```
 
 ## Development Workflow
@@ -84,7 +92,7 @@ uv run python -c "import ai_sidekick_for_splunk; print('✅ Package imported suc
 
 ```bash
 # Start the AI Sidekick (web interface + agents)
-uv run ai-sidekick
+uv run ai-sidekick --start
 
 # The web interface will be available at:
 # http://localhost:8087
@@ -94,19 +102,22 @@ uv run ai-sidekick
 
 ```bash
 # Stop the AI Sidekick
-uv run ai-sidekick-stop
+uv run ai-sidekick --stop
 
 # Or use Ctrl+C if running in foreground
 ```
 
-### Creating a New Agent
+### Creating a New Workflow Agent
 
 ```bash
-# Generate agent boilerplate
-uv run ai-sidekick-create-agent my_new_agent
+# Create a new FlowPilot workflow agent
+uv run ai-sidekick --create-flow-agent my_new_workflow
 
-# Add implementation (follow prompts)
-uv run ai-sidekick-add-agent my_new_agent
+# Restart to discover the new workflow
+uv run ai-sidekick --stop
+uv run ai-sidekick --start
+
+# Test in ADK Web interface at http://localhost:8087
 ```
 
 ### Code Quality Tools

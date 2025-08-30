@@ -205,25 +205,18 @@ agents = factory.create_all_flow_pilot_agents()
 
 ## 🛠️ **Development**
 
-### **Creating Custom Agents**
+### **Creating Workflow Agents**
 
 ```bash
-# Generate agent boilerplate
-ai-sidekick-create-agent my_custom_agent
+# Create a new FlowPilot workflow agent
+uv run ai-sidekick --create-flow-agent my_custom_workflow
 
-# Add implementation
-ai-sidekick-add-agent my_custom_agent
-```
+# Restart to discover new workflow
+uv run ai-sidekick --stop
+uv run ai-sidekick --start
 
-### **Creating Workflow Templates**
-
-```bash
-# Generate workflow template
-python src/ai_sidekick_for_splunk/scripts/generate_workflow_template.py
-
-# Choose core or contrib
-# Fill in workflow details
-# Template automatically validated
+# Test your workflow in ADK Web interface
+# Visit: http://localhost:8087
 ```
 
 ### **Testing & Quality**

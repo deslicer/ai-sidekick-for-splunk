@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/deslicer/ai-sidekick-for-splunk/blob/main/docs/GETTING_STARTED.md
+    about: Check our documentation for setup and usage guides
+  - name: 💬 GitHub Discussions
+    url: https://github.com/deslicer/ai-sidekick-for-splunk/discussions
+    about: Ask questions, share ideas, and discuss with the community

@@ -29,16 +29,16 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        echo "🔍 Running ruff check via uv tool..."
+        echo "Running ruff check via uv tool..."
         uv tool run ruff check src/
-        echo "🎨 Running ruff format check via uv tool..."
+        echo "Running ruff format check via uv tool..."
         uv tool run ruff format --check src/
 
     - name: Type check with mypy
       run: uv run mypy src/
 
     - name: Test package import
-      run: uv run python -c "import ai_sidekick_for_splunk; print('✅ Package imported successfully')"
+      run: uv run python -c "import ai_sidekick_for_splunk; print('[OK] Package imported successfully')"
 
     - name: Run tests
       run: uv run pytest tests/ -v || echo "No tests found - skipping"
@@ -46,7 +46,7 @@ jobs:
     - name: Test CLI commands
       run: |
         uv run ai-sidekick --help
-        echo "✅ CLI commands working"
+        echo "[OK] CLI commands working"
 
   security-scan:
     runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
     - name: Test wheel installation
       run: |
         pip install dist/*.whl
-        python -c "import ai_sidekick_for_splunk; print('✅ Wheel installation successful')"
+        python -c "import ai_sidekick_for_splunk; print('[OK] Wheel installation successful')"
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4

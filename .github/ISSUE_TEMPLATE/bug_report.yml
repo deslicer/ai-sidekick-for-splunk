@@ -1,0 +1,51 @@
+name: Bug Report
+description: File a bug report to help us improve AI Sidekick for Splunk
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees:
+  - deslicer
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of AI Sidekick for Splunk are you running?
+      placeholder: "e.g., 0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation Method
+      description: How did you install AI Sidekick for Splunk?
+      options:
+        - PyPI (pip install ai-sidekick-for-splunk)
+        - From source (git clone)
+        - Docker
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe what happened and what you expected to happen
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

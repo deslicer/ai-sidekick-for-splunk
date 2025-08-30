@@ -1,0 +1,8 @@
+# Default owners for everything
+* @SaikrishnaGundeti @YoungDan @RogerLindquist
+
+# Python server code
+src/ @SaikrishnaGundeti @YoungDan @RogerLindquist
+
+# Workflows
+.github/workflows/ @SaikrishnaGundeti @YoungDan @RogerLindquist

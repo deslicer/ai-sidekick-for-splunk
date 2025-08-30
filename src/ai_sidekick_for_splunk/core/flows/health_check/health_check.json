@@ -1,0 +1,382 @@
+{
+  "workflow_id": "core.health_check",
+  "workflow_name": "System Health Check Flow",
+  "workflow_type": "troubleshooting",
+  "workflow_category": "system_health",
+  "source": "core",
+  "maintainer": "Deslicer",
+  "stability": "stable",
+  "complexity_level": "beginner",
+  "estimated_duration": "2-5 minutes",
+  "version": "1.0.1",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "Fast parallel health assessment of Splunk infrastructure components with real-time monitoring and alerting capabilities",
+  "agent": "FlowPilot_Health_Check",
+  "target_audience": ["splunk_admin", "devops_engineer", "sre"],
+  "prerequisites": ["splunk_mcp_server", "system_access"],
+  "required_permissions": ["search", "list_indexes", "rest_access"],
+  "business_value": "Rapid identification of system health issues and performance bottlenecks to minimize downtime",
+  "use_cases": ["incident_response", "system_monitoring", "preventive_maintenance", "capacity_planning"],
+  "success_metrics": ["reduced_mttr", "improved_uptime", "faster_issue_detection"],
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": ["splunkd", "metrics"],
+    "optional_fields": ["host", "source", "index"]
+  },
+  "workflow_instructions": {
+    "specialization": "HEALTH CHECK SPECIALIZATION",
+    "focus_areas": [
+      "Focus on system health and availability",
+      "Prioritize fast, parallel checks where possible",
+      "Highlight critical issues requiring immediate attention",
+      "Provide clear health status summaries"
+    ],
+    "execution_style": "fast_parallel",
+    "domain": "infrastructure_monitoring"
+  },
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Splunk operations and system monitoring specialist",
+      "required": true,
+      "capabilities": [
+        "search_execution",
+        "system_information",
+        "rest_api_access"
+      ],
+      "integration_points": [
+        "health_monitoring_workflow"
+      ],
+      "tools": [
+        "run_oneshot_search",
+        "run_splunk_search",
+        "get_system_info",
+        "list_indexes"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Health status synthesis and alerting specialist",
+      "required": true,
+      "capabilities": [
+        "health_status_interpretation",
+        "alert_generation",
+        "dashboard_recommendations"
+      ],
+      "integration_points": [
+        "health_synthesis_workflow"
+      ],
+      "tools": []
+    }
+  },
+  "core_phases": {
+    "rapid_health_assessment": {
+      "name": "Rapid Health Assessment",
+      "description": "Fast parallel checks of critical Splunk components",
+      "mandatory": true,
+      "parallel": true,
+      "max_parallel": 6,
+      "tasks": [
+        {
+          "task_id": "indexer_health_check",
+          "title": "Indexer Health Status",
+          "description": "Check indexer cluster health and searchable state",
+          "goal": "Verify indexer peers are up and searchable",
+          "tool": "run_oneshot_search",
+          "search_query": "| rest /services/server/status/peers\n| eval component=\"indexer\"\n| rename peerName as splunk_server\n| table splunk_server, status, isSearchable, site, label, component",
+          "parameters": {
+            "earliest_time": "-5m@m",
+            "latest_time": "now"
+          },
+          "timeout_sec": 30,
+          "analysis_focus": [
+            "server_status",
+            "cluster_health",
+            "searchability"
+          ],
+          "validation": {
+            "agent": "splunk_mcp",
+            "required_fields": [
+              "splunk_server",
+              "status",
+              "isSearchable"
+            ],
+            "min_results": 1,
+            "max_execution_time": 30
+          }
+        },
+        {
+          "task_id": "search_head_health_check",
+          "title": "Search Head Health Status",
+          "description": "Check search head CPU and memory utilization (introspection)",
+          "goal": "Verify search heads are healthy and can execute searches normally",
+          "tool": "run_oneshot_search",
+          "search_query": "index=_introspection sourcetype=splunk_resource_usage\n| stats latest(data.cpu_system_pct) as cpu_system_pct latest(data.cpu_user_pct) as cpu_user_pct latest(data.mem_used) as mem_used latest(data.mem) as mem_total by host\n| eval cpu_usage=round(cpu_system_pct+cpu_user_pct,2)\n| eval memory_usage=round((mem_used/mem_total)*100,2)\n| eval component=\"search_head\"\n| rename host as splunk_server\n| table splunk_server, cpu_usage, memory_usage, component",
+          "parameters": {
+            "earliest_time": "-5m@m",
+            "latest_time": "now"
+          },
+          "timeout_sec": 30,
+          "analysis_focus": [
+            "resource_utilization",
+            "search_capacity",
+            "response_time"
+          ],
+          "validation": {
+            "required_fields": [
+              "splunk_server",
+              "cpu_usage",
+              "memory_usage"
+            ],
+            "min_results": 1,
+            "max_execution_time": 30,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "license_usage_check",
+          "title": "License Usage Status",
+          "description": "Check current license usage and remaining capacity (snapshot)",
+          "goal": "Verify license usage is within limits and identify potential issues",
+          "tool": "run_oneshot_search",
+          "search_query": "index=_internal source=*license_usage.log type=RolloverSummary\n| stats latest(b) as used_bytes latest(quota) as quota_bytes by pool\n| eval usage_pct=round(100*used_bytes/quota_bytes,2)\n| table pool, used_bytes, quota_bytes, usage_pct",
+          "parameters": {
+            "earliest_time": "-1h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 20,
+          "analysis_focus": [
+            "license_consumption",
+            "quota_utilization",
+            "compliance_status"
+          ],
+          "validation": {
+            "required_fields": [
+              "pool",
+              "used_bytes",
+              "quota_bytes",
+              "usage_pct"
+            ],
+            "min_results": 1,
+            "max_execution_time": 20,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "data_ingestion_health",
+          "title": "Data Ingestion Health",
+          "description": "Check ingestion counts per index and basic freshness proxy",
+          "goal": "Verify data is being ingested normally across indexes",
+          "tool": "run_oneshot_search",
+          "search_query": "| tstats count WHERE index=* by index\n| eval ingestion_rate=round(count/15,2)\n| eval status=case(count=0,\"no_data\", count<10,\"low\", true(),\"healthy\")\n| sort - count\n| head 20",
+          "parameters": {
+            "earliest_time": "-15m@m",
+            "latest_time": "now"
+          },
+          "timeout_sec": 25,
+          "analysis_focus": [
+            "ingestion_rates",
+            "index_activity",
+            "data_freshness"
+          ],
+          "validation": {
+            "required_fields": [
+              "index",
+              "count",
+              "ingestion_rate"
+            ],
+            "min_results": 1,
+            "max_execution_time": 25,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "forwarder_connectivity",
+          "title": "Forwarder Connectivity Status",
+          "description": "Check universal forwarder connectivity and throughput",
+          "goal": "Verify forwarders are connected and sending data",
+          "tool": "run_oneshot_search",
+          "search_query": "index=_internal source=*metrics.log group=tcpin_connections\n| stats latest(kb) as latest_kb, latest(tcp_avg_thruput) as avg_thruput by hostname\n| eval status=if(latest_kb>0,\"connected\",\"disconnected\")\n| eval thruput_mbps=round(avg_thruput/1024,2)\n| sort - latest_kb\n| table hostname, status, latest_kb, thruput_mbps",
+          "parameters": {
+            "earliest_time": "-10m@m",
+            "latest_time": "now"
+          },
+          "timeout_sec": 30,
+          "analysis_focus": [
+            "forwarder_status",
+            "connectivity",
+            "throughput"
+          ],
+          "validation": {
+            "required_fields": [
+              "hostname",
+              "status",
+              "latest_kb"
+            ],
+            "min_results": 0,
+            "max_execution_time": 30,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "search_performance_check",
+          "title": "Search Performance Health",
+          "description": "Identify slow searches and user impact",
+          "goal": "Verify search performance is within acceptable limits",
+          "tool": "run_oneshot_search",
+          "search_query": "index=_audit action=search info=completed\n| where total_run_time > 5\n| stats count as slow_searches avg(total_run_time) as avg_runtime max(total_run_time) as max_runtime by user\n| eval performance_status=case(avg_runtime>30,\"poor\", avg_runtime>10,\"degraded\", true(),\"good\")\n| sort - slow_searches",
+          "parameters": {
+            "earliest_time": "-1h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 35,
+          "analysis_focus": [
+            "search_performance",
+            "user_activity",
+            "system_load"
+          ],
+          "validation": {
+            "required_fields": [
+              "user",
+              "slow_searches",
+              "avg_runtime"
+            ],
+            "min_results": 0,
+            "max_execution_time": 35,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "skipped_searches_check",
+          "title": "Skipped Searches",
+          "description": "Monitor scheduler health via skipped searches",
+          "goal": "Detect sustained skipped searches indicating scheduler pressure",
+          "tool": "run_oneshot_search",
+          "search_query": "index=_internal source=*scheduler.log status=skipped\n| timechart span=5m count as skipped by app",
+          "parameters": {
+            "earliest_time": "-1h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 25,
+          "analysis_focus": [
+            "scheduler_health",
+            "skipped_trend"
+          ],
+          "validation": {
+            "required_fields": [
+              "_time",
+              "skipped"
+            ],
+            "min_results": 0,
+            "max_execution_time": 25,
+            "agent": "splunk_mcp"
+          }
+        },
+        {
+          "task_id": "shc_status_check",
+          "title": "Search Head Cluster Status",
+          "description": "Check SHC status (if deployed)",
+          "goal": "Verify captain/member status and cluster health",
+          "tool": "run_oneshot_search",
+          "search_query": "| rest /services/shcluster/status\n| fields label captain_*, initialized, peers_*, status",
+          "parameters": {
+            "earliest_time": "-5m@m",
+            "latest_time": "now"
+          },
+          "timeout_sec": 20,
+          "analysis_focus": [
+            "shc_health",
+            "captain_status",
+            "peer_state"
+          ],
+          "validation": {
+            "required_fields": [],
+            "min_results": 0,
+            "max_execution_time": 20,
+            "agent": "splunk_mcp"
+          }
+        }
+      ]
+    },
+    "health_status_synthesis": {
+      "name": "Health Status Synthesis",
+      "description": "Synthesize health check results into actionable status report",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": [
+        {
+          "task_id": "overall_health_assessment",
+          "title": "Overall Health Assessment",
+          "description": "Synthesize all health check results into comprehensive status",
+          "goal": "Provide clear overall health status with prioritized recommendations",
+          "tool": "result_synthesizer",
+          "parameters": {
+            "synthesis_type": "health_status",
+            "output_format": "structured_json",
+            "include_alerts": true,
+            "include_dashboards": true
+          },
+          "analysis_focus": [
+            "critical_issues",
+            "performance_trends",
+            "capacity_planning"
+          ],
+          "result_interpretation": {
+            "success_criteria": [
+              "overall_status",
+              "critical_alerts",
+              "recommendations"
+            ],
+            "output_format": "health_dashboard",
+            "agent": "result_synthesizer"
+          }
+        }
+      ]
+    }
+  },
+  "execution_flow": {
+    "phase_order": [
+      "rapid_health_assessment",
+      "health_status_synthesis"
+    ],
+    "error_handling": {
+      "continue_on_task_failure": true,
+      "max_failed_tasks_per_phase": 3,
+      "retry_failed_tasks": true,
+      "max_retries": 2
+    },
+    "performance_targets": {
+      "max_total_execution_time": 300,
+      "max_phase_execution_time": 180,
+      "parallel_execution_timeout": 120
+    },
+    "adaptive_behavior": {
+      "skip_slow_tasks": true,
+      "prioritize_critical_checks": true,
+      "dynamic_timeout_adjustment": true
+    }
+  },
+  "output_structure": {
+    "health_status": {
+      "overall_status": "string",
+      "component_status": {
+        "indexers": "object",
+        "search_heads": "object",
+        "forwarders": "object",
+        "licensing": "object"
+      },
+      "critical_alerts": "array",
+      "performance_metrics": "object",
+      "recommendations": "array"
+    },
+    "execution_metadata": {
+      "total_execution_time": "number",
+      "checks_completed": "number",
+      "checks_failed": "number",
+      "timestamp": "string"
+    }
+  }
+}

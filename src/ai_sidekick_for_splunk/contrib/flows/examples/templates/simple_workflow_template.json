@@ -1,0 +1,94 @@
+{
+  "workflow_id": "contrib.category.your_workflow_name",
+  "workflow_name": "Your Simple Workflow Name",
+  "workflow_type": "analysis",
+  "workflow_category": "data_analysis",
+  "source": "contrib",
+  "maintainer": "your_name",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "5-10 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "README.md",
+  "description": "A simple description of what your workflow does and why it's useful.",
+
+  "business_value": "Explain the business benefit in simple terms",
+  "use_cases": [
+    "first_use_case",
+    "second_use_case"
+  ],
+  "success_metrics": [
+    "what_success_looks_like",
+    "how_you_measure_it"
+  ],
+
+  "prerequisites": ["splunk_mcp_server"],
+  "required_permissions": ["search"],
+  "supported_splunk_versions": ["8.0+", "9.0+"],
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": ["your_sourcetype"],
+    "optional_fields": ["field1", "field2"]
+  },
+
+  "target_audience": ["who_will_use_this"],
+
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Does the Splunk searches",
+      "required": true,
+      "capabilities": ["search"],
+      "integration_points": ["search_execution"]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Creates the final report",
+      "required": true,
+      "capabilities": ["reporting"],
+      "integration_points": ["final_report"]
+    }
+  },
+
+  "core_phases": {
+    "first_phase": {
+      "name": "First Phase Name",
+      "description": "What happens in the first phase",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "first_task": {
+          "task_id": "do_first_thing",
+          "title": "Do First Thing",
+          "description": "Description of what this task does",
+          "agent": "splunk_mcp",
+          "type": "search",
+          "goal": "What you want to achieve with this task",
+          "tool": "splunk_mcp"
+        }
+      }
+    },
+
+    "second_phase": {
+      "name": "Second Phase Name",
+      "description": "What happens in the second phase",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": {
+        "second_task": {
+          "task_id": "do_second_thing",
+          "title": "Do Second Thing",
+          "description": "Description of the second task",
+          "agent": "result_synthesizer",
+          "type": "synthesis",
+          "goal": "Create a useful report",
+          "tool": "result_synthesizer"
+        }
+      }
+    }
+  },
+
+  "capabilities": ["what_your_workflow_can_do"]
+}

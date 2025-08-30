@@ -1,0 +1,227 @@
+{
+  "workflow_id": "contrib.security.basic_audit",
+  "workflow_name": "Basic Security Audit",
+  "workflow_type": "security",
+  "workflow_category": "security_audit",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "intermediate",
+  "estimated_duration": "5-10 minutes",
+  "version": "1.0.0",
+  "splunk_versions": ["8.0+", "9.0+"],
+  "last_updated": "2025-01-15",
+  "documentation_url": "./README.md",
+  "description": "Basic security audit workflow example for detecting common security issues and access patterns",
+
+  "target_audience": ["security_analyst", "splunk_admin", "compliance_officer"],
+  "prerequisites": ["splunk_mcp_server", "security_indexes"],
+  "required_permissions": ["search", "security_index_access"],
+  "business_value": "Identify security risks and compliance issues",
+  "use_cases": ["security_monitoring", "compliance_audit", "threat_detection"],
+  "success_metrics": ["security_issues_identified", "compliance_status", "risk_assessment"],
+
+  "data_requirements": {
+    "minimum_events": 1000,
+    "required_sourcetypes": ["access_combined", "wineventlog", "linux_audit"],
+    "optional_fields": ["user", "src_ip", "action", "status"]
+  },
+
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "description": "Splunk MCP agent for security data searches",
+      "required": true,
+      "fallback_behavior": "fail"
+    },
+    "result_synthesizer": {
+      "description": "Security findings synthesis and reporting",
+      "required": true,
+      "fallback_behavior": "skip_synthesis"
+    }
+  },
+
+  "workflow_instructions": {
+    "persona": "You are a security analyst conducting a basic security audit. Focus on identifying potential security risks, unusual access patterns, and compliance issues.",
+    "approach": "Systematically examine authentication logs, access patterns, and system events to identify security concerns.",
+    "success_criteria": [
+      "Failed authentication attempts analyzed",
+      "Unusual access patterns identified",
+      "Privilege escalation events detected",
+      "Security recommendations provided"
+    ],
+    "error_handling": "Continue analysis even if some data sources are unavailable"
+  },
+
+  "core_phases": {
+    "authentication_analysis": {
+      "name": "Authentication Analysis",
+      "description": "Analyze authentication events and failed login attempts",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "failed_logins": {
+          "task_id": "failed_auth",
+          "title": "Analyze Failed Authentication Attempts",
+          "goal": "Identify patterns in failed authentication attempts",
+          "tool": "splunk_mcp",
+          "description": "Search for failed login attempts and analyze patterns",
+          "search_query": "search index=security sourcetype=*auth* action=failure OR status=failed earliest=-24h | stats count by user, src_ip | where count > 5 | sort -count",
+          "parameters": {
+            "timeout_sec": 120
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Failed authentication analysis completed"
+          }
+        },
+        "successful_logins": {
+          "task_id": "success_auth",
+          "title": "Analyze Successful Authentication Patterns",
+          "goal": "Review successful authentication patterns for anomalies",
+          "tool": "splunk_mcp",
+          "description": "Examine successful logins for unusual patterns",
+          "search_query": "search index=security sourcetype=*auth* action=success OR status=success earliest=-24h | stats count by user, src_ip, hour | eventstats avg(count) as avg_count by user | where count > (avg_count * 2)",
+          "parameters": {
+            "timeout_sec": 120
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Successful authentication analysis completed"
+          }
+        }
+      }
+    },
+
+    "access_pattern_analysis": {
+      "name": "Access Pattern Analysis",
+      "description": "Examine user access patterns and privilege usage",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "privilege_escalation": {
+          "task_id": "priv_esc",
+          "title": "Detect Privilege Escalation Events",
+          "goal": "Identify potential privilege escalation attempts",
+          "tool": "splunk_mcp",
+          "description": "Search for privilege escalation indicators",
+          "search_query": "search index=security (sudo OR runas OR \"privilege escalation\" OR \"admin rights\") earliest=-24h | stats count by user, command, host | sort -count",
+          "parameters": {
+            "timeout_sec": 90
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Privilege escalation analysis completed"
+          }
+        },
+        "unusual_access": {
+          "task_id": "unusual_access",
+          "title": "Identify Unusual Access Patterns",
+          "goal": "Detect access patterns that deviate from normal behavior",
+          "tool": "splunk_mcp",
+          "description": "Analyze access patterns for anomalies",
+          "search_query": "search index=security earliest=-24h | bucket _time span=1h | stats dc(src_ip) as unique_ips, count by user, _time | where unique_ips > 10 OR count > 100",
+          "parameters": {
+            "timeout_sec": 90
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Unusual access pattern analysis completed"
+          }
+        }
+      }
+    },
+
+    "system_events_analysis": {
+      "name": "System Events Analysis",
+      "description": "Analyze system-level security events",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "system_changes": {
+          "task_id": "sys_changes",
+          "title": "Analyze System Configuration Changes",
+          "goal": "Identify unauthorized system configuration changes",
+          "tool": "splunk_mcp",
+          "description": "Search for system configuration modifications",
+          "search_query": "search index=security (\"config change\" OR \"policy change\" OR \"user added\" OR \"group modified\") earliest=-24h | stats count by user, action, object | sort -count",
+          "parameters": {
+            "timeout_sec": 90
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "System changes analysis completed"
+          }
+        },
+        "security_alerts": {
+          "task_id": "sec_alerts",
+          "title": "Review Security Alerts and Warnings",
+          "goal": "Examine security alerts and warning events",
+          "tool": "splunk_mcp",
+          "description": "Analyze security alerts and warnings",
+          "search_query": "search index=security (alert OR warning OR critical OR \"security violation\") earliest=-24h | stats count by severity, alert_type, host | sort -count",
+          "parameters": {
+            "timeout_sec": 90
+          },
+          "validation": {
+            "agent": "splunk_mcp",
+            "expected_results": "Security alerts analysis completed"
+          }
+        }
+      }
+    },
+
+    "security_synthesis": {
+      "name": "Security Assessment Synthesis",
+      "description": "Synthesize security findings into actionable recommendations",
+      "mandatory": true,
+      "parallel": false,
+      "max_parallel": 1,
+      "tasks": {
+        "security_report": {
+          "task_id": "sec_report",
+          "title": "Generate Security Assessment Report",
+          "goal": "Create comprehensive security assessment with recommendations",
+          "tool": "result_synthesizer",
+          "description": "Synthesize security findings into executive report",
+          "parameters": {
+            "synthesis_type": "security_assessment",
+            "include_risk_scoring": true,
+            "include_remediation": true,
+            "format": "executive_summary"
+          },
+          "result_interpretation": {
+            "agent": "result_synthesizer",
+            "context": "Security audit findings and analysis results",
+            "focus": ["risk_assessment", "critical_findings", "remediation_steps", "compliance_status"]
+          }
+        }
+      }
+    }
+  },
+
+  "execution_flow": {
+    "sequential_phases": true,
+    "allow_phase_skip": false,
+    "error_recovery": "log_and_continue",
+    "timeout_behavior": "graceful_termination"
+  },
+
+  "output_structure": {
+    "format": "security_report",
+    "sections": [
+      "executive_summary",
+      "risk_assessment",
+      "critical_findings",
+      "authentication_analysis",
+      "access_patterns",
+      "system_events",
+      "recommendations",
+      "remediation_steps"
+    ],
+    "include_metadata": true,
+    "include_risk_scores": true
+  }
+}

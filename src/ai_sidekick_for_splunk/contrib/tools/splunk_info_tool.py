@@ -31,9 +31,9 @@ class SplunkInfoTool(BaseTool):
                 "type": "string",
                 "description": "Type of information to retrieve",
                 "required": False,
-                "default": "general"
+                "default": "general",
             }
-        }
+        },
     )
 
     def __init__(self, config: Any = None, metadata: ToolMetadata | None = None):
@@ -55,9 +55,9 @@ class SplunkInfoTool(BaseTool):
                         "type": "string",
                         "description": "Type of information to retrieve",
                         "required": False,
-                        "default": "general"
+                        "default": "general",
                     }
-                }
+                },
             )
 
         super().__init__(config, metadata)
@@ -84,9 +84,9 @@ class SplunkInfoTool(BaseTool):
                         "splunk_port": self.config.splunk.port,
                         "app_context": self.config.splunk.app_context,
                         "ssl_enabled": self.config.splunk.enable_ssl,
-                        "framework_version": "1.0.0"
+                        "framework_version": "1.0.0",
                     },
-                    "message": "General Splunk environment information retrieved"
+                    "message": "General Splunk environment information retrieved",
                 }
             elif info_type == "config":
                 return {
@@ -96,9 +96,9 @@ class SplunkInfoTool(BaseTool):
                         "fallback_model": self.config.model.fallback_model,
                         "temperature": self.config.model.temperature,
                         "max_tokens": self.config.model.max_tokens,
-                        "debug_mode": self.config.debug_mode
+                        "debug_mode": self.config.debug_mode,
                     },
-                    "message": "Framework configuration information retrieved"
+                    "message": "Framework configuration information retrieved",
                 }
             elif info_type == "discovery":
                 return {
@@ -107,15 +107,15 @@ class SplunkInfoTool(BaseTool):
                         "agent_paths": self.config.discovery.contrib_agents_paths,
                         "tool_paths": self.config.discovery.contrib_tools_paths,
                         "patterns": self.config.discovery.discovery_patterns,
-                        "auto_discover": self.config.discovery.auto_discover
+                        "auto_discover": self.config.discovery.auto_discover,
                     },
-                    "message": "Discovery configuration information retrieved"
+                    "message": "Discovery configuration information retrieved",
                 }
             else:
                 return {
                     "success": False,
                     "error": f"Unknown info_type: {info_type}",
-                    "message": "Valid info_types are: general, config, discovery"
+                    "message": "Valid info_types are: general, config, discovery",
                 }
 
         except Exception as e:
@@ -123,7 +123,7 @@ class SplunkInfoTool(BaseTool):
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Failed to retrieve Splunk information"
+                "message": "Failed to retrieve Splunk information",
             }
 
     def validate_parameters(self, **kwargs) -> bool:
@@ -141,10 +141,10 @@ class SplunkInfoTool(BaseTool):
                     "type": "string",
                     "enum": ["general", "config", "discovery"],
                     "default": "general",
-                    "description": "Type of information to retrieve"
+                    "description": "Type of information to retrieve",
                 }
             },
-            "required": []
+            "required": [],
         }
 
     async def cleanup(self) -> None:

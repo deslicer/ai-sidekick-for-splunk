@@ -4,6 +4,7 @@ Setup Runner for AI Sidekick for Splunk agent execution.
 This module provides a runner for setting up and executing the AI Sidekick for Splunk agents
 with proper session management, artifact service, and LLM configuration.
 """
+
 import logging
 import os
 import uuid
@@ -17,6 +18,7 @@ from google.adk.sessions import InMemorySessionService
 from ..core.config import Config
 
 logger = logging.getLogger(__name__)
+
 
 class SetupRunner:
     """
@@ -55,6 +57,7 @@ class SetupRunner:
         # Get the agent (import lazily to avoid circular imports)
         if agent is None:
             from ..agent import root_agent
+
             agent = root_agent
 
         # Create RunConfig with streaming enabled (configurable via environment)
@@ -63,7 +66,7 @@ class SetupRunner:
 
         self.run_config = RunConfig(
             streaming_mode=StreamingMode.SSE if enable_streaming else StreamingMode.NONE,
-            max_llm_calls=max_llm_calls
+            max_llm_calls=max_llm_calls,
         )
 
         # Initialize the runner with the root agent, session service, and artifact service
@@ -71,12 +74,14 @@ class SetupRunner:
             agent=agent,
             app_name="splunk-ai-sidekick",
             session_service=self.session_service,
-            artifact_service=self.artifact_service
+            artifact_service=self.artifact_service,
         )
 
         logger.info(f"Initialized Setup Runner with model: {self.model}")
         logger.info("Services configured: SessionService, ArtifactService")
-        logger.info(f"Streaming enabled: {self.run_config.streaming_mode} with max {self.run_config.max_llm_calls} LLM calls")
+        logger.info(
+            f"Streaming enabled: {self.run_config.streaming_mode} with max {self.run_config.max_llm_calls} LLM calls"
+        )
 
     async def execute(
         self,
@@ -109,17 +114,15 @@ class SetupRunner:
                 app_name="splunk-ai-sidekick",
                 user_id=user_id,
                 state=context_args or {},
-                session_id=session_id
+                session_id=session_id,
             )
 
             logger.debug(f"Using session: {session.id} for user: {session.user_id}")
 
             # Create user message content according to ADK patterns
             from google.genai import types
-            user_message = types.Content(
-                role="user",
-                parts=[types.Part(text=user_query)]
-            )
+
+            user_message = types.Content(role="user", parts=[types.Part(text=user_query)])
 
             # Execute the query using the runner with proper session and streaming config
             # According to ADK docs, run_async returns an async generator of events
@@ -128,7 +131,7 @@ class SetupRunner:
                 user_id=user_id,
                 session_id=session.id,
                 new_message=user_message,
-                run_config=self.run_config  # Enable streaming with SSE
+                run_config=self.run_config,  # Enable streaming with SSE
             ):
                 # Process events and capture final response
                 if event.is_final_response() and event.content and event.content.parts:
@@ -136,16 +139,14 @@ class SetupRunner:
 
             # Get updated session to include latest state and events
             updated_session = await self.session_service.get_session(
-                app_name="splunk-ai-sidekick",
-                user_id=user_id,
-                session_id=session.id
+                app_name="splunk-ai-sidekick", user_id=user_id, session_id=session.id
             )
 
             # Format the response according to ADK response structure
             result = {
                 "session_id": session.id,
                 "reply": final_response or "No response generated",
-                "success": True
+                "success": True,
             }
 
             # Add session metadata from updated session if available
@@ -155,14 +156,16 @@ class SetupRunner:
                     "user_id": updated_session.user_id,
                     "last_update_time": updated_session.last_update_time,
                     "events_count": len(updated_session.events),
-                    "state_keys": list(updated_session.state.keys()) if updated_session.state else []
+                    "state_keys": list(updated_session.state.keys())
+                    if updated_session.state
+                    else [],
                 }
             else:
                 result["metadata"] = {
                     "app_name": "splunk-ai-sidekick",
                     "user_id": user_id,
                     "events_count": 0,
-                    "state_keys": []
+                    "state_keys": [],
                 }
 
             return result
@@ -174,14 +177,10 @@ class SetupRunner:
                 "session_id": session_id,
                 "reply": f"I encountered an error processing your request. Please try again. Error: {str(e)}",
                 "success": False,
-                "error": str(e)
+                "error": str(e),
             }
 
-    async def clean_session(
-        self,
-        session_id: str,
-        user_id: str = "default-user"
-    ) -> dict[str, Any]:
+    async def clean_session(self, session_id: str, user_id: str = "default-user") -> dict[str, Any]:
         """
         Clean up a session by ID using proper ADK SessionService API.
 
@@ -198,23 +197,16 @@ class SetupRunner:
         try:
             # Check if session exists before attempting deletion
             existing_session = await self.session_service.get_session(
-                app_name="splunk-ai-sidekick",
-                user_id=user_id,
-                session_id=session_id
+                app_name="splunk-ai-sidekick", user_id=user_id, session_id=session_id
             )
 
             if existing_session is None:
                 logger.warning(f"Session {session_id} not found for user {user_id}")
-                return {
-                    "success": False,
-                    "message": f"Session {session_id} not found"
-                }
+                return {"success": False, "message": f"Session {session_id} not found"}
 
             # Use proper ADK SessionService delete_session method
             await self.session_service.delete_session(
-                app_name="splunk-ai-sidekick",
-                user_id=user_id,
-                session_id=session_id
+                app_name="splunk-ai-sidekick", user_id=user_id, session_id=session_id
             )
 
             logger.info(f"Successfully deleted session {session_id} for user {user_id}")
@@ -222,14 +214,13 @@ class SetupRunner:
                 "success": True,
                 "message": f"Session {session_id} deleted successfully",
                 "deleted_events_count": len(existing_session.events),
-                "deleted_state_keys": list(existing_session.state.keys()) if existing_session.state else []
+                "deleted_state_keys": list(existing_session.state.keys())
+                if existing_session.state
+                else [],
             }
         except Exception as e:
             logger.error(f"Error cleaning session {session_id}: {e}")
-            return {
-                "success": False,
-                "message": f"Error cleaning session: {str(e)}"
-            }
+            return {"success": False, "message": f"Error cleaning session: {str(e)}"}
 
     async def list_sessions(self, user_id: str = "default-user") -> dict[str, Any]:
         """
@@ -247,12 +238,11 @@ class SetupRunner:
         try:
             # Use proper ADK SessionService list_sessions method
             sessions_response = await self.session_service.list_sessions(
-                app_name="splunk-ai-sidekick",
-                user_id=user_id
+                app_name="splunk-ai-sidekick", user_id=user_id
             )
 
             # Handle the response object (it might be a ListSessionsResponse or direct list)
-            if hasattr(sessions_response, 'sessions'):
+            if hasattr(sessions_response, "sessions"):
                 sessions = sessions_response.sessions
             elif isinstance(sessions_response, list):
                 sessions = sessions_response
@@ -270,9 +260,15 @@ class SetupRunner:
                     "last_update_time": session.last_update_time,
                     "events_count": len(session.events),
                     "state_keys": list(session.state.keys()) if session.state else [],
-                    "has_user_state": any(key.startswith("user:") for key in session.state.keys()) if session.state else False,
-                    "has_app_state": any(key.startswith("app:") for key in session.state.keys()) if session.state else False,
-                    "has_temp_state": any(key.startswith("temp:") for key in session.state.keys()) if session.state else False
+                    "has_user_state": any(key.startswith("user:") for key in session.state.keys())
+                    if session.state
+                    else False,
+                    "has_app_state": any(key.startswith("app:") for key in session.state.keys())
+                    if session.state
+                    else False,
+                    "has_temp_state": any(key.startswith("temp:") for key in session.state.keys())
+                    if session.state
+                    else False,
                 }
                 session_list.append(session_info)
 
@@ -282,7 +278,7 @@ class SetupRunner:
                 "sessions": session_list,
                 "total_count": len(session_list),
                 "user_id": user_id,
-                "app_name": "splunk-ai-sidekick"
+                "app_name": "splunk-ai-sidekick",
             }
         except Exception as e:
             logger.error(f"Error listing sessions for user {user_id}: {e}")
@@ -291,13 +287,11 @@ class SetupRunner:
                 "message": f"Error listing sessions: {str(e)}",
                 "sessions": [],
                 "total_count": 0,
-                "user_id": user_id
+                "user_id": user_id,
             }
 
     async def get_session_details(
-        self,
-        session_id: str,
-        user_id: str = "default-user"
+        self, session_id: str, user_id: str = "default-user"
     ) -> dict[str, Any]:
         """
         Get detailed information about a specific session using ADK SessionService API.
@@ -315,17 +309,12 @@ class SetupRunner:
         try:
             # Use proper ADK SessionService get_session method
             session = await self.session_service.get_session(
-                app_name="splunk-ai-sidekick",
-                user_id=user_id,
-                session_id=session_id
+                app_name="splunk-ai-sidekick", user_id=user_id, session_id=session_id
             )
 
             if session is None:
                 logger.warning(f"Session {session_id} not found for user {user_id}")
-                return {
-                    "success": False,
-                    "message": f"Session {session_id} not found"
-                }
+                return {"success": False, "message": f"Session {session_id} not found"}
 
             # Format detailed session information
             session_details = {
@@ -340,27 +329,35 @@ class SetupRunner:
                         "id": event.id,
                         "author": event.author,
                         "timestamp": event.timestamp,
-                        "content": event.content.parts[0].text if event.content and event.content.parts else None,
-                        "is_final_response": event.is_final_response()
+                        "content": event.content.parts[0].text
+                        if event.content and event.content.parts
+                        else None,
+                        "is_final_response": event.is_final_response(),
                     }
                     for event in session.events
                 ],
                 "state_analysis": {
-                    "session_state_keys": [k for k in session.state.keys() if not k.startswith(("user:", "app:", "temp:"))] if session.state else [],
-                    "user_state_keys": [k for k in session.state.keys() if k.startswith("user:")] if session.state else [],
-                    "app_state_keys": [k for k in session.state.keys() if k.startswith("app:")] if session.state else [],
-                    "temp_state_keys": [k for k in session.state.keys() if k.startswith("temp:")] if session.state else []
-                }
+                    "session_state_keys": [
+                        k
+                        for k in session.state.keys()
+                        if not k.startswith(("user:", "app:", "temp:"))
+                    ]
+                    if session.state
+                    else [],
+                    "user_state_keys": [k for k in session.state.keys() if k.startswith("user:")]
+                    if session.state
+                    else [],
+                    "app_state_keys": [k for k in session.state.keys() if k.startswith("app:")]
+                    if session.state
+                    else [],
+                    "temp_state_keys": [k for k in session.state.keys() if k.startswith("temp:")]
+                    if session.state
+                    else [],
+                },
             }
 
             logger.info(f"Retrieved session details for {session_id}")
-            return {
-                "success": True,
-                "session": session_details
-            }
+            return {"success": True, "session": session_details}
         except Exception as e:
             logger.error(f"Error getting session details for {session_id}: {e}")
-            return {
-                "success": False,
-                "message": f"Error getting session details: {str(e)}"
-            }
+            return {"success": False, "message": f"Error getting session details: {str(e)}"}

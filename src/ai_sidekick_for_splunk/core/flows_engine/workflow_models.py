@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class WorkflowType(str, Enum):
     """Supported workflow types."""
+
     ANALYSIS = "analysis"
     TROUBLESHOOTING = "troubleshooting"
     PERFORMANCE = "performance"
@@ -23,6 +24,7 @@ class WorkflowType(str, Enum):
 
 class WorkflowCategory(str, Enum):
     """Supported workflow categories."""
+
     DATA_ANALYSIS = "data_analysis"
     SYSTEM_HEALTH = "system_health"
     SECURITY_AUDIT = "security_audit"
@@ -32,12 +34,14 @@ class WorkflowCategory(str, Enum):
 
 class WorkflowSource(str, Enum):
     """Workflow source classification."""
+
     CORE = "core"
     CONTRIB = "contrib"
 
 
 class WorkflowStability(str, Enum):
     """Workflow stability levels."""
+
     STABLE = "stable"
     EXPERIMENTAL = "experimental"
     DEPRECATED = "deprecated"
@@ -45,6 +49,7 @@ class WorkflowStability(str, Enum):
 
 class ComplexityLevel(str, Enum):
     """Workflow complexity levels."""
+
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -53,43 +58,61 @@ class ComplexityLevel(str, Enum):
 
 class DataRequirements(BaseModel):
     """Data requirements for workflow execution."""
+
     minimum_events: int | None = Field(None, ge=0, description="Minimum number of events required")
-    required_sourcetypes: list[str] | None = Field(None, description="Required sourcetypes for the workflow")
-    optional_fields: list[str] | None = Field(None, description="Optional fields that enhance the workflow")
+    required_sourcetypes: list[str] | None = Field(
+        None, description="Required sourcetypes for the workflow"
+    )
+    optional_fields: list[str] | None = Field(
+        None, description="Optional fields that enhance the workflow"
+    )
 
 
 class AgentDependency(BaseModel):
     """Agent dependency specification."""
+
     agent_id: str = Field(..., description="Unique identifier for the dependent agent")
     description: str = Field(..., description="Description of the agent's role")
-    required: bool = Field(True, description="Whether this agent is required for workflow execution")
-    capabilities: list[str] | None = Field(None, description="List of capabilities this agent provides")
-    integration_points: list[str] | None = Field(None, description="Points where this agent integrates")
+    required: bool = Field(
+        True, description="Whether this agent is required for workflow execution"
+    )
+    capabilities: list[str] | None = Field(
+        None, description="List of capabilities this agent provides"
+    )
+    integration_points: list[str] | None = Field(
+        None, description="Points where this agent integrates"
+    )
     tools: list[str] | None = Field(None, description="Tools provided by this agent")
 
 
 class WorkflowInstructions(BaseModel):
     """Workflow-specific instructions for agent behavior."""
+
     specialization: str = Field(..., description="Specialization description for the workflow")
     focus_areas: list[str] = Field(..., description="Key focus areas for the workflow")
-    execution_style: str = Field(..., description="Execution style (e.g., 'fast_parallel', 'sequential')")
+    execution_style: str = Field(
+        ..., description="Execution style (e.g., 'fast_parallel', 'sequential')"
+    )
     domain: str = Field(..., description="Domain of expertise")
 
 
 class TaskValidation(BaseModel):
     """Task validation specification."""
+
     agent: str = Field(..., description="Agent responsible for validation")
     criteria: list[str] | None = Field(None, description="Validation criteria")
 
 
 class TaskResultInterpretation(BaseModel):
     """Task result interpretation specification."""
+
     agent: str = Field(..., description="Agent responsible for result interpretation")
     format: str | None = Field(None, description="Expected result format")
 
 
 class WorkflowTask(BaseModel):
     """Individual workflow task specification."""
+
     task_id: str = Field(..., description="Unique identifier for the task")
     title: str = Field(..., description="Human-readable task title")
     goal: str = Field(..., description="Goal or objective of the task")
@@ -104,7 +127,9 @@ class WorkflowTask(BaseModel):
     mandatory: bool | None = Field(None, description="Whether this task is mandatory")
     parallel: bool | None = Field(None, description="Whether this task can run in parallel")
     validation: TaskValidation | None = Field(None, description="Validation specification")
-    result_interpretation: TaskResultInterpretation | None = Field(None, description="Result interpretation specification")
+    result_interpretation: TaskResultInterpretation | None = Field(
+        None, description="Result interpretation specification"
+    )
 
     class Config:
         extra = "allow"  # Allow additional fields not explicitly defined
@@ -112,19 +137,22 @@ class WorkflowTask(BaseModel):
 
 class WorkflowPhase(BaseModel):
     """Workflow phase containing multiple tasks."""
+
     name: str = Field(..., description="Human-readable phase name")
     description: str = Field(..., description="Description of the phase")
     mandatory: bool = Field(True, description="Whether this phase is mandatory")
-    parallel: bool | None = Field(False, description="Whether tasks in this phase can run in parallel")
+    parallel: bool | None = Field(
+        False, description="Whether tasks in this phase can run in parallel"
+    )
     max_parallel: int | None = Field(None, ge=1, description="Maximum number of parallel tasks")
     tasks: list[WorkflowTask] = Field(..., min_items=1, description="Tasks in this phase")
 
-    @field_validator('max_parallel')
+    @field_validator("max_parallel")
     @classmethod
     def validate_max_parallel(cls, v, info):
         """Validate max_parallel only makes sense when parallel is True."""
         # Allow max_parallel=1 even when parallel=False (common pattern)
-        if v is not None and v > 1 and info.data.get('parallel', False) is False:
+        if v is not None and v > 1 and info.data.get("parallel", False) is False:
             raise ValueError("max_parallel > 1 can only be set when parallel=True")
         return v
 
@@ -136,9 +164,15 @@ class WorkflowTemplate(BaseModel):
     """Complete workflow template validation model."""
 
     # Core identification
-    workflow_id: str = Field(..., pattern=r'^[a-z_]+\.[a-z_]+$', description="Unique workflow identifier (e.g., 'core.health_check')")
+    workflow_id: str = Field(
+        ...,
+        pattern=r"^[a-z_]+\.[a-z_]+$",
+        description="Unique workflow identifier (e.g., 'core.health_check')",
+    )
     workflow_name: str = Field(..., min_length=1, description="Human-readable workflow name")
-    version: str = Field(..., pattern=r'^\d+\.\d+\.\d+$', description="Semantic version (e.g., '1.0.0')")
+    version: str = Field(
+        ..., pattern=r"^\d+\.\d+\.\d+$", description="Semantic version (e.g., '1.0.0')"
+    )
     description: str = Field(..., min_length=10, description="Detailed workflow description")
 
     # Classification metadata
@@ -150,17 +184,27 @@ class WorkflowTemplate(BaseModel):
 
     # Complexity and audience
     complexity_level: ComplexityLevel = Field(..., description="Complexity level")
-    estimated_duration: str = Field(..., pattern=r'^\d+-\d+\s+(minutes?|hours?)$', description="Estimated duration (e.g., '2-5 minutes')")
+    estimated_duration: str = Field(
+        ...,
+        pattern=r"^\d+-\d+\s+(minutes?|hours?)$",
+        description="Estimated duration (e.g., '2-5 minutes')",
+    )
     target_audience: list[str] = Field(..., min_items=1, description="Target audience roles")
 
     # Technical metadata
     splunk_versions: list[str] = Field(..., min_items=1, description="Supported Splunk versions")
-    last_updated: str = Field(..., pattern=r'^\d{4}-\d{2}-\d{2}$', description="Last update date (YYYY-MM-DD)")
+    last_updated: str = Field(
+        ..., pattern=r"^\d{4}-\d{2}-\d{2}$", description="Last update date (YYYY-MM-DD)"
+    )
     documentation_url: str = Field(..., description="URL to documentation")
 
     # Operational requirements
-    prerequisites: list[str] = Field(..., min_items=1, description="Prerequisites for workflow execution")
-    required_permissions: list[str] = Field(..., min_items=1, description="Required Splunk permissions")
+    prerequisites: list[str] = Field(
+        ..., min_items=1, description="Prerequisites for workflow execution"
+    )
+    required_permissions: list[str] = Field(
+        ..., min_items=1, description="Required Splunk permissions"
+    )
     data_requirements: DataRequirements = Field(..., description="Data requirements specification")
 
     # Business value
@@ -170,37 +214,47 @@ class WorkflowTemplate(BaseModel):
 
     # Workflow structure
     agent: str | None = Field(None, description="Primary agent for workflow execution")
-    workflow_instructions: WorkflowInstructions | None = Field(None, description="Workflow-specific instructions")
-    agent_dependencies: dict[str, AgentDependency] = Field(..., min_items=1, description="Agent dependencies")
+    workflow_instructions: WorkflowInstructions | None = Field(
+        None, description="Workflow-specific instructions"
+    )
+    agent_dependencies: dict[str, AgentDependency] = Field(
+        ..., min_items=1, description="Agent dependencies"
+    )
     core_phases: dict[str, WorkflowPhase] = Field(..., min_items=1, description="Workflow phases")
 
     # Optional legacy fields that may be present
     execution_flow: dict[str, Any] | None = Field(None, description="Execution flow configuration")
-    output_structure: dict[str, Any] | None = Field(None, description="Output structure configuration")
+    output_structure: dict[str, Any] | None = Field(
+        None, description="Output structure configuration"
+    )
 
-    @field_validator('workflow_id')
+    @field_validator("workflow_id")
     @classmethod
     def validate_workflow_id_format(cls, v):
         """Validate workflow ID follows the expected format."""
-        parts = v.split('.')
+        parts = v.split(".")
         if len(parts) != 2:
-            raise ValueError("workflow_id must be in format 'source.name' (e.g., 'core.health_check')")
+            raise ValueError(
+                "workflow_id must be in format 'source.name' (e.g., 'core.health_check')"
+            )
 
         source, name = parts
-        if source not in ['core', 'contrib']:
+        if source not in ["core", "contrib"]:
             raise ValueError("workflow_id source must be 'core' or 'contrib'")
 
         return v
 
-    @field_validator('documentation_url')
+    @field_validator("documentation_url")
     @classmethod
     def validate_documentation_url(cls, v):
         """Validate documentation URL format."""
-        if not (v.startswith('./') or v.startswith('http://') or v.startswith('https://')):
-            raise ValueError("documentation_url must be a relative path (./README.md) or absolute URL")
+        if not (v.startswith("./") or v.startswith("http://") or v.startswith("https://")):
+            raise ValueError(
+                "documentation_url must be a relative path (./README.md) or absolute URL"
+            )
         return v
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_workflow_consistency(self):
         """Validate consistency across workflow fields."""
         workflow_id = self.workflow_id
@@ -208,10 +262,12 @@ class WorkflowTemplate(BaseModel):
 
         # Ensure workflow_id source matches source field
         if workflow_id and source:
-            id_source = workflow_id.split('.')[0]
-            source_value = source.value if hasattr(source, 'value') else source
+            id_source = workflow_id.split(".")[0]
+            source_value = source.value if hasattr(source, "value") else source
             if id_source != source_value:
-                raise ValueError(f"workflow_id source '{id_source}' must match source field '{source_value}'")
+                raise ValueError(
+                    f"workflow_id source '{id_source}' must match source field '{source_value}'"
+                )
 
         # Validate agent dependencies reference valid agents
         agent_deps = self.agent_dependencies
@@ -235,6 +291,7 @@ class WorkflowTemplate(BaseModel):
 
     class Config:
         """Pydantic configuration."""
+
         use_enum_values = True
         validate_assignment = True
         extra = "allow"  # Allow extra fields for flexibility with existing templates
@@ -250,15 +307,17 @@ class WorkflowValidationError(Exception):
         # Format error message
         error_details = []
         for error in errors:
-            loc = " -> ".join(str(x) for x in error.get('loc', []))
-            msg = error.get('msg', 'Unknown error')
+            loc = " -> ".join(str(x) for x in error.get("loc", []))
+            msg = error.get("msg", "Unknown error")
             error_details.append(f"  {loc}: {msg}")
 
         message = f"Validation failed for workflow '{workflow_path}':\n" + "\n".join(error_details)
         super().__init__(message)
 
 
-def validate_workflow_template(template_data: dict[str, Any], template_path: str = "unknown") -> WorkflowTemplate:
+def validate_workflow_template(
+    template_data: dict[str, Any], template_path: str = "unknown"
+) -> WorkflowTemplate:
     """
     Validate a workflow template using Pydantic models.
 
@@ -275,7 +334,7 @@ def validate_workflow_template(template_data: dict[str, Any], template_path: str
     try:
         return WorkflowTemplate(**template_data)
     except Exception as e:
-        if hasattr(e, 'errors'):
+        if hasattr(e, "errors"):
             raise WorkflowValidationError(template_path, e.errors())
         else:
             raise WorkflowValidationError(template_path, [{"loc": ["root"], "msg": str(e)}])
@@ -303,7 +362,7 @@ def validate_workflow_file(template_path: str) -> WorkflowTemplate:
     if not template_file.exists():
         raise FileNotFoundError(f"Workflow template not found: {template_path}")
 
-    with open(template_file, encoding='utf-8') as f:
+    with open(template_file, encoding="utf-8") as f:
         template_data = json.load(f)
 
     return validate_workflow_template(template_data, str(template_path))

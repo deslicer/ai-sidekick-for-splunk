@@ -25,19 +25,19 @@ def _configure_adk_web_logging():
     # Configure root logger for ADK web mode
     logging.basicConfig(
         level=getattr(logging, log_level, logging.DEBUG),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s",
         stream=sys.stdout,  # Ensure output goes to stdout for web interface
-        force=True  # Override any existing configuration
+        force=True,  # Override any existing configuration
     )
 
     # Configure specific loggers
     loggers_to_configure = [
-        'ai_sidekick_for_splunk',
+        "ai_sidekick_for_splunk",
         # Ensure ADK logs are visible regardless of package name used
-        'google_adk',
-        'google.adk',
-        'google',
-        '__main__'
+        "google_adk",
+        "google.adk",
+        "google",
+        "__main__",
     ]
 
     for logger_name in loggers_to_configure:
@@ -51,7 +51,7 @@ def _configure_adk_web_logging():
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(getattr(logging, log_level, logging.DEBUG))
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+        "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
     )
     console_handler.setFormatter(formatter)
 
@@ -63,6 +63,7 @@ def _configure_adk_web_logging():
     print(f"🔧 ADK Web Logging configured - Level: {log_level}")
     print("✅ Debug statements should now be visible in ADK web mode")
 
+
 # Configure logging immediately when module is imported
 _configure_adk_web_logging()
 
@@ -70,6 +71,7 @@ _configure_adk_web_logging()
 setup_logging(level=os.getenv("LOG_LEVEL", "INFO"), log_to_file=True, unified_file="logs/app.log")
 
 logger = logging.getLogger(__name__)
+
 
 def _create_root_agent() -> Any:
     """
@@ -102,6 +104,7 @@ def _create_root_agent() -> Any:
     except Exception as e:
         logger.error(f"❌ Failed to create root agent: {e}")
         raise RuntimeError(f"Root agent creation failed: {e}") from e
+
 
 # Create the root agent for ADK discovery
 try:

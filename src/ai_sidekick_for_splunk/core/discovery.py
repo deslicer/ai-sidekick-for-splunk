@@ -52,8 +52,14 @@ class AgentToolMapping:
 class ADKAgentWrapper(BaseAgent):
     """Enhanced wrapper for ADK Agent instances with tool association support."""
 
-    def __init__(self, config: Config, metadata: AgentMetadata, adk_agent: Any = None,
-                 tools: list[Any] | None = None, session_state: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        config: Config,
+        metadata: AgentMetadata,
+        adk_agent: Any = None,
+        tools: list[Any] | None = None,
+        session_state: dict[str, Any] | None = None,
+    ):
         self.config = config
         self._metadata = metadata
         self.adk_agent = adk_agent
@@ -66,7 +72,7 @@ class ADKAgentWrapper(BaseAgent):
 
     @property
     def instructions(self) -> str:
-        return getattr(self.adk_agent, 'instruction', "ADK agent wrapper")
+        return getattr(self.adk_agent, "instruction", "ADK agent wrapper")
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> Any:
         """Get the wrapped ADK agent instance.
@@ -101,17 +107,14 @@ class ADKToolWrapper(BaseTool):
         # ADK tools have their own schema handling
         return {
             "type": "function",
-            "function": {
-                "name": self.metadata.name,
-                "description": self.metadata.description
-            }
+            "function": {"name": self.metadata.name, "description": self.metadata.description},
         }
 
     async def execute(self, **kwargs) -> dict[str, Any]:
         """Execute the wrapped ADK tool."""
         try:
             # ADK tools are callable
-            if hasattr(self.adk_tool, '__call__'):
+            if hasattr(self.adk_tool, "__call__"):
                 result = self.adk_tool(**kwargs)
                 return {"result": result, "success": True}
             else:
@@ -157,9 +160,11 @@ class ComponentDiscovery:
         for path in agent_paths:
             try:
                 counts = self.discover_agents_with_tools_in_path(path)
-                agent_count += counts['agents']
-                tool_count += counts['tools']
-                logger.info(f"Discovered {counts['agents']} agents and {counts['tools']} tools in {path}")
+                agent_count += counts["agents"]
+                tool_count += counts["tools"]
+                logger.info(
+                    f"Discovered {counts['agents']} agents and {counts['tools']} tools in {path}"
+                )
             except Exception as e:
                 logger.error(f"Error discovering agents with tools in {path}: {e}")
 
@@ -175,7 +180,7 @@ class ComponentDiscovery:
         logger.info(f"Enhanced discovery complete: {agent_count} agents, {tool_count} tools")
         logger.info(f"Agent-tool mappings: {self.agent_tool_mapping.get_all_agent_tool_mappings()}")
 
-        return {'agents': agent_count, 'tools': tool_count}
+        return {"agents": agent_count, "tools": tool_count}
 
     def discover_agents_with_tools_in_path(self, path: str) -> dict[str, int]:
         """Discover agents and their associated tools in a specific path.
@@ -191,34 +196,36 @@ class ComponentDiscovery:
 
         try:
             # Convert path to module notation if needed
-            if path.startswith('src/'):
-                module_path = path.replace('src/', '').replace('/', '.')
+            if path.startswith("src/"):
+                module_path = path.replace("src/", "").replace("/", ".")
             else:
-                module_path = path.replace('/', '.')
+                module_path = path.replace("/", ".")
 
             # Try to import the base module
             try:
                 base_module = importlib.import_module(module_path)
             except ImportError as e:
                 logger.warning(f"Could not import agent module {module_path}: {e}")
-                return {'agents': 0, 'tools': 0}
+                return {"agents": 0, "tools": 0}
 
             # First, check the base module itself for agents
             registered_agents = self._register_agents_from_module(base_module, module_path)
             agent_count += len(registered_agents)
 
             # Then look for agent subdirectories following ADK patterns
-            if hasattr(base_module, '__path__'):
-                for finder, name, ispkg in pkgutil.iter_modules(base_module.__path__, f"{module_path}."):
+            if hasattr(base_module, "__path__"):
+                for finder, name, ispkg in pkgutil.iter_modules(
+                    base_module.__path__, f"{module_path}."
+                ):
                     if ispkg:
                         counts = self._discover_agent_package_with_tools(name)
-                        agent_count += counts['agents']
-                        tool_count += counts['tools']
+                        agent_count += counts["agents"]
+                        tool_count += counts["tools"]
 
         except Exception as e:
             logger.error(f"Error discovering agents with tools in {path}: {e}")
 
-        return {'agents': agent_count, 'tools': tool_count}
+        return {"agents": agent_count, "tools": tool_count}
 
     def _discover_agent_package_with_tools(self, package_name: str) -> dict[str, int]:
         """Discover an agent and its tools in a specific package following ADK patterns.
@@ -258,7 +265,7 @@ class ComponentDiscovery:
         except Exception as e:
             logger.debug(f"Could not discover agent package {package_name}: {e}")
 
-        return {'agents': agent_count, 'tools': tool_count}
+        return {"agents": agent_count, "tools": tool_count}
 
     def _discover_tools_for_agent(self, package_name: str, agent_name: str) -> list[str]:
         """Discover tools associated with a specific agent.
@@ -285,9 +292,11 @@ class ComponentDiscovery:
                 discovered_tools.extend(tool_names)
 
                 # Look for individual tool files
-                if hasattr(tools_module, '__path__'):
-                    for finder, name, ispkg in pkgutil.iter_modules(tools_module.__path__, f"{tools_module_path}."):
-                        if not ispkg and not name.endswith('__init__'):
+                if hasattr(tools_module, "__path__"):
+                    for finder, name, ispkg in pkgutil.iter_modules(
+                        tools_module.__path__, f"{tools_module_path}."
+                    ):
+                        if not ispkg and not name.endswith("__init__"):
                             try:
                                 tool_module = importlib.import_module(name)
                                 tool_names = self._register_tools_from_module_for_agent(
@@ -319,7 +328,7 @@ class ComponentDiscovery:
 
         # Look for agent instances or classes
         for attr_name in dir(module):
-            if attr_name.startswith('_'):
+            if attr_name.startswith("_"):
                 continue
 
             attr = getattr(module, attr_name)
@@ -329,28 +338,35 @@ class ComponentDiscovery:
                 try:
                     # Create metadata for ADK agent
                     metadata = AgentMetadata(
-                        name=getattr(attr, 'name', attr_name),
-                        description=getattr(attr, 'description', f"Agent from {package_name}"),
+                        name=getattr(attr, "name", attr_name),
+                        description=getattr(attr, "description", f"Agent from {package_name}"),
                         version="1.0.0",
                         author="Auto-discovered",
-                        tags=[package_name.split('.')[-1]],
-                        dependencies=[]
+                        tags=[package_name.split(".")[-1]],
+                        dependencies=[],
                     )
 
                     # Create wrapper class for ADK agent
                     def create_agent_wrapper(agent_instance, agent_metadata):
                         class SpecificADKAgentWrapper(ADKAgentWrapper):
-                            def __init__(self, config: Config, metadata: AgentMetadata, tools: list[Any] | None = None, session_state: dict[str, Any] | None = None):
-                                super().__init__(config, metadata, agent_instance, tools, session_state)
+                            def __init__(
+                                self,
+                                config: Config,
+                                metadata: AgentMetadata,
+                                tools: list[Any] | None = None,
+                                session_state: dict[str, Any] | None = None,
+                            ):
+                                super().__init__(
+                                    config, metadata, agent_instance, tools, session_state
+                                )
+
                         return SpecificADKAgentWrapper
 
                     wrapper_class = create_agent_wrapper(attr, metadata)
 
                     # Register the wrapper class
                     self.registry_manager.agent_registry.register(
-                        name=metadata.name,
-                        cls=wrapper_class,
-                        metadata=metadata
+                        name=metadata.name, cls=wrapper_class, metadata=metadata
                     )
                     logger.info(f"Registered ADK agent: {metadata.name}")
                     registered_agents.append(metadata.name)
@@ -362,35 +378,43 @@ class ComponentDiscovery:
             elif isinstance(attr, type) and issubclass(attr, BaseAgent) and attr != BaseAgent:
                 try:
                     # Get metadata from the class attributes instead of instantiating
-                    metadata_attr = getattr(attr, 'METADATA', None)
+                    metadata_attr = getattr(attr, "METADATA", None)
                     if metadata_attr and isinstance(metadata_attr, AgentMetadata):
                         self.registry_manager.agent_registry.register(
-                            name=metadata_attr.name,
-                            cls=attr,
-                            metadata=metadata_attr
+                            name=metadata_attr.name, cls=attr, metadata=metadata_attr
                         )
                         logger.info(f"Registered BaseAgent: {metadata_attr.name}")
                         registered_agents.append(metadata_attr.name)
 
                         # Associate any built-in tools with this agent
-                        if hasattr(attr, 'get_adk_agent'):
+                        if hasattr(attr, "get_adk_agent"):
                             try:
                                 # Create instance to check for tools
                                 instance = attr(self.config, metadata_attr)
-                                get_adk_agent_method = getattr(instance, 'get_adk_agent', None)
+                                get_adk_agent_method = getattr(instance, "get_adk_agent", None)
                                 if get_adk_agent_method and callable(get_adk_agent_method):
                                     adk_agent = get_adk_agent_method()
-                                    if adk_agent and hasattr(adk_agent, 'tools') and adk_agent.tools:
+                                    if (
+                                        adk_agent
+                                        and hasattr(adk_agent, "tools")
+                                        and adk_agent.tools
+                                    ):
                                         for tool in adk_agent.tools:
-                                            tool_name = getattr(tool, 'name', 'unknown_tool')
+                                            tool_name = getattr(tool, "name", "unknown_tool")
                                             self.agent_tool_mapping.associate_tool_with_agent(
                                                 metadata_attr.name, tool_name
                                             )
-                                            logger.debug(f"Associated tool {tool_name} with agent {metadata_attr.name}")
+                                            logger.debug(
+                                                f"Associated tool {tool_name} with agent {metadata_attr.name}"
+                                            )
                             except Exception as e:
-                                logger.debug(f"Could not check tools for agent {metadata_attr.name}: {e}")
+                                logger.debug(
+                                    f"Could not check tools for agent {metadata_attr.name}: {e}"
+                                )
                     else:
-                        logger.debug(f"Skipping BaseAgent class {attr_name} - no valid METADATA attribute")
+                        logger.debug(
+                            f"Skipping BaseAgent class {attr_name} - no valid METADATA attribute"
+                        )
                 except Exception as e:
                     logger.error(f"Error registering agent class {attr_name}: {e}")
 
@@ -398,12 +422,12 @@ class ComponentDiscovery:
             elif isinstance(attr, BaseAgent):
                 try:
                     # Use the instance's metadata
-                    if hasattr(attr, 'metadata') and isinstance(attr.metadata, AgentMetadata):
+                    if hasattr(attr, "metadata") and isinstance(attr.metadata, AgentMetadata):
                         self.registry_manager.agent_registry.register(
                             name=attr.metadata.name,
                             cls=type(attr),
                             metadata=attr.metadata,
-                            overwrite=True  # Allow instances to override class registrations
+                            overwrite=True,  # Allow instances to override class registrations
                         )
 
                         # Set the instance in the registry entry to avoid re-creation
@@ -418,20 +442,26 @@ class ComponentDiscovery:
                         # Associate any built-in tools with this agent
                         try:
                             # Check if the instance has ADK agent capabilities with tools
-                            get_adk_agent_method = getattr(attr, 'get_adk_agent', None)
+                            get_adk_agent_method = getattr(attr, "get_adk_agent", None)
                             if get_adk_agent_method and callable(get_adk_agent_method):
                                 adk_agent = get_adk_agent_method()
-                                if adk_agent and hasattr(adk_agent, 'tools') and adk_agent.tools:
+                                if adk_agent and hasattr(adk_agent, "tools") and adk_agent.tools:
                                     for tool in adk_agent.tools:
-                                        tool_name = getattr(tool, 'name', 'unknown_tool')
+                                        tool_name = getattr(tool, "name", "unknown_tool")
                                         self.agent_tool_mapping.associate_tool_with_agent(
                                             attr.metadata.name, tool_name
                                         )
-                                        logger.debug(f"Associated tool {tool_name} with agent {attr.metadata.name}")
+                                        logger.debug(
+                                            f"Associated tool {tool_name} with agent {attr.metadata.name}"
+                                        )
                         except Exception as e:
-                            logger.debug(f"Could not check tools for agent instance {attr.metadata.name}: {e}")
+                            logger.debug(
+                                f"Could not check tools for agent instance {attr.metadata.name}: {e}"
+                            )
                     else:
-                        logger.debug(f"Skipping BaseAgent instance {attr_name} - no valid metadata attribute")
+                        logger.debug(
+                            f"Skipping BaseAgent instance {attr_name} - no valid metadata attribute"
+                        )
                 except Exception as e:
                     logger.error(f"Error registering agent instance {attr_name}: {e}")
 
@@ -455,9 +485,9 @@ class ComponentDiscovery:
             return isinstance(obj, Agent | LlmAgent | LoopAgent | ADKBaseAgent)
         except ImportError:
             # ADK not available, check by duck typing
-            return (hasattr(obj, 'name') and
-                   hasattr(obj, 'description') and
-                   hasattr(obj, 'instruction'))
+            return (
+                hasattr(obj, "name") and hasattr(obj, "description") and hasattr(obj, "instruction")
+            )
 
     def _register_tools_from_module(self, module: Any, module_name: str) -> int:
         """Register tools found in a module.
@@ -473,7 +503,7 @@ class ComponentDiscovery:
 
         # Look for tool instances or classes
         for attr_name in dir(module):
-            if attr_name.startswith('_'):
+            if attr_name.startswith("_"):
                 continue
 
             attr = getattr(module, attr_name)
@@ -483,12 +513,12 @@ class ComponentDiscovery:
                 try:
                     # Create metadata for ADK tool
                     metadata = ToolMetadata(
-                        name=getattr(attr, 'name', attr_name),
-                        description=getattr(attr, 'description', f"Tool from {module_name}"),
+                        name=getattr(attr, "name", attr_name),
+                        description=getattr(attr, "description", f"Tool from {module_name}"),
                         version="1.0.0",
                         author="Auto-discovered",
-                        tags=[module_name.split('.')[-1]],
-                        parameters={}  # ADK tools handle their own schemas
+                        tags=[module_name.split(".")[-1]],
+                        parameters={},  # ADK tools handle their own schemas
                     )
 
                     # Create wrapper class for ADK tool
@@ -496,15 +526,14 @@ class ComponentDiscovery:
                         class SpecificADKToolWrapper(ADKToolWrapper):
                             def __init__(self, config: Config, metadata: ToolMetadata):
                                 super().__init__(config, metadata, tool_instance)
+
                         return SpecificADKToolWrapper
 
                     wrapper_class = create_tool_wrapper(attr, metadata)
 
                     # Register the wrapper class
                     self.registry_manager.tool_registry.register(
-                        name=metadata.name,
-                        cls=wrapper_class,
-                        metadata=metadata
+                        name=metadata.name, cls=wrapper_class, metadata=metadata
                     )
                     logger.info(f"Registered ADK tool: {metadata.name}")
                     count += 1
@@ -516,17 +545,17 @@ class ComponentDiscovery:
             elif isinstance(attr, type) and issubclass(attr, BaseTool) and attr != BaseTool:
                 try:
                     # Get metadata from the class attributes instead of instantiating
-                    metadata_attr = getattr(attr, 'METADATA', None)
+                    metadata_attr = getattr(attr, "METADATA", None)
                     if metadata_attr and isinstance(metadata_attr, ToolMetadata):
                         self.registry_manager.tool_registry.register(
-                            name=metadata_attr.name,
-                            cls=attr,
-                            metadata=metadata_attr
+                            name=metadata_attr.name, cls=attr, metadata=metadata_attr
                         )
                         logger.info(f"Registered BaseTool: {metadata_attr.name}")
                         count += 1
                     else:
-                        logger.debug(f"Skipping BaseTool class {attr_name} - no valid METADATA attribute")
+                        logger.debug(
+                            f"Skipping BaseTool class {attr_name} - no valid METADATA attribute"
+                        )
                 except Exception as e:
                     logger.error(f"Error registering tool class {attr_name}: {e}")
 
@@ -546,16 +575,23 @@ class ComponentDiscovery:
             from google.adk.tools.agent_tool import AgentTool
             from google.adk.tools.google_search_tool import google_search
 
-            return (isinstance(obj, AgentTool) or
-                   obj is google_search or
-                   (hasattr(obj, '__class__') and
-                    obj.__class__.__module__.startswith('google.adk.tools')))
+            return (
+                isinstance(obj, AgentTool)
+                or obj is google_search
+                or (
+                    hasattr(obj, "__class__")
+                    and obj.__class__.__module__.startswith("google.adk.tools")
+                )
+            )
         except ImportError:
             # ADK not available, check by duck typing
-            return (hasattr(obj, '__call__') and
-                   hasattr(obj, 'name') if hasattr(obj, 'name') else False)
+            return (
+                hasattr(obj, "__call__") and hasattr(obj, "name") if hasattr(obj, "name") else False
+            )
 
-    def _register_tools_from_module_for_agent(self, module: Any, module_name: str, agent_name: str) -> list[str]:
+    def _register_tools_from_module_for_agent(
+        self, module: Any, module_name: str, agent_name: str
+    ) -> list[str]:
         """Register tools found in a module for a specific agent.
 
         Args:
@@ -570,7 +606,7 @@ class ComponentDiscovery:
 
         # Look for tool instances or classes
         for attr_name in dir(module):
-            if attr_name.startswith('_'):
+            if attr_name.startswith("_"):
                 continue
 
             attr = getattr(module, attr_name)
@@ -580,12 +616,12 @@ class ComponentDiscovery:
                 try:
                     # Create metadata for ADK tool
                     metadata = ToolMetadata(
-                        name=getattr(attr, 'name', attr_name),
-                        description=getattr(attr, 'description', f"Tool from {module_name}"),
+                        name=getattr(attr, "name", attr_name),
+                        description=getattr(attr, "description", f"Tool from {module_name}"),
                         version="1.0.0",
                         author="Auto-discovered",
-                        tags=[module_name.split('.')[-1]],
-                        parameters={}  # ADK tools handle their own schemas
+                        tags=[module_name.split(".")[-1]],
+                        parameters={},  # ADK tools handle their own schemas
                     )
 
                     # Create wrapper class for ADK tool
@@ -593,15 +629,14 @@ class ComponentDiscovery:
                         class SpecificADKToolWrapper(ADKToolWrapper):
                             def __init__(self, config: Config, metadata: ToolMetadata):
                                 super().__init__(config, metadata, tool_instance)
+
                         return SpecificADKToolWrapper
 
                     wrapper_class = create_tool_wrapper(attr, metadata)
 
                     # Register the wrapper class
                     self.registry_manager.tool_registry.register(
-                        name=metadata.name,
-                        cls=wrapper_class,
-                        metadata=metadata
+                        name=metadata.name, cls=wrapper_class, metadata=metadata
                     )
                     logger.info(f"Registered ADK tool: {metadata.name}")
                     discovered_tools.append(metadata.name)
@@ -617,21 +652,25 @@ class ComponentDiscovery:
             elif isinstance(attr, type) and issubclass(attr, BaseTool) and attr != BaseTool:
                 try:
                     # Get metadata from the class attributes instead of instantiating
-                    metadata_attr = getattr(attr, 'METADATA', None)
+                    metadata_attr = getattr(attr, "METADATA", None)
                     if metadata_attr and isinstance(metadata_attr, ToolMetadata):
                         self.registry_manager.tool_registry.register(
-                            name=metadata_attr.name,
-                            cls=attr,
-                            metadata=metadata_attr
+                            name=metadata_attr.name, cls=attr, metadata=metadata_attr
                         )
                         logger.info(f"Registered BaseTool: {metadata_attr.name}")
                         discovered_tools.append(metadata_attr.name)
 
                         # Associate the tool with the agent
-                        self.agent_tool_mapping.associate_tool_with_agent(agent_name, metadata_attr.name)
-                        logger.debug(f"Associated tool {metadata_attr.name} with agent {agent_name}")
+                        self.agent_tool_mapping.associate_tool_with_agent(
+                            agent_name, metadata_attr.name
+                        )
+                        logger.debug(
+                            f"Associated tool {metadata_attr.name} with agent {agent_name}"
+                        )
                     else:
-                        logger.debug(f"Skipping BaseTool class {attr_name} - no valid METADATA attribute")
+                        logger.debug(
+                            f"Skipping BaseTool class {attr_name} - no valid METADATA attribute"
+                        )
                 except Exception as e:
                     logger.error(f"Error registering tool class {attr_name}: {e}")
 
@@ -650,10 +689,10 @@ class ComponentDiscovery:
 
         try:
             # Convert path to module notation if needed
-            if path.startswith('src/'):
-                module_path = path.replace('src/', '').replace('/', '.')
+            if path.startswith("src/"):
+                module_path = path.replace("src/", "").replace("/", ".")
             else:
-                module_path = path.replace('/', '.')
+                module_path = path.replace("/", ".")
 
             # Try to import the base module
             try:
@@ -666,9 +705,11 @@ class ComponentDiscovery:
             count += self._register_tools_from_module(base_module, module_path)
 
             # Look for tool files in subdirectories
-            if hasattr(base_module, '__path__'):
-                for finder, name, ispkg in pkgutil.iter_modules(base_module.__path__, f"{module_path}."):
-                    if not ispkg and not name.endswith('__init__'):
+            if hasattr(base_module, "__path__"):
+                for finder, name, ispkg in pkgutil.iter_modules(
+                    base_module.__path__, f"{module_path}."
+                ):
+                    if not ispkg and not name.endswith("__init__"):
                         try:
                             tool_module = importlib.import_module(name)
                             count += self._register_tools_from_module(tool_module, name)

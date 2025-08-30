@@ -34,7 +34,7 @@ class SplunkMCPAgent(BaseAgent):
         version="1.0.0",
         author="Core",
         tags=["splunk", "mcp", "administration", "search"],
-        dependencies=[]
+        dependencies=[],
     )
 
     name = "splunk_mcp"
@@ -50,7 +50,7 @@ class SplunkMCPAgent(BaseAgent):
         config: Any | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None
+        session_state: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize the Splunk MCP Agent.
@@ -75,7 +75,7 @@ class SplunkMCPAgent(BaseAgent):
                 version="1.0.0",
                 author="Core",
                 tags=["splunk", "mcp", "administration", "search"],
-                dependencies=[]
+                dependencies=[],
             )
 
         super().__init__(config, metadata, tools, session_state)
@@ -109,13 +109,16 @@ class SplunkMCPAgent(BaseAgent):
                 "X-Session-Timeout": "3600",  # 1 hour
                 "X-Connection-Keep-Alive": "true",
                 "X-Auto-Reconnect": "true",
-                "X-Session-Validation": "enabled"
+                "X-Session-Validation": "enabled",
             }
 
             # Create MCP toolset with improved connection parameters to reduce task group issues
             # Temporarily suppress ADK authentication warnings for MCP tools
             import logging
-            adk_auth_logger = logging.getLogger('google_adk.google.adk.tools.base_authenticated_tool')
+
+            adk_auth_logger = logging.getLogger(
+                "google_adk.google.adk.tools.base_authenticated_tool"
+            )
             original_level = adk_auth_logger.level
             adk_auth_logger.setLevel(logging.ERROR)  # Suppress WARNING level messages
 
@@ -128,14 +131,18 @@ class SplunkMCPAgent(BaseAgent):
                         sse_read_timeout=300.0,  # 5 minutes for long-running operations
                         terminate_on_close=True,  # Changed to True to properly close connections
                         max_retries=2,  # Reduce retries to minimize task group conflicts
-                        retry_delay=1.0  # Short retry delay
+                        retry_delay=1.0,  # Short retry delay
                     )
                 )
             finally:
                 # Restore original logging level
                 adk_auth_logger.setLevel(original_level)
-            logger.info(f"Enhanced MCP toolset created successfully for URL: {self.config.splunk.mcp_server_url}")
-            logger.debug("Session management features enabled: persistent sessions, auto-reconnect, validation")
+            logger.info(
+                f"Enhanced MCP toolset created successfully for URL: {self.config.splunk.mcp_server_url}"
+            )
+            logger.debug(
+                "Session management features enabled: persistent sessions, auto-reconnect, validation"
+            )
             return mcp_toolset
 
         except Exception as e:
@@ -165,7 +172,7 @@ class SplunkMCPAgent(BaseAgent):
                 name=self.name,
                 description=self.description,
                 instruction=SPLUNK_MCP_PROMPT,
-                tools=[mcp_toolset]
+                tools=[mcp_toolset],
             )
 
             logger.debug("Created Splunk MCP ADK agent with MCP toolset")
@@ -197,7 +204,7 @@ class SplunkMCPAgent(BaseAgent):
                     "success": True,
                     "task_type": "splunk_mcp",
                     "response": result,
-                    "execution_method": "adk_agent_with_mcp_tools"
+                    "execution_method": "adk_agent_with_mcp_tools",
                 }
             else:
                 # If ADK agent is not available, return an error
@@ -206,7 +213,7 @@ class SplunkMCPAgent(BaseAgent):
                 return {
                     "success": False,
                     "error": error_msg,
-                    "message": "SplunkMCP agent requires ADK LlmAgent with MCP toolset integration"
+                    "message": "SplunkMCP agent requires ADK LlmAgent with MCP toolset integration",
                 }
 
         except Exception as e:
@@ -214,10 +221,8 @@ class SplunkMCPAgent(BaseAgent):
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Failed to execute Splunk MCP task"
+                "message": "Failed to execute Splunk MCP task",
             }
-
-
 
     def get_capabilities(self) -> list[str]:
         """
@@ -231,7 +236,7 @@ class SplunkMCPAgent(BaseAgent):
             "splunk_administration",
             "mcp_integration",
             "real_time_splunk_access",
-            "configuration_management"
+            "configuration_management",
         ]
 
     def validate_input(self, input_data: dict[str, Any]) -> bool:

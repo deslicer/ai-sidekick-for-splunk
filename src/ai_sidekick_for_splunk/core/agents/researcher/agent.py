@@ -32,7 +32,7 @@ class ResearcherAgent(BaseAgent):
         version="1.0.0",
         author="Core",
         tags=["research", "google-search", "internet", "information"],
-        dependencies=[]
+        dependencies=[],
     )
 
     name = "researcher"
@@ -43,7 +43,7 @@ class ResearcherAgent(BaseAgent):
         config: Any | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None
+        session_state: dict[str, Any] | None = None,
     ) -> None:
         """
         Initialize the Researcher Agent.
@@ -68,7 +68,7 @@ class ResearcherAgent(BaseAgent):
                 version="1.0.0",
                 author="Core",
                 tags=["research", "google-search", "internet", "information"],
-                dependencies=[]
+                dependencies=[],
             )
 
         super().__init__(config, metadata, tools, session_state)
@@ -91,6 +91,7 @@ class ResearcherAgent(BaseAgent):
             str: The agent's system instructions
         """
         from .prompt import RESEARCHER_PROMPT
+
         return RESEARCHER_PROMPT
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> Agent:
@@ -110,7 +111,7 @@ class ResearcherAgent(BaseAgent):
             name=self.name,
             description=self.description,
             instruction=RESEARCHER_PROMPT,
-            tools=[google_search_grounding]
+            tools=[google_search_grounding],
         )
 
         logger.debug("Created researcher ADK agent with google search grounding tool")
@@ -189,24 +190,27 @@ insights based on provided information and your expertise.
             logger.info(f"ResearcherAgent executing task: {task}")
 
             # Basic task routing based on research type
-            if any(keyword in task.lower() for keyword in ["cve", "vulnerability", "security", "advisory"]):
+            if any(
+                keyword in task.lower()
+                for keyword in ["cve", "vulnerability", "security", "advisory"]
+            ):
                 return await self._handle_security_research(task, context)
             elif any(keyword in task.lower() for keyword in ["splunk", "spl", "search"]):
                 return await self._handle_splunk_research(task, context)
-            elif any(keyword in task.lower() for keyword in ["conf", "event", "training", "webinar"]):
+            elif any(
+                keyword in task.lower() for keyword in ["conf", "event", "training", "webinar"]
+            ):
                 return await self._handle_event_research(task, context)
             else:
                 return await self._handle_general_research(task, context)
 
         except Exception as e:
             logger.error(f"ResearcherAgent execution failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Failed to execute research task"
-            }
+            return {"success": False, "error": str(e), "message": "Failed to execute research task"}
 
-    async def _handle_security_research(self, task: str, context: dict[str, Any] | None) -> dict[str, Any]:
+    async def _handle_security_research(
+        self, task: str, context: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Handle security-related research tasks."""
         return {
             "success": True,
@@ -215,12 +219,14 @@ insights based on provided information and your expertise.
                 "Latest CVE alerts for Splunk products",
                 "Security advisories and patches",
                 "Threat intelligence updates",
-                "Security best practices"
+                "Security best practices",
             ],
-            "message": "Security research capabilities available - use Google Search for current threats"
+            "message": "Security research capabilities available - use Google Search for current threats",
         }
 
-    async def _handle_splunk_research(self, task: str, context: dict[str, Any] | None) -> dict[str, Any]:
+    async def _handle_splunk_research(
+        self, task: str, context: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Handle Splunk-specific research tasks."""
         return {
             "success": True,
@@ -229,12 +235,14 @@ insights based on provided information and your expertise.
                 "Latest Splunk documentation updates",
                 "Community best practices",
                 "Performance optimization guides",
-                "New feature announcements"
+                "New feature announcements",
             ],
-            "message": "Splunk research capabilities available - use Google Search for current information"
+            "message": "Splunk research capabilities available - use Google Search for current information",
         }
 
-    async def _handle_event_research(self, task: str, context: dict[str, Any] | None) -> dict[str, Any]:
+    async def _handle_event_research(
+        self, task: str, context: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Handle event and training research tasks."""
         return {
             "success": True,
@@ -243,12 +251,14 @@ insights based on provided information and your expertise.
                 "Splunk .conf conference information",
                 "Training and certification updates",
                 "Webinars and virtual events",
-                "Community meetups"
+                "Community meetups",
             ],
-            "message": "Event research capabilities available - use Google Search for current schedules"
+            "message": "Event research capabilities available - use Google Search for current schedules",
         }
 
-    async def _handle_general_research(self, task: str, context: dict[str, Any] | None) -> dict[str, Any]:
+    async def _handle_general_research(
+        self, task: str, context: dict[str, Any] | None
+    ) -> dict[str, Any]:
         """Handle general research tasks."""
         return {
             "success": True,
@@ -257,9 +267,9 @@ insights based on provided information and your expertise.
                 "Real-time web research",
                 "Technology trend analysis",
                 "Best practices research",
-                "Documentation updates"
+                "Documentation updates",
             ],
-            "message": "General research capabilities available - use Google Search for current information"
+            "message": "General research capabilities available - use Google Search for current information",
         }
 
     def get_capabilities(self) -> list[str]:
@@ -276,7 +286,7 @@ insights based on provided information and your expertise.
             "splunk_research",
             "event_research",
             "documentation_research",
-            "real_time_information"
+            "real_time_information",
         ]
 
     def validate_input(self, input_data: dict[str, Any]) -> bool:

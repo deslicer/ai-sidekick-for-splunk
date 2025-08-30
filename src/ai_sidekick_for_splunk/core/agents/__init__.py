@@ -83,15 +83,22 @@ def get_all_agents():
 
     return agents
 
+
 # Base __all__ list
 __all__ = [
-    "ResultSynthesizerAgent", "result_synthesizer_agent",
-    "SplunkMCPAgent", "splunk_mcp_agent",
+    "ResultSynthesizerAgent",
+    "result_synthesizer_agent",
+    "SplunkMCPAgent",
+    "splunk_mcp_agent",
     "FlowPilot",
-    "IndexAnalysisFlowAgent", "index_analysis_flow_agent",
-    "initialize_dynamic_agents", "get_all_agents", "create_dynamic_flowpilot_agents", "get_all_dynamic_agents"
+    "IndexAnalysisFlowAgent",
+    "index_analysis_flow_agent",
+    "initialize_dynamic_agents",
+    "get_all_agents",
+    "create_dynamic_flowpilot_agents",
+    "get_all_dynamic_agents",
 ]
 
 # Add dynamic agent names to __all__ after they're created
-if '_dynamic_attr_names' in globals():
+if "_dynamic_attr_names" in globals():
     __all__.extend(_dynamic_attr_names)

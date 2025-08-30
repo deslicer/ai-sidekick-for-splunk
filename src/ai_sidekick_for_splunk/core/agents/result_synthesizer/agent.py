@@ -37,7 +37,7 @@ class ResultSynthesizerAgent(BaseAgent):
         version="1.0.0",
         author="Core",
         tags=["synthesis", "business-intelligence", "insights", "personas"],
-        dependencies=[]
+        dependencies=[],
     )
 
     name = "result_synthesizer"
@@ -53,7 +53,7 @@ class ResultSynthesizerAgent(BaseAgent):
         config: Any | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None
+        session_state: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the ResultSynthesizer agent."""
         from ai_sidekick_for_splunk.core.config import Config
@@ -70,7 +70,7 @@ class ResultSynthesizerAgent(BaseAgent):
                 version="1.0.0",
                 author="Core",
                 tags=["synthesis", "business-intelligence", "insights", "personas"],
-                dependencies=[]
+                dependencies=[],
             )
 
         super().__init__(config, metadata, tools, session_state)
@@ -97,7 +97,7 @@ class ResultSynthesizerAgent(BaseAgent):
                 name=self.name,
                 description=self.description,
                 instruction=self.instructions,
-                tools=agent_tools
+                tools=agent_tools,
             )
 
         except ImportError:
@@ -111,7 +111,7 @@ class ResultSynthesizerAgent(BaseAgent):
         self,
         search_results: dict[str, Any],
         context: dict[str, Any] = None,
-        synthesis_type: str = "comprehensive"
+        synthesis_type: str = "comprehensive",
     ) -> dict[str, Any]:
         """
         Synthesize search results into business insights using ADK agent.
@@ -128,7 +128,9 @@ class ResultSynthesizerAgent(BaseAgent):
             index_name = context.get("index_name", "unknown") if context else "unknown"
             domain = context.get("domain", "general") if context else "general"
 
-            logger.info(f"Synthesizing results for index '{index_name}' with {synthesis_type} approach")
+            logger.info(
+                f"Synthesizing results for index '{index_name}' with {synthesis_type} approach"
+            )
 
             # Get the ADK agent for synthesis
             adk_agent = self.get_adk_agent()
@@ -151,15 +153,11 @@ class ResultSynthesizerAgent(BaseAgent):
 
             session_service = InMemorySessionService()
             session = await session_service.create_session(
-                app_name="result_synthesizer",
-                user_id="system",
-                session_id="synthesis_session"
+                app_name="result_synthesizer", user_id="system", session_id="synthesis_session"
             )
 
             runner = Runner(
-                agent=adk_agent,
-                app_name="result_synthesizer",
-                session_service=session_service
+                agent=adk_agent, app_name="result_synthesizer", session_service=session_service
             )
 
             # Create the message content
@@ -169,9 +167,7 @@ class ResultSynthesizerAgent(BaseAgent):
             synthesis_response = None
             try:
                 async for event in runner.run_async(
-                    user_id="system",
-                    session_id=session.id,
-                    new_message=content
+                    user_id="system", session_id=session.id, new_message=content
                 ):
                     if event.is_final_response() and event.content and event.content.parts:
                         synthesis_response = event.content.parts[0].text
@@ -182,7 +178,9 @@ class ResultSynthesizerAgent(BaseAgent):
             except RuntimeError as runtime_error:
                 # Handle MCP client task group issues
                 if "cancel scope" in str(runtime_error) or "different task" in str(runtime_error):
-                    logger.debug(f"MCP client task group issue in result synthesizer (expected): {runtime_error}")
+                    logger.debug(
+                        f"MCP client task group issue in result synthesizer (expected): {runtime_error}"
+                    )
                     # This is a known MCP client library issue - continue with execution
                 else:
                     logger.warning(f"Runtime error in result synthesizer: {runtime_error}")
@@ -204,10 +202,12 @@ class ResultSynthesizerAgent(BaseAgent):
                 "synthesis_type": synthesis_type,
                 "index_analyzed": index_name,
                 "error": str(e),
-                "success": False
+                "success": False,
             }
 
-    def _create_placeholder_synthesis(self, index_name: str, domain: str, synthesis_type: str) -> dict[str, Any]:
+    def _create_placeholder_synthesis(
+        self, index_name: str, domain: str, synthesis_type: str
+    ) -> dict[str, Any]:
         """Create a structured placeholder when ADK is not available."""
         return {
             "synthesis_type": synthesis_type,
@@ -219,24 +219,22 @@ class ResultSynthesizerAgent(BaseAgent):
                 "persona_based_use_cases": "Would generate 3-5 persona-based use cases",
                 "dashboard_recommendations": "Would provide specific dashboard panels with SPL",
                 "alert_strategies": "Would recommend proactive monitoring alerts",
-                "implementation_priorities": "Would rank recommendations by business value"
+                "implementation_priorities": "Would rank recommendations by business value",
             },
             "ready_for_integration": True,
-            "adk_available": False
+            "adk_available": False,
         }
 
     def _build_synthesis_prompt(
-        self,
-        search_results: dict[str, Any],
-        index_name: str,
-        domain: str,
-        synthesis_type: str
+        self, search_results: dict[str, Any], index_name: str, domain: str, synthesis_type: str
     ) -> str:
         """Build the synthesis prompt with real search results."""
 
         # Check if we're receiving LLM analysis results from micro agents
         if self._is_llm_analysis_results(search_results):
-            return self._build_llm_analysis_synthesis_prompt(search_results, index_name, domain, synthesis_type)
+            return self._build_llm_analysis_synthesis_prompt(
+                search_results, index_name, domain, synthesis_type
+            )
 
         # Extract key data from traditional search results
         sourcetypes = self._extract_sourcetypes(search_results)
@@ -286,14 +284,14 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         for phase_results in search_results.values():
             if isinstance(phase_results, dict):
                 for task_result in phase_results.values():
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
+                    if isinstance(task_result, dict) and "search_results" in task_result:
                         # Look for sourcetype data in search results
-                        data = task_result['search_results']
+                        data = task_result["search_results"]
                         if isinstance(data, list):
                             for row in data:
-                                if isinstance(row, dict) and 'sourcetype' in row:
-                                    if row['sourcetype'] not in sourcetypes:
-                                        sourcetypes.append(row['sourcetype'])
+                                if isinstance(row, dict) and "sourcetype" in row:
+                                    if row["sourcetype"] not in sourcetypes:
+                                        sourcetypes.append(row["sourcetype"])
         return sourcetypes
 
     def _extract_hosts(self, search_results: dict[str, Any]) -> list[str]:
@@ -302,13 +300,13 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         for phase_results in search_results.values():
             if isinstance(phase_results, dict):
                 for task_result in phase_results.values():
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
-                        data = task_result['search_results']
+                    if isinstance(task_result, dict) and "search_results" in task_result:
+                        data = task_result["search_results"]
                         if isinstance(data, list):
                             for row in data:
-                                if isinstance(row, dict) and 'host' in row:
-                                    if row['host'] not in hosts:
-                                        hosts.append(row['host'])
+                                if isinstance(row, dict) and "host" in row:
+                                    if row["host"] not in hosts:
+                                        hosts.append(row["host"])
         return hosts
 
     def _extract_sources(self, search_results: dict[str, Any]) -> list[str]:
@@ -317,13 +315,13 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         for phase_results in search_results.values():
             if isinstance(phase_results, dict):
                 for task_result in phase_results.values():
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
-                        data = task_result['search_results']
+                    if isinstance(task_result, dict) and "search_results" in task_result:
+                        data = task_result["search_results"]
                         if isinstance(data, list):
                             for row in data:
-                                if isinstance(row, dict) and 'source' in row:
-                                    if row['source'] not in sources:
-                                        sources.append(row['source'])
+                                if isinstance(row, dict) and "source" in row:
+                                    if row["source"] not in sources:
+                                        sources.append(row["source"])
         return sources
 
     def _extract_volume_data(self, search_results: dict[str, Any]) -> dict[str, Any]:
@@ -333,13 +331,13 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         for phase_results in search_results.values():
             if isinstance(phase_results, dict):
                 for task_result in phase_results.values():
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
-                        data = task_result['search_results']
+                    if isinstance(task_result, dict) and "search_results" in task_result:
+                        data = task_result["search_results"]
                         if isinstance(data, list):
                             for row in data:
-                                if isinstance(row, dict) and 'count' in row:
+                                if isinstance(row, dict) and "count" in row:
                                     try:
-                                        volume_info["total_events"] += int(row['count'])
+                                        volume_info["total_events"] += int(row["count"])
                                     except (ValueError, TypeError):
                                         pass
 
@@ -352,16 +350,16 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         for phase_results in search_results.values():
             if isinstance(phase_results, dict):
                 for task_result in phase_results.values():
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
-                        data = task_result['search_results']
+                    if isinstance(task_result, dict) and "search_results" in task_result:
+                        data = task_result["search_results"]
                         if isinstance(data, list):
                             for row in data:
                                 if isinstance(row, dict):
-                                    if 'hour' in row:
-                                        patterns["peak_hours"].append(row.get('hour'))
-                                    if 'day_of_week' in row:
-                                        patterns["peak_days"].append(row.get('day_of_week'))
-                                    if 'anomaly_score' in row:
+                                    if "hour" in row:
+                                        patterns["peak_hours"].append(row.get("hour"))
+                                    if "day_of_week" in row:
+                                        patterns["peak_days"].append(row.get("day_of_week"))
+                                    if "anomaly_score" in row:
                                         patterns["anomalies"].append(row)
 
         return patterns
@@ -375,12 +373,12 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
             if isinstance(phase_results, dict):
                 for task_name, task_result in phase_results.items():
                     formatted.append(f"\nTask: {task_name}")
-                    if isinstance(task_result, dict) and 'search_results' in task_result:
-                        data = task_result['search_results']
+                    if isinstance(task_result, dict) and "search_results" in task_result:
+                        data = task_result["search_results"]
                         if isinstance(data, list) and len(data) > 0:
                             # Show first few rows as examples
                             for i, row in enumerate(data[:3]):
-                                formatted.append(f"  Row {i+1}: {row}")
+                                formatted.append(f"  Row {i + 1}: {row}")
                             if len(data) > 3:
                                 formatted.append(f"  ... and {len(data) - 3} more rows")
                         else:
@@ -389,11 +387,7 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         return "\n".join(formatted)
 
     def _parse_synthesis_response(
-        self,
-        response: str,
-        index_name: str,
-        domain: str,
-        synthesis_type: str
+        self, response: str, index_name: str, domain: str, synthesis_type: str
     ) -> dict[str, Any]:
         """Parse and structure the ADK agent synthesis response."""
 
@@ -407,10 +401,10 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
                 "raw_synthesis": response,
                 "structured_format": "Generated by ADK agent",
                 "persona_based_recommendations": "Included in synthesis response",
-                "implementation_ready": True
+                "implementation_ready": True,
             },
             "success": True,
-            "adk_generated": True
+            "adk_generated": True,
         }
 
     async def execute(self, task: str, context: dict[str, Any] = None) -> dict[str, Any]:
@@ -429,7 +423,9 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
         try:
             # Extract search results from context
             search_results = context.get("search_results", {}) if context else {}
-            synthesis_type = context.get("synthesis_type", "comprehensive") if context else "comprehensive"
+            synthesis_type = (
+                context.get("synthesis_type", "comprehensive") if context else "comprehensive"
+            )
 
             # Perform synthesis
             result = await self.synthesize_results(search_results, context, synthesis_type)
@@ -439,34 +435,33 @@ OUTPUT FORMAT: Provide structured business insights with specific, actionable re
 
         except Exception as e:
             logger.error(f"ResultSynthesizer execution failed: {e}")
-            return {
-                "error": str(e),
-                "success": False,
-                "agent": "ResultSynthesizer"
-            }
+            return {"error": str(e), "success": False, "agent": "ResultSynthesizer"}
 
     def _is_llm_analysis_results(self, search_results: dict[str, Any]) -> bool:
         """Check if the search results are LLM analysis results from micro agents."""
         # LLM analysis results have task_id, success, response structure
         for key, value in search_results.items():
-            if isinstance(value, dict) and 'response' in value and 'task_id' in value and 'success' in value:
+            if (
+                isinstance(value, dict)
+                and "response" in value
+                and "task_id" in value
+                and "success" in value
+            ):
                 return True
         return False
 
     def _build_llm_analysis_synthesis_prompt(
-        self,
-        search_results: dict[str, Any],
-        index_name: str,
-        domain: str,
-        synthesis_type: str
+        self, search_results: dict[str, Any], index_name: str, domain: str, synthesis_type: str
     ) -> str:
         """Build synthesis prompt for LLM analysis results from micro agents."""
 
         # Extract the analysis content from micro agent responses
         analysis_content = []
         for task_id, result in search_results.items():
-            if isinstance(result, dict) and result.get('success') and 'response' in result:
-                analysis_content.append(f"**{task_id.replace('_', ' ').title()}**:\n{result['response']}\n")
+            if isinstance(result, dict) and result.get("success") and "response" in result:
+                analysis_content.append(
+                    f"**{task_id.replace('_', ' ').title()}**:\n{result['response']}\n"
+                )
 
         combined_analysis = "\n".join(analysis_content)
 

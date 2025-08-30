@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class WorkflowSource(Enum):
     """Workflow source types"""
+
     CORE = "core"
     CONTRIB = "contrib"
     UNKNOWN = "unknown"
@@ -35,6 +36,7 @@ class WorkflowSource(Enum):
 
 class WorkflowStability(Enum):
     """Workflow stability levels"""
+
     STABLE = "stable"
     EXPERIMENTAL = "experimental"
     DEPRECATED = "deprecated"
@@ -42,6 +44,7 @@ class WorkflowStability(Enum):
 
 class ComplexityLevel(Enum):
     """Workflow complexity levels"""
+
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -51,6 +54,7 @@ class ComplexityLevel(Enum):
 @dataclass
 class WorkflowInfo:
     """Comprehensive workflow information"""
+
     # Core identification
     workflow_id: str
     file_path: Path
@@ -95,6 +99,7 @@ class WorkflowInfo:
 @dataclass
 class WorkflowGroup:
     """Group of related workflows"""
+
     group_id: str
     group_name: str
     description: str
@@ -129,7 +134,7 @@ class WorkflowDiscovery:
             "total_scanned": 0,
             "valid_workflows": 0,
             "invalid_workflows": 0,
-            "discovery_errors": []
+            "discovery_errors": [],
         }
 
         logger.info(f"🔍 WorkflowDiscovery initialized with paths: {self.base_paths}")
@@ -138,11 +143,13 @@ class WorkflowDiscovery:
         """Get default workflow discovery paths"""
         current_file = Path(__file__)
         # From workflow_discovery.py -> flows_engine -> core -> ai_sidekick_for_splunk -> src
-        ai_sidekick_for_splunk_root = current_file.parent.parent.parent  # Go up to ai_sidekick_for_splunk/
+        ai_sidekick_for_splunk_root = (
+            current_file.parent.parent.parent
+        )  # Go up to ai_sidekick_for_splunk/
 
         return [
             ai_sidekick_for_splunk_root / "core" / "flows",
-            ai_sidekick_for_splunk_root / "contrib" / "flows"
+            ai_sidekick_for_splunk_root / "contrib" / "flows",
         ]
 
     def discover_workflows(self, force_refresh: bool = False) -> dict[str, WorkflowInfo]:
@@ -162,7 +169,7 @@ class WorkflowDiscovery:
                 "total_scanned": 0,
                 "valid_workflows": 0,
                 "invalid_workflows": 0,
-                "discovery_errors": []
+                "discovery_errors": [],
             }
 
         logger.info("🔍 Starting workflow discovery...")
@@ -178,7 +185,9 @@ class WorkflowDiscovery:
         # Group workflows after discovery
         self._group_workflows()
 
-        logger.info(f"✅ Discovery complete: {self.discovery_stats['valid_workflows']} valid workflows found")
+        logger.info(
+            f"✅ Discovery complete: {self.discovery_stats['valid_workflows']} valid workflows found"
+        )
         return self.discovered_workflows
 
     def _scan_directory(self, directory: Path) -> None:
@@ -212,7 +221,7 @@ class WorkflowDiscovery:
             "_template",
             "_example",
             "basic_workflow_template",
-            "security_audit_example"
+            "security_audit_example",
         ]
 
         file_name = file_path.stem.lower()
@@ -253,7 +262,9 @@ class WorkflowDiscovery:
             self.discovery_stats["discovery_errors"].append(error_msg)
             return None
 
-    def _create_workflow_info(self, file_path: Path, workflow_data: dict, agent_flow: AgentFlow) -> WorkflowInfo:
+    def _create_workflow_info(
+        self, file_path: Path, workflow_data: dict, agent_flow: AgentFlow
+    ) -> WorkflowInfo:
         """Create WorkflowInfo from workflow data"""
         from datetime import datetime
 
@@ -280,40 +291,36 @@ class WorkflowDiscovery:
             workflow_id=workflow_data.get("workflow_id", f"unknown_{file_path.stem}"),
             file_path=file_path,
             agent_flow=agent_flow,
-
             # Metadata
-            workflow_name=workflow_data.get("workflow_name", workflow_data.get("name", "Unknown Workflow")),
+            workflow_name=workflow_data.get(
+                "workflow_name", workflow_data.get("name", "Unknown Workflow")
+            ),
             workflow_type=workflow_data.get("workflow_type", "unknown"),
             workflow_category=workflow_data.get("workflow_category", "general"),
             source=source,
             stability=stability,
             complexity_level=complexity,
-
             # Operational details
             version=workflow_data.get("version", "1.0.0"),
             estimated_duration=workflow_data.get("estimated_duration", "Unknown"),
             maintainer=workflow_data.get("maintainer", "Unknown"),
             last_updated=workflow_data.get("last_updated", "Unknown"),
-
             # Requirements
             target_audience=workflow_data.get("target_audience", []),
             prerequisites=workflow_data.get("prerequisites", []),
             required_permissions=workflow_data.get("required_permissions", []),
             splunk_versions=workflow_data.get("splunk_versions", []),
-
             # Business context
             business_value=workflow_data.get("business_value", ""),
             use_cases=workflow_data.get("use_cases", []),
             success_metrics=workflow_data.get("success_metrics", []),
             industry_focus=workflow_data.get("industry_focus", []),
-
             # Technical details
             data_requirements=workflow_data.get("data_requirements", {}),
             documentation_url=workflow_data.get("documentation_url", ""),
-
             # Discovery metadata
             discovery_timestamp=datetime.now().isoformat(),
-            validation_status="valid"
+            validation_status="valid",
         )
 
     def _group_workflows(self) -> None:
@@ -346,7 +353,7 @@ class WorkflowDiscovery:
                 group_name=f"{category.replace('_', ' ').title()} Workflows",
                 description=f"Workflows focused on {category.replace('_', ' ')} tasks",
                 workflows=workflows,
-                total_count=len(workflows)
+                total_count=len(workflows),
             )
 
     def _group_by_source(self) -> None:
@@ -365,7 +372,7 @@ class WorkflowDiscovery:
                 group_name=f"{source.title()} Workflows",
                 description=f"Workflows maintained by {source} team",
                 workflows=workflows,
-                total_count=len(workflows)
+                total_count=len(workflows),
             )
 
     def _group_by_complexity(self) -> None:
@@ -384,7 +391,7 @@ class WorkflowDiscovery:
                 group_name=f"{complexity.title()} Workflows",
                 description=f"Workflows suitable for {complexity} users",
                 workflows=workflows,
-                total_count=len(workflows)
+                total_count=len(workflows),
             )
 
     def _group_by_type(self) -> None:
@@ -403,7 +410,7 @@ class WorkflowDiscovery:
                 group_name=f"{workflow_type.replace('_', ' ').title()} Workflows",
                 description=f"Workflows for {workflow_type.replace('_', ' ')} purposes",
                 workflows=workflows,
-                total_count=len(workflows)
+                total_count=len(workflows),
             )
 
     def get_workflows_by_criteria(
@@ -412,7 +419,7 @@ class WorkflowDiscovery:
         complexity: ComplexityLevel | None = None,
         workflow_type: str | None = None,
         category: str | None = None,
-        stability: WorkflowStability | None = None
+        stability: WorkflowStability | None = None,
     ) -> list[WorkflowInfo]:
         """Filter workflows by multiple criteria"""
         filtered = list(self.discovered_workflows.values())
@@ -437,18 +444,28 @@ class WorkflowDiscovery:
             "total_workflows": len(self.discovered_workflows),
             "total_groups": len(self.workflow_groups),
             "workflows_by_source": {
-                source.value: len([w for w in self.discovered_workflows.values() if w.source == source])
+                source.value: len(
+                    [w for w in self.discovered_workflows.values() if w.source == source]
+                )
                 for source in WorkflowSource
             },
             "workflows_by_complexity": {
-                complexity.value: len([w for w in self.discovered_workflows.values() if w.complexity_level == complexity])
+                complexity.value: len(
+                    [
+                        w
+                        for w in self.discovered_workflows.values()
+                        if w.complexity_level == complexity
+                    ]
+                )
                 for complexity in ComplexityLevel
             },
             "workflows_by_stability": {
-                stability.value: len([w for w in self.discovered_workflows.values() if w.stability == stability])
+                stability.value: len(
+                    [w for w in self.discovered_workflows.values() if w.stability == stability]
+                )
                 for stability in WorkflowStability
             },
-            "group_names": list(self.workflow_groups.keys())
+            "group_names": list(self.workflow_groups.keys()),
         }
 
 

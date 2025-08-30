@@ -7,6 +7,4 @@ and other infrastructure concerns for the AI Sidekick for Splunk agent.
 
 from .setup_runner import SetupRunner
 
-__all__ = [
-    "SetupRunner"
-]
+__all__ = ["SetupRunner"]

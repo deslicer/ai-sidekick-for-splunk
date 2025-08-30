@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProgressUpdate:
     """Progress update for streaming to user."""
+
     phase_name: str
     task_id: str | None = None
     step_number: int | None = None
@@ -33,6 +34,7 @@ class ProgressUpdate:
 @dataclass
 class LLMStepResult:
     """Result from a single LLM step in the loop."""
+
     step_number: int
     tool_used: str | None = None
     tool_output: dict[str, Any] | None = None
@@ -45,6 +47,7 @@ class LLMStepResult:
 @dataclass
 class TaskResult:
     """Result from executing a single flow task."""
+
     task_id: str
     success: bool
     data: dict[str, Any] | None = None
@@ -57,6 +60,7 @@ class TaskResult:
 @dataclass
 class PhaseResult:
     """Result from executing a flow phase."""
+
     phase_name: str
     success: bool
     task_results: list[TaskResult]
@@ -67,6 +71,7 @@ class PhaseResult:
 @dataclass
 class FlowExecutionResult:
     """Complete result from flow execution."""
+
     flow_name: str
     success: bool
     phase_results: list[PhaseResult]
@@ -88,8 +93,9 @@ class PlaceholderResolver:
         """Set context values for placeholder resolution."""
         self.context_values.update(context)
 
-    def add_discovery_data(self, sourcetypes: list[str] = None,
-                          hosts: list[str] = None, sources: list[str] = None) -> None:
+    def add_discovery_data(
+        self, sourcetypes: list[str] = None, hosts: list[str] = None, sources: list[str] = None
+    ) -> None:
         """Add discovered data for dynamic placeholder resolution."""
         if sourcetypes:
             self.discovered_sourcetypes.extend(sourcetypes)
@@ -128,8 +134,9 @@ class PlaceholderResolver:
 
         return resolved
 
-    def resolve_parameters(self, parameters: dict[str, Any],
-                          task_context: dict[str, Any] = None) -> dict[str, Any]:
+    def resolve_parameters(
+        self, parameters: dict[str, Any], task_context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Resolve placeholders in task parameters."""
         if not parameters:
             return parameters
@@ -190,14 +197,18 @@ class AgentCoordinator:
         orchestrator = self._get_orchestrator()
         logger.debug(f"🔍 Orchestrator available: {orchestrator is not None}")
 
-        if orchestrator and hasattr(orchestrator, 'registry_manager'):
+        if orchestrator and hasattr(orchestrator, "registry_manager"):
             # Get agent from the real orchestrator registry
             try:
                 logger.debug(f"🔍 Accessing registry manager for agent {agent_id}")
                 agent_registry = orchestrator.registry_manager.agent_registry
 
                 # Check if agent is registered
-                available_agents = list(agent_registry._entries.keys()) if hasattr(agent_registry, '_entries') else []
+                available_agents = (
+                    list(agent_registry._entries.keys())
+                    if hasattr(agent_registry, "_entries")
+                    else []
+                )
                 logger.debug(f"🔍 Available agents in registry: {available_agents}")
 
                 # CRITICAL: Await the async get_instance call
@@ -207,21 +218,29 @@ class AgentCoordinator:
                     logger.info(f"✅ Successfully retrieved agent {agent_id} from registry")
                     return agent_instance
                 else:
-                    logger.error(f"❌ Agent {agent_id} not found in registry. Available: {available_agents}")
+                    logger.error(
+                        f"❌ Agent {agent_id} not found in registry. Available: {available_agents}"
+                    )
             except Exception as e:
                 logger.error(f"❌ Failed to get agent {agent_id} from registry: {e}")
                 logger.error(f"❌ Registry manager: {orchestrator.registry_manager}")
-                logger.error(f"❌ Agent registry: {getattr(orchestrator.registry_manager, 'agent_registry', 'NOT_FOUND')}")
+                logger.error(
+                    f"❌ Agent registry: {getattr(orchestrator.registry_manager, 'agent_registry', 'NOT_FOUND')}"
+                )
         else:
             logger.error("❌ Orchestrator not available or missing registry_manager")
             logger.error(f"❌ Orchestrator: {orchestrator}")
-            logger.error(f"❌ Has registry_manager: {hasattr(orchestrator, 'registry_manager') if orchestrator else False}")
+            logger.error(
+                f"❌ Has registry_manager: {hasattr(orchestrator, 'registry_manager') if orchestrator else False}"
+            )
 
         # Return failure indicator instead of fake data
         logger.error(f"❌ Agent {agent_id} is not available - returning None")
         return None
 
-    async def validate_search(self, search_query: str, agent_id: str = "search_guru") -> tuple[bool, str, str | None]:
+    async def validate_search(
+        self, search_query: str, agent_id: str = "search_guru"
+    ) -> tuple[bool, str, str | None]:
         """
         Validate SPL search query using SearchGuru agent.
 
@@ -231,7 +250,7 @@ class AgentCoordinator:
         try:
             agent = await self.get_agent(agent_id)
 
-                        # Check if we got a real agent instance
+            # Check if we got a real agent instance
             if not agent or isinstance(agent, dict):
                 error_msg = f"SearchGuru agent '{agent_id}' not available - orchestrator not properly initialized"
                 logger.error(error_msg)
@@ -239,7 +258,7 @@ class AgentCoordinator:
                 logger.error(f"Orchestrator state: {self.orchestrator}")
                 return False, search_query, error_msg
 
-            if not hasattr(agent, 'execute'):
+            if not hasattr(agent, "execute"):
                 error_msg = f"SearchGuru agent '{agent_id}' does not have execute method - invalid agent instance"
                 logger.error(error_msg)
                 logger.error(f"Agent type: {type(agent)}")
@@ -267,34 +286,31 @@ class AgentCoordinator:
             logger.error(f"Search validation failed: {e}")
             return False, search_query, str(e)
 
-    async def execute_search(self, search_query: str, parameters: dict[str, Any],
-                      agent_id: str = "splunk_mcp", tool_name: str = "run_oneshot_search") -> TaskResult:
+    async def execute_search(
+        self,
+        search_query: str,
+        parameters: dict[str, Any],
+        agent_id: str = "splunk_mcp",
+        tool_name: str = "run_oneshot_search",
+    ) -> TaskResult:
         """Execute search using SplunkMCP agent."""
         try:
             agent = await self.get_agent(agent_id)
 
-                        # Check if we got a real agent instance
+            # Check if we got a real agent instance
             if not agent or isinstance(agent, dict):
                 error_msg = f"SplunkMCP agent '{agent_id}' not available - orchestrator not properly initialized"
                 logger.error(error_msg)
                 logger.error(f"Agent retrieval returned: {agent}")
                 logger.error(f"Orchestrator state: {self.orchestrator}")
-                return TaskResult(
-                    task_id="search_execution",
-                    success=False,
-                    error=error_msg
-                )
+                return TaskResult(task_id="search_execution", success=False, error=error_msg)
 
-            if not hasattr(agent, 'execute'):
+            if not hasattr(agent, "execute"):
                 error_msg = f"SplunkMCP agent '{agent_id}' does not have execute method - invalid agent instance"
                 logger.error(error_msg)
                 logger.error(f"Agent type: {type(agent)}")
                 logger.error(f"Agent attributes: {dir(agent)}")
-                return TaskResult(
-                    task_id="search_execution",
-                    success=False,
-                    error=error_msg
-                )
+                return TaskResult(task_id="search_execution", success=False, error=error_msg)
 
             # Make real call to SplunkMCP agent
             logger.info(f"🔍 Executing search with {agent_id}: {search_query}")
@@ -316,33 +332,26 @@ class AgentCoordinator:
                         "agent_used": agent_id,
                         "query": search_query,
                         "tool_name": tool_name,
-                        "parameters": parameters
-                    }
+                        "parameters": parameters,
+                    },
                 )
             else:
                 error_msg = result.get("error", "Unknown search execution error")
                 logger.error(f"❌ Search execution failed: {error_msg}")
-                return TaskResult(
-                    task_id="search_execution",
-                    success=False,
-                    error=error_msg
-                )
+                return TaskResult(task_id="search_execution", success=False, error=error_msg)
 
         except Exception as e:
             logger.error(f"Search execution failed: {e}")
-            return TaskResult(
-                task_id="search_execution",
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(task_id="search_execution", success=False, error=str(e))
 
-    async def synthesize_results(self, results: dict[str, Any], context: str,
-                          agent_id: str = "result_synthesizer") -> dict[str, Any]:
+    async def synthesize_results(
+        self, results: dict[str, Any], context: str, agent_id: str = "result_synthesizer"
+    ) -> dict[str, Any]:
         """Synthesize search results using ResultSynthesizer agent."""
         try:
             agent = await self.get_agent(agent_id)
 
-                        # Check if we got a real agent instance
+            # Check if we got a real agent instance
             if not agent or isinstance(agent, dict):
                 error_msg = f"ResultSynthesizer agent '{agent_id}' not available - orchestrator not properly initialized"
                 logger.error(error_msg)
@@ -350,7 +359,7 @@ class AgentCoordinator:
                 logger.error(f"Orchestrator state: {self.orchestrator}")
                 return {"error": error_msg, "success": False, "agent": agent_id}
 
-            if not hasattr(agent, 'execute'):
+            if not hasattr(agent, "execute"):
                 error_msg = f"ResultSynthesizer agent '{agent_id}' does not have execute method - invalid agent instance"
                 logger.error(error_msg)
                 logger.error(f"Agent type: {type(agent)}")
@@ -367,11 +376,9 @@ class AgentCoordinator:
 
             if result and result.get("success", True):
                 logger.info(f"✅ Results synthesized successfully by {agent_id}")
-                return result.get("data", {
-                    "synthesis_performed": True,
-                    "context": context,
-                    "agent": agent_id
-                })
+                return result.get(
+                    "data", {"synthesis_performed": True, "context": context, "agent": agent_id}
+                )
             else:
                 error_msg = result.get("error", "Unknown synthesis error")
                 logger.error(f"❌ Result synthesis failed: {error_msg}")
@@ -407,7 +414,7 @@ class AgentCoordinator:
                     "type": resource.resource_type,
                     "description": resource.description,
                     "data": context_data,
-                    "priority": resource.priority
+                    "priority": resource.priority,
                 }
 
                 logger.info(f"Loaded context resource: {resource.resource_id}")
@@ -428,29 +435,18 @@ class AgentCoordinator:
             "tool_name": resource.resource_id,
             "parameters": resource.parameters,
             "documentation_ready": True,
-            "integration_status": "Ready for MCP tool integration"
+            "integration_status": "Ready for MCP tool integration",
         }
 
     def _load_static_documentation(self, resource: ContextResource) -> dict[str, Any]:
         """Load static documentation resources."""
         logger.info(f"Loading static documentation: {resource.resource_id}")
-        return {
-            "doc_id": resource.resource_id,
-            "content_ready": True
-        }
+        return {"doc_id": resource.resource_id, "content_ready": True}
 
     def _load_reference_material(self, resource: ContextResource) -> dict[str, Any]:
         """Load reference materials."""
         logger.info(f"Loading reference material: {resource.resource_id}")
-        return {
-            "reference_id": resource.resource_id,
-            "material_ready": True
-        }
-
-
-
-
-
+        return {"reference_id": resource.resource_id, "material_ready": True}
 
 
 class FlowEngine:
@@ -462,7 +458,12 @@ class FlowEngine:
     multi-agent coordination with dynamic tool discovery.
     """
 
-    def __init__(self, config: Config | None = None, orchestrator=None, progress_callback: Callable[[ProgressUpdate], None] | None = None):
+    def __init__(
+        self,
+        config: Config | None = None,
+        orchestrator=None,
+        progress_callback: Callable[[ProgressUpdate], None] | None = None,
+    ):
         """
         Initialize flow engine.
 
@@ -512,7 +513,9 @@ class FlowEngine:
             logger.info(f"Executing LLM step {step_number} for task {task.task_id}")
 
             # Execute LLM step
-            step_result = self._execute_llm_step(task, dynamic_prompt, context, loaded_context, step_number)
+            step_result = self._execute_llm_step(
+                task, dynamic_prompt, context, loaded_context, step_number
+            )
             llm_steps.append(step_result)
 
             # Check if task is complete
@@ -530,9 +533,9 @@ class FlowEngine:
                 "llm_loop_enabled": True,
                 "steps_executed": len(llm_steps),
                 "context_resources_loaded": len(loaded_context),
-                "bounded_execution": task.llm_loop.bounded_execution
+                "bounded_execution": task.llm_loop.bounded_execution,
             },
-            llm_steps=llm_steps
+            llm_steps=llm_steps,
         )
 
     async def _execute_regular_task(self, task: FlowTask, context: dict[str, Any]) -> TaskResult:
@@ -544,13 +547,17 @@ class FlowEngine:
             task_id=task.task_id,
             success=True,
             data={"message": f"Regular task execution: {task.task_id}"},
-            metadata={"execution_type": "regular"}
+            metadata={"execution_type": "regular"},
         )
 
-    def _build_dynamic_prompt(self, task: FlowTask, context: dict[str, Any], loaded_context: dict[str, Any]) -> str:
+    def _build_dynamic_prompt(
+        self, task: FlowTask, context: dict[str, Any], loaded_context: dict[str, Any]
+    ) -> str:
         """Build dynamic prompt using task information and context."""
         # Base template with task information - resolve placeholders first
-        raw_template = task.llm_loop.prompt or """
+        raw_template = (
+            task.llm_loop.prompt
+            or """
 You are executing task: {task_id} - {title}
 
 **Task Description**: {description}
@@ -570,6 +577,7 @@ You are executing task: {task_id} - {title}
 
 Execute this task step by step, using the available tools and context resources to achieve the goal.
 """
+        )
 
         # Resolve placeholders in the base template first
         base_template = self.placeholder_resolver.resolve_search_query(raw_template, context)
@@ -581,7 +589,9 @@ Execute this task step by step, using the available tools and context resources 
 
         # Resolve placeholders in task fields first
         resolved_title = self.placeholder_resolver.resolve_search_query(task.title, context)
-        resolved_description = self.placeholder_resolver.resolve_search_query(task.description, context)
+        resolved_description = self.placeholder_resolver.resolve_search_query(
+            task.description, context
+        )
         resolved_goal = self.placeholder_resolver.resolve_search_query(task.goal, context)
         resolved_instructions = self.placeholder_resolver.resolve_search_query(
             task.dynamic_instructions or "Follow the task goal and description.", context
@@ -597,7 +607,7 @@ Execute this task step by step, using the available tools and context resources 
                 allowed_tools=", ".join(task.llm_loop.allowed_tools),
                 context_resources="\n".join(context_desc),
                 dynamic_instructions=resolved_instructions,
-                max_iterations=task.llm_loop.max_iterations
+                max_iterations=task.llm_loop.max_iterations,
             )
         except KeyError as e:
             # Handle placeholders in the template that aren't in our format dict
@@ -605,7 +615,9 @@ Execute this task step by step, using the available tools and context resources 
             # Use a safer approach - replace the problematic placeholders
             safe_template = base_template
             for placeholder in context.keys():
-                safe_template = safe_template.replace(f"{{{placeholder}}}", str(context[placeholder]))
+                safe_template = safe_template.replace(
+                    f"{{{placeholder}}}", str(context[placeholder])
+                )
 
             prompt = safe_template.format(
                 task_id=task.task_id,
@@ -615,13 +627,19 @@ Execute this task step by step, using the available tools and context resources 
                 allowed_tools=", ".join(task.llm_loop.allowed_tools),
                 context_resources="\n".join(context_desc),
                 dynamic_instructions=resolved_instructions,
-                max_iterations=task.llm_loop.max_iterations
+                max_iterations=task.llm_loop.max_iterations,
             )
 
         return prompt
 
-    def _execute_llm_step(self, task: FlowTask, prompt: str, context: dict[str, Any],
-                         loaded_context: dict[str, Any], step_number: int) -> LLMStepResult:
+    def _execute_llm_step(
+        self,
+        task: FlowTask,
+        prompt: str,
+        context: dict[str, Any],
+        loaded_context: dict[str, Any],
+        step_number: int,
+    ) -> LLMStepResult:
         """Execute a single step in the LLM loop."""
         # For now, simulate the LLM step execution
         logger.info(f"Executing LLM step {step_number} for task {task.task_id}")
@@ -643,11 +661,12 @@ Execute this task step by step, using the available tools and context resources 
             llm_reasoning=f"Step {step_number}: Using {selected_tool} to achieve task goal",
             next_action="complete" if step_number >= 2 else "continue",
             step_complete=step_number >= 2,
-            context_loaded=list(loaded_context.keys())
+            context_loaded=list(loaded_context.keys()),
         )
 
-    def _compile_llm_loop_result(self, task: FlowTask, steps: list[LLMStepResult],
-                                context: dict[str, Any]) -> dict[str, Any]:
+    def _compile_llm_loop_result(
+        self, task: FlowTask, steps: list[LLMStepResult], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compile final result from LLM loop execution."""
         return {
             "task_id": task.task_id,
@@ -657,17 +676,19 @@ Execute this task step by step, using the available tools and context resources 
                     "step": step.step_number,
                     "tool": step.tool_used,
                     "reasoning": step.llm_reasoning,
-                    "action": step.next_action
+                    "action": step.next_action,
                 }
                 for step in steps
             ],
             "context_resources_used": list(context.keys()),
             "final_output": steps[-1].tool_output if steps else None,
             "execution_pattern": "llm_in_the_loop",
-            "bounded_execution": True
+            "bounded_execution": True,
         }
 
-    async def execute_flow(self, flow: AgentFlow, context: dict[str, Any] = None) -> FlowExecutionResult:
+    async def execute_flow(
+        self, flow: AgentFlow, context: dict[str, Any] = None
+    ) -> FlowExecutionResult:
         """
         Execute complete agent flow.
 
@@ -683,11 +704,13 @@ Execute this task step by step, using the available tools and context resources 
 
         try:
             # Send initial progress update
-            self._send_progress_update(ProgressUpdate(
-                phase_name="initialization",
-                message=f"🚀 Starting {flow.workflow_name}",
-                status="starting"
-            ))
+            self._send_progress_update(
+                ProgressUpdate(
+                    phase_name="initialization",
+                    message=f"🚀 Starting {flow.workflow_name}",
+                    status="starting",
+                )
+            )
 
             # Validate flow
             validation_errors = flow.validate()
@@ -696,7 +719,7 @@ Execute this task step by step, using the available tools and context resources 
                     flow_name=flow.workflow_name,
                     success=False,
                     phase_results=[],
-                    error_summary=f"Flow validation failed: {'; '.join(validation_errors)}"
+                    error_summary=f"Flow validation failed: {'; '.join(validation_errors)}",
                 )
 
             # Set up execution context
@@ -715,11 +738,13 @@ Execute this task step by step, using the available tools and context resources 
                     continue
 
                 # Send phase start update
-                self._send_progress_update(ProgressUpdate(
-                    phase_name=phase_name,
-                    message=f"📋 **Phase {len(phase_results) + 1}: {phase.name}**\n*Goal*: {phase.description}",
-                    status="starting"
-                ))
+                self._send_progress_update(
+                    ProgressUpdate(
+                        phase_name=phase_name,
+                        message=f"📋 **Phase {len(phase_results) + 1}: {phase.name}**\n*Goal*: {phase.description}",
+                        status="starting",
+                    )
+                )
 
                 logger.info(f"Executing phase: {phase_name}")
                 phase_result = await self._execute_phase(phase, flow)
@@ -744,7 +769,7 @@ Execute this task step by step, using the available tools and context resources 
                 success=overall_success,
                 phase_results=phase_results,
                 synthesized_output=synthesized_output,
-                total_execution_time=execution_time
+                total_execution_time=execution_time,
             )
 
         except Exception as e:
@@ -755,9 +780,9 @@ Execute this task step by step, using the available tools and context resources 
             return FlowExecutionResult(
                 flow_name=flow.workflow_name,
                 success=False,
-                phase_results=phase_results if 'phase_results' in locals() else [],
+                phase_results=phase_results if "phase_results" in locals() else [],
                 error_summary=f"Flow execution failed: {str(e)}",
-                total_execution_time=execution_time
+                total_execution_time=execution_time,
             )
 
     async def _execute_phase(self, phase: FlowPhase, flow: AgentFlow) -> PhaseResult:
@@ -771,11 +796,13 @@ Execute this task step by step, using the available tools and context resources 
             logger.info(f"🚀 Executing phase '{phase.name}' with parallel fan-out/gather pattern")
 
             # Send parallel execution start update
-            self._send_progress_update(ProgressUpdate(
-                phase_name=phase.name,
-                message=f"🚀 **Parallel Fan-Out**: {phase.name}\n*Tasks*: {len(phase.tasks)} | *Max Parallel*: {phase.max_parallel}",
-                status="starting"
-            ))
+            self._send_progress_update(
+                ProgressUpdate(
+                    phase_name=phase.name,
+                    message=f"🚀 **Parallel Fan-Out**: {phase.name}\n*Tasks*: {len(phase.tasks)} | *Max Parallel*: {phase.max_parallel}",
+                    status="starting",
+                )
+            )
 
             # Execute tasks in parallel using fan-out/gather
             task_results = await self._execute_tasks_parallel(phase.tasks, phase.max_parallel, flow)
@@ -793,12 +820,14 @@ Execute this task step by step, using the available tools and context resources 
 
             for task in phase.tasks:
                 # Send task start update
-                self._send_progress_update(ProgressUpdate(
-                    phase_name=phase.name,
-                    task_id=task.task_id,
-                    message=f"🔧 **Executing Task {task.task_id}: {task.title}**\n*Description*: {task.description}",
-                    status="starting"
-                ))
+                self._send_progress_update(
+                    ProgressUpdate(
+                        phase_name=phase.name,
+                        task_id=task.task_id,
+                        message=f"🔧 **Executing Task {task.task_id}: {task.title}**\n*Description*: {task.description}",
+                        status="starting",
+                    )
+                )
 
                 logger.info(f"Executing task: {task.task_id}")
 
@@ -823,7 +852,7 @@ Execute this task step by step, using the available tools and context resources 
             phase_name=phase.name,
             success=phase_success,
             task_results=task_results,
-            execution_time=execution_time
+            execution_time=execution_time,
         )
 
     async def _execute_task(self, task: FlowTask, flow: AgentFlow) -> TaskResult:
@@ -852,11 +881,11 @@ Execute this task step by step, using the available tools and context resources 
                     return TaskResult(
                         task_id=task.task_id,
                         success=False,
-                        error=f"Search validation failed: {error}"
+                        error=f"Search validation failed: {error}",
                     )
                 resolved_query = validated_query
 
-                        # Execute search
+                # Execute search
             if resolved_query and task.tool in ["run_oneshot_search", "run_splunk_search"]:
                 search_result = await self.agent_coordinator.execute_search(
                     resolved_query, resolved_params, "splunk_mcp", task.tool
@@ -864,9 +893,7 @@ Execute this task step by step, using the available tools and context resources 
 
                 if not search_result.success:
                     return TaskResult(
-                        task_id=task.task_id,
-                        success=False,
-                        error=search_result.error
+                        task_id=task.task_id, success=False, error=search_result.error
                     )
 
                 # Use ResultSynthesizer for business intelligence generation if requested
@@ -882,10 +909,10 @@ Execute this task step by step, using the available tools and context resources 
                     data={
                         "search_results": search_result.data,
                         "resolved_query": resolved_query,
-                        "interpretation": interpretation
+                        "interpretation": interpretation,
                     },
                     metadata=search_result.metadata,
-                    execution_time=search_result.execution_time
+                    execution_time=search_result.execution_time,
                 )
 
             else:
@@ -894,32 +921,30 @@ Execute this task step by step, using the available tools and context resources 
                     task_id=task.task_id,
                     success=True,
                     data={"message": f"Task {task.task_id} executed successfully"},
-                    metadata={"task_type": "non_search"}
+                    metadata={"task_type": "non_search"},
                 )
 
         except Exception as e:
             logger.error(f"Task execution failed: {task.task_id}: {e}")
-            return TaskResult(
-                task_id=task.task_id,
-                success=False,
-                error=str(e)
-            )
+            return TaskResult(task_id=task.task_id, success=False, error=str(e))
 
     async def _execute_per_sourcetype_task(self, task: FlowTask, flow: AgentFlow) -> TaskResult:
         """Execute task for each discovered sourcetype."""
         if not self.placeholder_resolver.discovered_sourcetypes:
             # For now, simulate that we would execute per sourcetype
             # In real implementation, this would use discovered sourcetypes from previous phases
-            logger.info(f"Per-sourcetype task {task.task_id} would execute for each discovered sourcetype")
+            logger.info(
+                f"Per-sourcetype task {task.task_id} would execute for each discovered sourcetype"
+            )
             return TaskResult(
                 task_id=task.task_id,
                 success=True,
                 data={
                     "message": f"Per-sourcetype task ready: {task.task_id}",
                     "execution_mode": "per_sourcetype",
-                    "integration_status": "Ready for real system integration"
+                    "integration_status": "Ready for real system integration",
                 },
-                metadata={"execution_mode": "per_sourcetype", "awaiting_discovery": True}
+                metadata={"execution_mode": "per_sourcetype", "awaiting_discovery": True},
             )
 
         all_results = []
@@ -941,30 +966,29 @@ Execute this task step by step, using the available tools and context resources 
                 )
 
                 if search_result.success:
-                    all_results.append({
-                        "sourcetype": sourcetype,
-                        "results": search_result.data,
-                        "metadata": search_result.metadata
-                    })
+                    all_results.append(
+                        {
+                            "sourcetype": sourcetype,
+                            "results": search_result.data,
+                            "metadata": search_result.metadata,
+                        }
+                    )
                 else:
                     overall_success = False
-                    all_results.append({
-                        "sourcetype": sourcetype,
-                        "error": search_result.error
-                    })
+                    all_results.append({"sourcetype": sourcetype, "error": search_result.error})
 
             except Exception as e:
                 overall_success = False
-                all_results.append({
-                    "sourcetype": sourcetype,
-                    "error": str(e)
-                })
+                all_results.append({"sourcetype": sourcetype, "error": str(e)})
 
         return TaskResult(
             task_id=task.task_id,
             success=overall_success,
             data={"per_sourcetype_results": all_results},
-            metadata={"execution_mode": "per_sourcetype", "sourcetype_count": len(self.placeholder_resolver.discovered_sourcetypes)}
+            metadata={
+                "execution_mode": "per_sourcetype",
+                "sourcetype_count": len(self.placeholder_resolver.discovered_sourcetypes),
+            },
         )
 
     def _update_context_from_phase_results(self, phase_result: PhaseResult) -> None:
@@ -994,8 +1018,9 @@ Execute this task step by step, using the available tools and context resources 
                 if sources:
                     self.placeholder_resolver.add_discovery_data(sources=sources)
 
-    def _synthesize_results(self, phase_results: list[PhaseResult],
-                          output_structure: dict[str, Any]) -> dict[str, Any]:
+    def _synthesize_results(
+        self, phase_results: list[PhaseResult], output_structure: dict[str, Any]
+    ) -> dict[str, Any]:
         """Synthesize final output from all phase results."""
         synthesized = {
             "execution_summary": {
@@ -1003,16 +1028,15 @@ Execute this task step by step, using the available tools and context resources 
                 "successful_phases": sum(1 for p in phase_results if p.success),
                 "total_tasks": sum(len(p.task_results) for p in phase_results),
                 "successful_tasks": sum(
-                    sum(1 for t in p.task_results if t.success)
-                    for p in phase_results
-                )
+                    sum(1 for t in p.task_results if t.success) for p in phase_results
+                ),
             },
             "phase_results": {},
             "discovered_data": {
                 "sourcetypes": list(set(self.placeholder_resolver.discovered_sourcetypes)),
                 "hosts": list(set(self.placeholder_resolver.discovered_hosts)),
-                "sources": list(set(self.placeholder_resolver.discovered_sources))
-            }
+                "sources": list(set(self.placeholder_resolver.discovered_sources)),
+            },
         }
 
         # Organize results by phase
@@ -1020,7 +1044,7 @@ Execute this task step by step, using the available tools and context resources 
             phase_data = {
                 "success": phase_result.success,
                 "execution_time": phase_result.execution_time,
-                "tasks": {}
+                "tasks": {},
             }
 
             for task_result in phase_result.task_results:
@@ -1028,14 +1052,16 @@ Execute this task step by step, using the available tools and context resources 
                     "success": task_result.success,
                     "data": task_result.data,
                     "error": task_result.error,
-                    "execution_time": task_result.execution_time
+                    "execution_time": task_result.execution_time,
                 }
 
             synthesized["phase_results"][phase_result.phase_name] = phase_data
 
         return synthesized
 
-    async def _execute_tasks_parallel(self, tasks: list[FlowTask], max_parallel: int, flow: AgentFlow) -> list[TaskResult]:
+    async def _execute_tasks_parallel(
+        self, tasks: list[FlowTask], max_parallel: int, flow: AgentFlow
+    ) -> list[TaskResult]:
         """
         Execute tasks in parallel using the Fan-Out/Gather pattern.
 
@@ -1054,7 +1080,9 @@ Execute this task step by step, using the available tools and context resources 
 
         # Execute regular tasks in parallel
         if regular_tasks:
-            regular_results = await self._execute_regular_tasks_parallel(regular_tasks, max_parallel)
+            regular_results = await self._execute_regular_tasks_parallel(
+                regular_tasks, max_parallel
+            )
             all_results.extend(regular_results)
 
         # Execute per-sourcetype tasks sequentially (they have their own internal parallelization)
@@ -1066,20 +1094,22 @@ Execute this task step by step, using the available tools and context resources 
         logger.info(f"✅ Gather: Collected {len(all_results)} task results from parallel execution")
         return all_results
 
-    async def _execute_regular_tasks_parallel(self, tasks: list[FlowTask], max_parallel: int) -> list[TaskResult]:
+    async def _execute_regular_tasks_parallel(
+        self, tasks: list[FlowTask], max_parallel: int
+    ) -> list[TaskResult]:
         """Execute regular (non-per-sourcetype) tasks in parallel using micro agents."""
 
         # Create micro agent configurations for each task
         micro_agent_configs = []
         for task in tasks:
-            config = self.micro_agent_builder.create_micro_agent_for_task(task, self.execution_context)
+            config = self.micro_agent_builder.create_micro_agent_for_task(
+                task, self.execution_context
+            )
             micro_agent_configs.append(config)
 
         # Execute micro agents in parallel
         micro_results = await self.micro_agent_builder.execute_micro_agents_parallel(
-            micro_agent_configs,
-            max_parallel,
-            self._send_progress_update_dict
+            micro_agent_configs, max_parallel, self._send_progress_update_dict
         )
 
         # Convert MicroAgentResult to TaskResult
@@ -1094,8 +1124,8 @@ Execute this task step by step, using the available tools and context resources 
                 metadata={
                     "execution_type": "parallel_micro_agent",
                     "agent_name": micro_result.agent_name,
-                    "timeout_occurred": micro_result.timeout_occurred
-                }
+                    "timeout_occurred": micro_result.timeout_occurred,
+                },
             )
             task_results.append(task_result)
 
@@ -1108,25 +1138,31 @@ Execute this task step by step, using the available tools and context resources 
             task_id=update_dict.get("task_id"),
             message=update_dict.get("message", ""),
             status=update_dict.get("status", "in_progress"),
-            data=update_dict.get("data")
+            data=update_dict.get("data"),
         )
         self._send_progress_update(progress_update)
 
-    async def _synthesize_parallel_results(self, phase: FlowPhase, task_results: list[TaskResult]) -> None:
+    async def _synthesize_parallel_results(
+        self, phase: FlowPhase, task_results: list[TaskResult]
+    ) -> None:
         """
         Synthesize results from parallel task execution using ResultSynthesizer.
 
         This implements the "Gather" part of the pattern by collecting all parallel
         results and synthesizing them into actionable insights.
         """
-        logger.info(f"🧠 Synthesizing results from {len(task_results)} parallel tasks in phase '{phase.name}'")
+        logger.info(
+            f"🧠 Synthesizing results from {len(task_results)} parallel tasks in phase '{phase.name}'"
+        )
 
         # Send synthesis start update
-        self._send_progress_update(ProgressUpdate(
-            phase_name=phase.name,
-            message=f"🧠 **Synthesizing Results**: {phase.name}\n*Parallel Tasks*: {len(task_results)}",
-            status="starting"
-        ))
+        self._send_progress_update(
+            ProgressUpdate(
+                phase_name=phase.name,
+                message=f"🧠 **Synthesizing Results**: {phase.name}\n*Parallel Tasks*: {len(task_results)}",
+                status="starting",
+            )
+        )
 
         # Prepare synthesis context
         successful_results = [r for r in task_results if r.success]
@@ -1138,7 +1174,7 @@ Execute this task step by step, using the available tools and context resources 
             "total_tasks": len(task_results),
             "successful_tasks": len(successful_results),
             "failed_tasks": len(failed_results),
-            "execution_pattern": "parallel_fan_out_gather"
+            "execution_pattern": "parallel_fan_out_gather",
         }
 
         # Collect all successful task data for synthesis
@@ -1154,77 +1190,97 @@ Execute this task step by step, using the available tools and context resources 
             ]
 
         try:
-                                    # Optimal Hybrid: Enhanced Gather Agent + Result Synthesizer JSON Output
+            # Optimal Hybrid: Enhanced Gather Agent + Result Synthesizer JSON Output
             # Step 1: Enhanced gather agent for coordination and data collection
             builtin_synthesis = self._synthesize_parallel_results_builtin(
-                combined_results,
-                phase,
-                synthesis_context
+                combined_results, phase, synthesis_context
             )
 
             # Step 2: Use result_synthesizer for structured JSON output if meaningful data exists
             if builtin_synthesis.get("has_meaningful_data", False):
-                logger.info(f"🎯 Generating structured JSON output via result_synthesizer for phase '{phase.name}'")
+                logger.info(
+                    f"🎯 Generating structured JSON output via result_synthesizer for phase '{phase.name}'"
+                )
                 try:
                     json_synthesis_result = await self.agent_coordinator.synthesize_results(
                         combined_results,
                         f"Phase: {phase.name} - {phase.description}",
-                        "result_synthesizer"
+                        "result_synthesizer",
                     )
 
                     # Combine enhanced gather agent metadata with JSON output
                     if json_synthesis_result.get("success", True):
                         synthesis_result = json_synthesis_result
                         synthesis_result["builtin_metadata"] = builtin_synthesis
-                        synthesis_result["synthesis_method"] = "optimal_hybrid_enhanced_gather_plus_json_output"
-                        logger.info(f"✅ Optimal hybrid synthesis complete for phase '{phase.name}': enhanced coordination + JSON output")
+                        synthesis_result["synthesis_method"] = (
+                            "optimal_hybrid_enhanced_gather_plus_json_output"
+                        )
+                        logger.info(
+                            f"✅ Optimal hybrid synthesis complete for phase '{phase.name}': enhanced coordination + JSON output"
+                        )
                     else:
                         # Fallback to enhanced gather agent
-                        logger.warning(f"⚠️ result_synthesizer failed, using enhanced gather agent for phase '{phase.name}'")
+                        logger.warning(
+                            f"⚠️ result_synthesizer failed, using enhanced gather agent for phase '{phase.name}'"
+                        )
                         synthesis_result = builtin_synthesis
                         synthesis_result["synthesis_method"] = "enhanced_gather_agent_fallback"
 
                 except Exception as e:
                     logger.error(f"❌ result_synthesizer error for phase '{phase.name}': {e}")
                     synthesis_result = builtin_synthesis
-                    synthesis_result["synthesis_method"] = "enhanced_gather_agent_fallback_after_error"
+                    synthesis_result["synthesis_method"] = (
+                        "enhanced_gather_agent_fallback_after_error"
+                    )
             else:
                 # Use enhanced gather agent for phases without meaningful data
-                logger.info(f"📊 Using enhanced gather agent for phase '{phase.name}' (no meaningful data for JSON synthesis)")
+                logger.info(
+                    f"📊 Using enhanced gather agent for phase '{phase.name}' (no meaningful data for JSON synthesis)"
+                )
                 synthesis_result = builtin_synthesis
                 synthesis_result["synthesis_method"] = "enhanced_gather_agent_only"
 
-            logger.info(f"✅ Successfully synthesized parallel results for phase '{phase.name}' using built-in synthesis")
+            logger.info(
+                f"✅ Successfully synthesized parallel results for phase '{phase.name}' using built-in synthesis"
+            )
 
             # Send synthesis completion update
             insights_count = len(synthesis_result.get("key_insights", []))
-            self._send_progress_update(ProgressUpdate(
-                phase_name=phase.name,
-                message=f"✅ **Synthesis Complete**: {phase.name}\n*Insights Generated*: {insights_count}",
-                status="completed",
-                data={"synthesis_result": synthesis_result}
-            ))
+            self._send_progress_update(
+                ProgressUpdate(
+                    phase_name=phase.name,
+                    message=f"✅ **Synthesis Complete**: {phase.name}\n*Insights Generated*: {insights_count}",
+                    status="completed",
+                    data={"synthesis_result": synthesis_result},
+                )
+            )
 
             # Store synthesis result in execution context for future phases
             self.execution_context[f"{phase.name}_synthesis"] = {
                 "synthesis_performed": True,
                 "context": f"Phase: {phase.name} - {phase.description}",
                 "agent": "builtin_parallel_synthesis",
-                "result": synthesis_result
+                "result": synthesis_result,
             }
 
         except Exception as e:
-            logger.error(f"❌ Exception during parallel result synthesis for phase '{phase.name}': {e}")
+            logger.error(
+                f"❌ Exception during parallel result synthesis for phase '{phase.name}': {e}"
+            )
 
             # Send synthesis error update
-            self._send_progress_update(ProgressUpdate(
-                phase_name=phase.name,
-                message=f"❌ **Synthesis Failed**: {phase.name}\n*Error*: {str(e)[:100]}...",
-                status="error",
-                data={"synthesis_error": str(e)}
-            ))
+            self._send_progress_update(
+                ProgressUpdate(
+                    phase_name=phase.name,
+                    message=f"❌ **Synthesis Failed**: {phase.name}\n*Error*: {str(e)[:100]}...",
+                    status="error",
+                    data={"synthesis_error": str(e)},
+                )
+            )
 
-    def _synthesize_results(self, phase_results: list[PhaseResult], output_structure: dict[str, Any]) -> dict[str, Any]:
+    def _synthesize_results(
+        self, phase_results: list[PhaseResult], output_structure: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Synthesize final output from all phase results and synthesis results.
 
@@ -1252,14 +1308,18 @@ Execute this task step by step, using the available tools and context resources 
                 "total_phases": len(phase_results),
                 "successful_phases": sum(1 for p in phase_results if p.success),
                 "synthesis_phases": len(synthesis_results),
-                "output_structure": output_structure
-            }
+                "output_structure": output_structure,
+            },
         }
 
-        logger.info(f"✅ Final synthesis complete: {len(synthesis_results)} phase syntheses combined")
+        logger.info(
+            f"✅ Final synthesis complete: {len(synthesis_results)} phase syntheses combined"
+        )
         return synthesized_output
 
-    def _build_comprehensive_summary(self, synthesis_results: dict[str, Any], phase_results: list[PhaseResult]) -> str:
+    def _build_comprehensive_summary(
+        self, synthesis_results: dict[str, Any], phase_results: list[PhaseResult]
+    ) -> str:
         """Build a comprehensive summary from all synthesis results."""
         if not synthesis_results:
             return "No synthesis results available - phases may not have completed successfully."
@@ -1351,10 +1411,7 @@ Execute this task step by step, using the available tools and context resources 
         return recommendations
 
     def _synthesize_parallel_results_builtin(
-        self,
-        combined_results: dict[str, Any],
-        phase: FlowPhase,
-        synthesis_context: dict[str, Any]
+        self, combined_results: dict[str, Any], phase: FlowPhase, synthesis_context: dict[str, Any]
     ) -> dict[str, Any]:
         """
         Built-in ADK Parallel Fan-Out/Gather synthesis pattern.
@@ -1362,7 +1419,9 @@ Execute this task step by step, using the available tools and context resources 
         This implements the correct ADK pattern by synthesizing results internally
         within the FlowEngine instead of calling external agents.
         """
-        logger.info(f"🧠 Built-in synthesis for phase '{phase.name}' with {len(combined_results)} task results")
+        logger.info(
+            f"🧠 Built-in synthesis for phase '{phase.name}' with {len(combined_results)} task results"
+        )
 
         # Extract insights from micro agent responses
         key_insights = []
@@ -1374,28 +1433,33 @@ Execute this task step by step, using the available tools and context resources 
                 continue
 
             # Extract insights from micro agent LLM responses
-            if isinstance(task_data, dict) and 'response' in task_data:
-                response_text = task_data['response']
+            if isinstance(task_data, dict) and "response" in task_data:
+                response_text = task_data["response"]
 
                 # Parse insights from the LLM response
                 insights = self._extract_insights_from_response(response_text, task_id)
-                key_insights.extend(insights.get('insights', []))
+                key_insights.extend(insights.get("insights", []))
 
                 # Extract data patterns
                 data_patterns = self._extract_data_patterns_from_response(response_text, task_id)
                 discovered_data.update(data_patterns)
 
                 # Extract recommendations
-                task_recommendations = self._extract_recommendations_from_response(response_text, task_id)
+                task_recommendations = self._extract_recommendations_from_response(
+                    response_text, task_id
+                )
                 recommendations.extend(task_recommendations)
 
         # Determine if we have meaningful data for production synthesis
         has_meaningful_data = (
-            len(key_insights) > 0 or
-            len(discovered_data) > 0 or
-            len(recommendations) > 0 or
-            any(task_data.get("result", {}).get("search_results") for task_id, task_data in combined_results.items()
-                if task_id != "failed_tasks" and isinstance(task_data, dict))
+            len(key_insights) > 0
+            or len(discovered_data) > 0
+            or len(recommendations) > 0
+            or any(
+                task_data.get("result", {}).get("search_results")
+                for task_id, task_data in combined_results.items()
+                if task_id != "failed_tasks" and isinstance(task_data, dict)
+            )
         )
 
         # Build comprehensive synthesis result
@@ -1415,8 +1479,8 @@ Execute this task step by step, using the available tools and context resources 
                 "phase_description": phase.description,
                 "synthesis_timestamp": datetime.now().isoformat(),
                 "synthesis_method": "builtin_adk_pattern",
-                "meaningful_data_detected": has_meaningful_data
-            }
+                "meaningful_data_detected": has_meaningful_data,
+            },
         }
 
         # Enhanced Business Intelligence Generation
@@ -1431,13 +1495,17 @@ Execute this task step by step, using the available tools and context resources 
         )
 
         # Add enhanced business intelligence to synthesis result
-        synthesis_result.update({
-            "executive_summary": executive_summary,
-            "business_intelligence": business_intelligence,
-            "synthesis_method": "enhanced_builtin_gather_agent_with_business_intelligence"
-        })
+        synthesis_result.update(
+            {
+                "executive_summary": executive_summary,
+                "business_intelligence": business_intelligence,
+                "synthesis_method": "enhanced_builtin_gather_agent_with_business_intelligence",
+            }
+        )
 
-        logger.info(f"✅ Enhanced built-in synthesis complete: {len(key_insights)} insights, {len(recommendations)} recommendations, executive summary generated")
+        logger.info(
+            f"✅ Enhanced built-in synthesis complete: {len(key_insights)} insights, {len(recommendations)} recommendations, executive summary generated"
+        )
         return synthesis_result
 
     def _extract_insights_from_response(self, response_text: str, task_id: str) -> dict[str, Any]:
@@ -1452,21 +1520,27 @@ Execute this task step by step, using the available tools and context resources 
         # Look for common insight patterns in the response
         if "pattern" in response_text.lower() or "insight" in response_text.lower():
             # Extract bullet points or numbered lists as insights
-            lines = response_text.split('\n')
+            lines = response_text.split("\n")
             for line in lines:
                 line = line.strip()
-                if line.startswith('*') or line.startswith('-') or line.startswith('•'):
-                    insight = line.lstrip('*-• ').strip()
+                if line.startswith("*") or line.startswith("-") or line.startswith("•"):
+                    insight = line.lstrip("*-• ").strip()
                     if len(insight) > 10:  # Filter out very short lines
-                        insights.append({
-                            "source_task": task_id,
-                            "insight": insight,
-                            "confidence": "high" if "significant" in insight.lower() else "medium"
-                        })
+                        insights.append(
+                            {
+                                "source_task": task_id,
+                                "insight": insight,
+                                "confidence": "high"
+                                if "significant" in insight.lower()
+                                else "medium",
+                            }
+                        )
 
         return {"insights": insights}
 
-    def _extract_data_patterns_from_response(self, response_text: str, task_id: str) -> dict[str, Any]:
+    def _extract_data_patterns_from_response(
+        self, response_text: str, task_id: str
+    ) -> dict[str, Any]:
         """Extract data patterns from micro agent LLM response."""
         patterns = {}
 
@@ -1483,7 +1557,7 @@ Execute this task step by step, using the available tools and context resources 
             patterns["error_patterns"] = {
                 "source_task": task_id,
                 "has_errors": True,
-                "description": "Error patterns detected in analysis"
+                "description": "Error patterns detected in analysis",
             }
 
         # Extract temporal patterns
@@ -1491,7 +1565,7 @@ Execute this task step by step, using the available tools and context resources 
             patterns["temporal_patterns"] = {
                 "source_task": task_id,
                 "has_temporal_data": True,
-                "description": "Temporal patterns detected in analysis"
+                "description": "Temporal patterns detected in analysis",
             }
 
         # Extract volume patterns
@@ -1499,12 +1573,14 @@ Execute this task step by step, using the available tools and context resources 
             patterns["volume_patterns"] = {
                 "source_task": task_id,
                 "has_volume_data": True,
-                "description": "Volume patterns detected in analysis"
+                "description": "Volume patterns detected in analysis",
             }
 
         return patterns
 
-    def _extract_recommendations_from_response(self, response_text: str, task_id: str) -> list[dict[str, Any]]:
+    def _extract_recommendations_from_response(
+        self, response_text: str, task_id: str
+    ) -> list[dict[str, Any]]:
         """Extract recommendations from micro agent LLM response."""
         recommendations = []
 
@@ -1516,19 +1592,28 @@ Execute this task step by step, using the available tools and context resources 
         # Look for recommendation patterns
         response_lower = response_text.lower()
 
-        if "recommend" in response_lower or "suggest" in response_lower or "should" in response_lower:
+        if (
+            "recommend" in response_lower
+            or "suggest" in response_lower
+            or "should" in response_lower
+        ):
             # Extract sentences containing recommendations
-            sentences = response_text.split('.')
+            sentences = response_text.split(".")
             for sentence in sentences:
                 sentence = sentence.strip()
-                if any(word in sentence.lower() for word in ["recommend", "suggest", "should", "consider"]):
+                if any(
+                    word in sentence.lower()
+                    for word in ["recommend", "suggest", "should", "consider"]
+                ):
                     if len(sentence) > 20:  # Filter out very short sentences
-                        recommendations.append({
-                            "source_task": task_id,
-                            "recommendation": sentence,
-                            "priority": "high" if "critical" in sentence.lower() else "medium",
-                            "category": "operational"
-                        })
+                        recommendations.append(
+                            {
+                                "source_task": task_id,
+                                "recommendation": sentence,
+                                "priority": "high" if "critical" in sentence.lower() else "medium",
+                                "category": "operational",
+                            }
+                        )
 
         return recommendations
 
@@ -1538,7 +1623,7 @@ Execute this task step by step, using the available tools and context resources 
         discovered_data: dict[str, Any],
         recommendations: list[dict[str, Any]],
         phase: FlowPhase,
-        combined_results: dict[str, Any]
+        combined_results: dict[str, Any],
     ) -> dict[str, Any]:
         """
         Generate executive summary with business intelligence.
@@ -1557,22 +1642,31 @@ Execute this task step by step, using the available tools and context resources 
         business_findings = []
         for insight in high_priority_insights[:5]:  # Top 5 high-confidence insights
             finding = insight.get("insight", "")
-            if any(keyword in finding.lower() for keyword in ["error", "performance", "volume", "pattern", "anomaly", "security"]):
-                business_findings.append({
-                    "finding": finding,
-                    "confidence": insight.get("confidence", "medium"),
-                    "business_impact": self._assess_business_impact(finding)
-                })
+            if any(
+                keyword in finding.lower()
+                for keyword in ["error", "performance", "volume", "pattern", "anomaly", "security"]
+            ):
+                business_findings.append(
+                    {
+                        "finding": finding,
+                        "confidence": insight.get("confidence", "medium"),
+                        "business_impact": self._assess_business_impact(finding),
+                    }
+                )
 
         # Generate next actions
         next_actions = []
         for rec in critical_recommendations[:3]:  # Top 3 critical recommendations
-            next_actions.append({
-                "action": rec.get("recommendation", ""),
-                "priority": rec.get("priority", "medium"),
-                "estimated_effort": self._estimate_implementation_effort(rec.get("recommendation", "")),
-                "business_value": self._assess_business_value(rec.get("recommendation", ""))
-            })
+            next_actions.append(
+                {
+                    "action": rec.get("recommendation", ""),
+                    "priority": rec.get("priority", "medium"),
+                    "estimated_effort": self._estimate_implementation_effort(
+                        rec.get("recommendation", "")
+                    ),
+                    "business_value": self._assess_business_value(rec.get("recommendation", "")),
+                }
+            )
 
         return {
             "overview": executive_overview,
@@ -1582,8 +1676,8 @@ Execute this task step by step, using the available tools and context resources 
                 "phase_analyzed": phase.name,
                 "data_points_examined": total_data_points,
                 "insights_generated": len(key_insights),
-                "recommendations_provided": len(recommendations)
-            }
+                "recommendations_provided": len(recommendations),
+            },
         }
 
     def _generate_business_intelligence(
@@ -1592,7 +1686,7 @@ Execute this task step by step, using the available tools and context resources 
         discovered_data: dict[str, Any],
         recommendations: list[dict[str, Any]],
         phase: FlowPhase,
-        combined_results: dict[str, Any]
+        combined_results: dict[str, Any],
     ) -> dict[str, Any]:
         """
         Generate production-ready business intelligence with persona-based use cases.
@@ -1615,14 +1709,18 @@ Execute this task step by step, using the available tools and context resources 
             "persona_use_cases": personas,
             "dashboard_strategy": {
                 "recommended_panels": dashboard_panels,
-                "implementation_priority": "high" if len(dashboard_panels) > 2 else "medium"
+                "implementation_priority": "high" if len(dashboard_panels) > 2 else "medium",
             },
             "alert_strategy": {
                 "recommended_alerts": alert_recommendations,
-                "monitoring_approach": "proactive" if len(alert_recommendations) > 1 else "reactive"
+                "monitoring_approach": "proactive"
+                if len(alert_recommendations) > 1
+                else "reactive",
             },
             "business_opportunities": business_opportunities,
-            "implementation_roadmap": self._create_implementation_roadmap(dashboard_panels, alert_recommendations, business_opportunities)
+            "implementation_roadmap": self._create_implementation_roadmap(
+                dashboard_panels, alert_recommendations, business_opportunities
+            ),
         }
 
     def _assess_business_impact(self, finding: str) -> str:
@@ -1655,133 +1753,170 @@ Execute this task step by step, using the available tools and context resources 
         else:
             return "low"
 
-    def _identify_relevant_personas(self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _identify_relevant_personas(
+        self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Identify relevant personas based on insights and recommendations."""
         personas = []
 
         # IT Operations persona
-        if any("error" in str(item).lower() or "performance" in str(item).lower()
-               for item in insights + recommendations):
-            personas.append({
-                "persona": "IT Operations",
-                "title": "Proactive System Monitoring and Issue Resolution",
-                "business_opportunity": "Identify and resolve system issues before they impact users",
-                "use_case_description": "Monitor system health, detect anomalies, and implement proactive fixes"
-            })
+        if any(
+            "error" in str(item).lower() or "performance" in str(item).lower()
+            for item in insights + recommendations
+        ):
+            personas.append(
+                {
+                    "persona": "IT Operations",
+                    "title": "Proactive System Monitoring and Issue Resolution",
+                    "business_opportunity": "Identify and resolve system issues before they impact users",
+                    "use_case_description": "Monitor system health, detect anomalies, and implement proactive fixes",
+                }
+            )
 
         # Security Team persona
-        if any("security" in str(item).lower() or "access" in str(item).lower()
-               for item in insights + recommendations):
-            personas.append({
-                "persona": "Security Team",
-                "title": "Security Monitoring and Threat Detection",
-                "business_opportunity": "Enhance security posture and threat detection capabilities",
-                "use_case_description": "Monitor security events, detect threats, and implement security controls"
-            })
+        if any(
+            "security" in str(item).lower() or "access" in str(item).lower()
+            for item in insights + recommendations
+        ):
+            personas.append(
+                {
+                    "persona": "Security Team",
+                    "title": "Security Monitoring and Threat Detection",
+                    "business_opportunity": "Enhance security posture and threat detection capabilities",
+                    "use_case_description": "Monitor security events, detect threats, and implement security controls",
+                }
+            )
 
         # Business Analyst persona (default)
-        personas.append({
-            "persona": "Business Analyst",
-            "title": "Data-Driven Business Intelligence",
-            "business_opportunity": "Transform operational data into actionable business insights",
-            "use_case_description": "Analyze operational patterns to drive business decisions and improvements"
-        })
+        personas.append(
+            {
+                "persona": "Business Analyst",
+                "title": "Data-Driven Business Intelligence",
+                "business_opportunity": "Transform operational data into actionable business insights",
+                "use_case_description": "Analyze operational patterns to drive business decisions and improvements",
+            }
+        )
 
         return personas
 
-    def _generate_dashboard_recommendations(self, discovered_data: dict[str, Any], insights: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _generate_dashboard_recommendations(
+        self, discovered_data: dict[str, Any], insights: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate dashboard panel recommendations."""
         panels = []
 
         # Error monitoring panel
         if any("error" in str(insight).lower() for insight in insights):
-            panels.append({
-                "name": "Error Rate Monitoring",
-                "purpose": "Track error frequency and patterns over time",
-                "spl": "index=* ERROR OR error | timechart count by sourcetype",
-                "visualization": "line_chart"
-            })
+            panels.append(
+                {
+                    "name": "Error Rate Monitoring",
+                    "purpose": "Track error frequency and patterns over time",
+                    "spl": "index=* ERROR OR error | timechart count by sourcetype",
+                    "visualization": "line_chart",
+                }
+            )
 
         # Performance monitoring panel
         if any("performance" in str(insight).lower() for insight in insights):
-            panels.append({
-                "name": "Performance Metrics Overview",
-                "purpose": "Monitor system performance indicators",
-                "spl": "index=* | stats avg(response_time) max(response_time) by host",
-                "visualization": "single_value"
-            })
+            panels.append(
+                {
+                    "name": "Performance Metrics Overview",
+                    "purpose": "Monitor system performance indicators",
+                    "spl": "index=* | stats avg(response_time) max(response_time) by host",
+                    "visualization": "single_value",
+                }
+            )
 
         # Volume analysis panel
-        panels.append({
-            "name": "Data Volume Trends",
-            "purpose": "Track data ingestion patterns and volume changes",
-            "spl": "index=* | bucket _time span=1h | stats count by _time sourcetype",
-            "visualization": "column_chart"
-        })
+        panels.append(
+            {
+                "name": "Data Volume Trends",
+                "purpose": "Track data ingestion patterns and volume changes",
+                "spl": "index=* | bucket _time span=1h | stats count by _time sourcetype",
+                "visualization": "column_chart",
+            }
+        )
 
         return panels
 
-    def _generate_alert_recommendations(self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _generate_alert_recommendations(
+        self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate alert recommendations."""
         alerts = []
 
         # Critical error alert
         if any("error" in str(item).lower() for item in insights + recommendations):
-            alerts.append({
-                "name": "Critical Error Rate Alert",
-                "query": "index=* ERROR OR error | stats count | where count > 10",
-                "threshold": "Trigger when error count > 10 in 15-minute window",
-                "response_action": "Immediately investigate error patterns and notify IT Operations"
-            })
+            alerts.append(
+                {
+                    "name": "Critical Error Rate Alert",
+                    "query": "index=* ERROR OR error | stats count | where count > 10",
+                    "threshold": "Trigger when error count > 10 in 15-minute window",
+                    "response_action": "Immediately investigate error patterns and notify IT Operations",
+                }
+            )
 
         # Performance degradation alert
         if any("performance" in str(item).lower() for item in insights + recommendations):
-            alerts.append({
-                "name": "Performance Degradation Alert",
-                "query": "index=* | stats avg(response_time) | where avg(response_time) > 5",
-                "threshold": "Trigger when average response time > 5 seconds",
-                "response_action": "Investigate performance bottlenecks and optimize system resources"
-            })
+            alerts.append(
+                {
+                    "name": "Performance Degradation Alert",
+                    "query": "index=* | stats avg(response_time) | where avg(response_time) > 5",
+                    "threshold": "Trigger when average response time > 5 seconds",
+                    "response_action": "Investigate performance bottlenecks and optimize system resources",
+                }
+            )
 
         return alerts
 
-    def _assess_business_opportunities(self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def _assess_business_opportunities(
+        self, insights: list[dict[str, Any]], recommendations: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Assess business opportunities from insights and recommendations."""
         opportunities = []
 
         # Operational efficiency opportunity
         if recommendations:
-            opportunities.append({
-                "opportunity": "Operational Efficiency Enhancement",
-                "description": "Implement proactive monitoring to reduce incident response time",
-                "estimated_value": "2-4 hours saved per incident through early detection",
-                "implementation_priority": "high"
-            })
+            opportunities.append(
+                {
+                    "opportunity": "Operational Efficiency Enhancement",
+                    "description": "Implement proactive monitoring to reduce incident response time",
+                    "estimated_value": "2-4 hours saved per incident through early detection",
+                    "implementation_priority": "high",
+                }
+            )
 
         # Data quality opportunity
         if insights:
-            opportunities.append({
-                "opportunity": "Data Quality Improvement",
-                "description": "Establish data quality monitoring and validation processes",
-                "estimated_value": "Improved decision-making accuracy and reduced data-related issues",
-                "implementation_priority": "medium"
-            })
+            opportunities.append(
+                {
+                    "opportunity": "Data Quality Improvement",
+                    "description": "Establish data quality monitoring and validation processes",
+                    "estimated_value": "Improved decision-making accuracy and reduced data-related issues",
+                    "implementation_priority": "medium",
+                }
+            )
 
         return opportunities
 
-    def _create_implementation_roadmap(self, dashboard_panels: list[dict[str, Any]], alerts: list[dict[str, Any]], opportunities: list[dict[str, Any]]) -> dict[str, Any]:
+    def _create_implementation_roadmap(
+        self,
+        dashboard_panels: list[dict[str, Any]],
+        alerts: list[dict[str, Any]],
+        opportunities: list[dict[str, Any]],
+    ) -> dict[str, Any]:
         """Create implementation roadmap."""
         return {
             "phase_1_immediate": {
                 "timeline": "1-2 weeks",
-                "actions": [f"Implement {panel['name']}" for panel in dashboard_panels[:2]]
+                "actions": [f"Implement {panel['name']}" for panel in dashboard_panels[:2]],
             },
             "phase_2_short_term": {
                 "timeline": "1 month",
-                "actions": [f"Deploy {alert['name']}" for alert in alerts[:2]]
+                "actions": [f"Deploy {alert['name']}" for alert in alerts[:2]],
             },
             "phase_3_long_term": {
                 "timeline": "3 months",
-                "actions": [f"Realize {opp['opportunity']}" for opp in opportunities[:2]]
-            }
+                "actions": [f"Realize {opp['opportunity']}" for opp in opportunities[:2]],
+            },
         }

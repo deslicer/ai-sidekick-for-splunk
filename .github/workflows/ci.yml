@@ -29,12 +29,10 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        echo "🔍 Checking ruff installation..."
-        uv run python -c "import ruff; print('✅ Ruff module found')" || echo "⚠️ Ruff module not found, but continuing with uv run"
-        echo "🔍 Running ruff check..."
-        uv run ruff check src/
-        echo "🎨 Running ruff format check..."
-        uv run ruff format --check src/
+        echo "🔍 Running ruff check via uv tool..."
+        uv tool run ruff check src/
+        echo "🎨 Running ruff format check via uv tool..."
+        uv tool run ruff format --check src/
 
     - name: Type check with mypy
       run: uv run mypy src/

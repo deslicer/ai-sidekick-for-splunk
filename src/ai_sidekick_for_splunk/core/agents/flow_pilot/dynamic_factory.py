@@ -62,8 +62,7 @@ class DynamicFlowPilotFactory:
 
                 # Create FlowPilot agent
                 agent = create_flow_pilot(
-                    template_path=str(workflow_info.file_path),
-                    orchestrator=orchestrator
+                    template_path=str(workflow_info.file_path), orchestrator=orchestrator
                 )
 
                 self._created_agents[agent_name] = agent

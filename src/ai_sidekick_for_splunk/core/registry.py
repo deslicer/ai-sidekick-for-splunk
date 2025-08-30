@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RegistryEntry:
     """Base class for registry entries."""
+
     name: str
     cls: type
     metadata: AgentMetadata | ToolMetadata
@@ -55,7 +56,7 @@ class BaseRegistry:
         cls: type,
         metadata: AgentMetadata | ToolMetadata,
         source_path: Path | None = None,
-        overwrite: bool = False
+        overwrite: bool = False,
     ) -> None:
         """
         Register a component in the registry.
@@ -71,14 +72,11 @@ class BaseRegistry:
             ValueError: If component already exists and overwrite is False
         """
         if name in self._entries and not overwrite:
-            raise ValueError(f"Component '{name}' already registered. Use overwrite=True to replace.")
+            raise ValueError(
+                f"Component '{name}' already registered. Use overwrite=True to replace."
+            )
 
-        entry = RegistryEntry(
-            name=name,
-            cls=cls,
-            metadata=metadata,
-            source_path=source_path
-        )
+        entry = RegistryEntry(name=name, cls=cls, metadata=metadata, source_path=source_path)
 
         self._entries[name] = entry
 
@@ -123,9 +121,10 @@ class BaseRegistry:
         # Clean up instance if loaded
         if entry.instance:
             try:
-                if hasattr(entry.instance, 'cleanup'):
+                if hasattr(entry.instance, "cleanup"):
                     if inspect.iscoroutinefunction(entry.instance.cleanup):
                         import asyncio
+
                         asyncio.create_task(entry.instance.cleanup())
                     else:
                         entry.instance.cleanup()
@@ -227,10 +226,10 @@ class BaseRegistry:
             Dictionary containing registry statistics
         """
         return {
-            'total_components': len(self._entries),
-            'tags': {tag: len(components) for tag, components in self._tags.items()},
-            'components_with_dependencies': len(self._dependencies),
-            'loaded_components': len([e for e in self._entries.values() if e.is_loaded])
+            "total_components": len(self._entries),
+            "tags": {tag: len(components) for tag, components in self._tags.items()},
+            "components_with_dependencies": len(self._dependencies),
+            "loaded_components": len([e for e in self._entries.values() if e.is_loaded]),
         }
 
 
@@ -248,16 +247,13 @@ class AgentRegistry(BaseRegistry):
         cls: type,
         metadata: AgentMetadata,
         source_path: Path | None = None,
-        overwrite: bool = False
+        overwrite: bool = False,
     ) -> None:
         """Override to ensure only AgentMetadata is accepted."""
         super().register(name, cls, metadata, source_path, overwrite)
 
     async def create_instance(
-        self,
-        name: str,
-        session_state: dict[str, Any] | None = None,
-        tools: list[Any] | None = None
+        self, name: str, session_state: dict[str, Any] | None = None, tools: list[Any] | None = None
     ) -> BaseAgent | None:
         """
         Create an instance of an agent.
@@ -284,7 +280,7 @@ class AgentRegistry(BaseRegistry):
                 config=self.config,
                 metadata=entry.metadata,
                 tools=tools,
-                session_state=session_state
+                session_state=session_state,
             )
 
             # Cache the instance
@@ -299,10 +295,7 @@ class AgentRegistry(BaseRegistry):
             raise RuntimeError(f"Agent creation failed: {e}")
 
     async def get_instance(
-        self,
-        name: str,
-        session_state: dict[str, Any] | None = None,
-        tools: list[Any] | None = None
+        self, name: str, session_state: dict[str, Any] | None = None, tools: list[Any] | None = None
     ) -> BaseAgent | None:
         """
         Get or create an agent instance.
@@ -334,14 +327,14 @@ class AgentRegistry(BaseRegistry):
         result = {}
         for name, entry in self._entries.items():
             result[name] = {
-                'name': entry.metadata.name,
-                'description': entry.metadata.description,
-                'version': entry.metadata.version,
-                'author': entry.metadata.author,
-                'tags': entry.metadata.tags,
-                'dependencies': entry.metadata.dependencies,
-                'loaded': entry.is_loaded,
-                'source_path': str(entry.source_path) if entry.source_path else None
+                "name": entry.metadata.name,
+                "description": entry.metadata.description,
+                "version": entry.metadata.version,
+                "author": entry.metadata.author,
+                "tags": entry.metadata.tags,
+                "dependencies": entry.metadata.dependencies,
+                "loaded": entry.is_loaded,
+                "source_path": str(entry.source_path) if entry.source_path else None,
             }
         return result
 
@@ -358,9 +351,9 @@ class ToolRegistry(BaseRegistry):
         self,
         name: str,
         cls: type,
-        metadata: 'ToolMetadata',
+        metadata: "ToolMetadata",
         source_path: Path | None = None,
-        overwrite: bool = False
+        overwrite: bool = False,
     ) -> None:
         """Override to ensure only ToolMetadata is accepted."""
         super().register(name, cls, metadata, source_path, overwrite)
@@ -385,10 +378,7 @@ class ToolRegistry(BaseRegistry):
 
         try:
             # Create instance
-            instance = entry.cls(
-                config=self.config,
-                metadata=entry.metadata
-            )
+            instance = entry.cls(config=self.config, metadata=entry.metadata)
 
             # Cache the instance
             entry.instance = instance
@@ -433,26 +423,22 @@ class ToolRegistry(BaseRegistry):
             metadata = entry.metadata
             if isinstance(metadata, ToolMetadata):
                 result[name] = {
-                    'name': metadata.name,
-                    'description': metadata.description,
-                    'version': metadata.version,
-                    'author': metadata.author,
-                    'tags': metadata.tags,
-                    'dependencies': metadata.dependencies,
-                    'parameters': metadata.parameters,
-                    'loaded': entry.is_loaded,
-                    'source_path': str(entry.source_path) if entry.source_path else None,
-                    'schema': entry.cls.schema if hasattr(entry.cls, 'schema') else None
+                    "name": metadata.name,
+                    "description": metadata.description,
+                    "version": metadata.version,
+                    "author": metadata.author,
+                    "tags": metadata.tags,
+                    "dependencies": metadata.dependencies,
+                    "parameters": metadata.parameters,
+                    "loaded": entry.is_loaded,
+                    "source_path": str(entry.source_path) if entry.source_path else None,
+                    "schema": entry.cls.schema if hasattr(entry.cls, "schema") else None,
                 }
             else:
                 logger.warning(f"Non-tool metadata found in ToolRegistry for {name}")
         return result
 
-    async def execute_tool(
-        self,
-        name: str,
-        **kwargs
-    ) -> dict[str, Any]:
+    async def execute_tool(self, name: str, **kwargs) -> dict[str, Any]:
         """
         Execute a tool by name.
 
@@ -465,10 +451,7 @@ class ToolRegistry(BaseRegistry):
         """
         tool = await self.get_instance(name)
         if not tool:
-            return {
-                'success': False,
-                'error': f"Tool not found: {name}"
-            }
+            return {"success": False, "error": f"Tool not found: {name}"}
 
         return await tool.safe_execute(**kwargs)
 
@@ -500,12 +483,12 @@ class RegistryManager:
             Dictionary containing registry summaries
         """
         return {
-            'agents': self.agent_registry.get_info(),
-            'tools': self.tool_registry.get_info(),
-            'total_components': (
-                self.agent_registry.get_info()['total_components'] +
-                self.tool_registry.get_info()['total_components']
-            )
+            "agents": self.agent_registry.get_info(),
+            "tools": self.tool_registry.get_info(),
+            "total_components": (
+                self.agent_registry.get_info()["total_components"]
+                + self.tool_registry.get_info()["total_components"]
+            ),
         }
 
     async def cleanup_all(self) -> None:
@@ -516,7 +499,7 @@ class RegistryManager:
 
         # Clean up agent instances
         for entry in agent_entries.values():
-            if entry.instance and hasattr(entry.instance, 'cleanup'):
+            if entry.instance and hasattr(entry.instance, "cleanup"):
                 try:
                     await entry.instance.cleanup()
                 except Exception as e:
@@ -524,7 +507,7 @@ class RegistryManager:
 
         # Clean up tool instances
         for entry in tool_entries.values():
-            if entry.instance and hasattr(entry.instance, 'cleanup'):
+            if entry.instance and hasattr(entry.instance, "cleanup"):
                 try:
                     await entry.instance.cleanup()
                 except Exception as e:

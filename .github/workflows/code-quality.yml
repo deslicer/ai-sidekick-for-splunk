@@ -30,14 +30,11 @@ jobs:
         uv --version
         uv run python --version
         
-        echo "🔍 Checking ruff installation..."
-        uv run python -c "import ruff; print('✅ Ruff module found')" || echo "⚠️ Ruff module not found, but continuing with uv run"
-        
-        echo "🔍 Running Ruff linting..."
-        uv run ruff check src/ --output-format=github
+        echo "🔍 Running Ruff linting via uv tool..."
+        uv tool run ruff check src/ --output-format=github
 
-        echo "🎨 Checking code formatting..."
-        uv run ruff format --check src/
+        echo "🎨 Checking code formatting via uv tool..."
+        uv tool run ruff format --check src/
 
         echo "🔧 Running type checking..."
         uv run mypy src/ --show-error-codes

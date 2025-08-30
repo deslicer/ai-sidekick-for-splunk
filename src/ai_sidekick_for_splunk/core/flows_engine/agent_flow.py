@@ -21,6 +21,7 @@ try:
         WorkflowValidationError,
         validate_workflow_template,
     )
+
     PYDANTIC_AVAILABLE = True
     logger.debug("✅ Pydantic validation models loaded successfully")
 except ImportError as e:
@@ -34,6 +35,7 @@ except ImportError as e:
 @dataclass
 class AgentDependency:
     """Configuration for agent dependencies in flows."""
+
     agent_id: str
     description: str
     required: bool
@@ -44,6 +46,7 @@ class AgentDependency:
 @dataclass
 class ValidationConfig:
     """Configuration for task validation."""
+
     agent: str
     validate_syntax: bool = True
     optimize_performance: bool = False
@@ -53,6 +56,7 @@ class ValidationConfig:
 @dataclass
 class InterpretationConfig:
     """Configuration for result interpretation."""
+
     agent: str
     interpret_results: bool = True
     generate_insights: bool = True
@@ -63,6 +67,7 @@ class InterpretationConfig:
 @dataclass
 class LLMLoopConfig:
     """Configuration for LLM-in-the-loop task execution."""
+
     enabled: bool = False
     max_iterations: int = 3
     allowed_tools: list[str] = field(default_factory=list)
@@ -76,16 +81,18 @@ class LLMLoopConfig:
 @dataclass
 class ContextResource:
     """Embedded context resource for LLM tasks."""
+
     resource_type: str  # "mcp_tool", "documentation", "reference"
-    resource_id: str    # Tool name or doc identifier
+    resource_id: str  # Tool name or doc identifier
     description: str
     parameters: dict[str, Any] = field(default_factory=dict)
-    priority: int = 1   # Higher priority resources loaded first
+    priority: int = 1  # Higher priority resources loaded first
 
 
 @dataclass
 class FlowTask:
     """Individual task within a flow phase."""
+
     task_id: str
     title: str
     description: str
@@ -114,6 +121,7 @@ class FlowTask:
 @dataclass
 class FlowPhase:
     """Phase containing multiple related tasks."""
+
     name: str
     description: str
     mandatory: bool
@@ -131,6 +139,7 @@ class FlowPhase:
 @dataclass
 class ExecutionFlow:
     """Configuration for flow execution behavior."""
+
     sequential_phases: list[str]
     parallel_execution: dict[str, bool] = field(default_factory=dict)
     validation_workflow: dict[str, str] = field(default_factory=dict)
@@ -146,6 +155,7 @@ class AgentFlow:
     including bounded intelligence tasks, agent dependencies, and
     contextual execution parameters.
     """
+
     workflow_name: str
     version: str
     description: str
@@ -154,10 +164,12 @@ class AgentFlow:
     execution_flow: ExecutionFlow
     output_structure: dict[str, Any]
     _raw_data: dict[str, Any] = field(default_factory=dict)  # Store raw JSON for custom fields
-    _validated_template: Any | None = field(default=None, init=False)  # Store validated Pydantic model
+    _validated_template: Any | None = field(
+        default=None, init=False
+    )  # Store validated Pydantic model
 
     @classmethod
-    def load_from_json(cls, json_path: str | Path) -> 'AgentFlow':
+    def load_from_json(cls, json_path: str | Path) -> "AgentFlow":
         """
         Load agent flow from JSON file with optional Pydantic validation.
 
@@ -177,7 +189,7 @@ class AgentFlow:
             if not path.exists():
                 raise FileNotFoundError(f"Flow definition not found: {json_path}")
 
-            with open(path, encoding='utf-8') as f:
+            with open(path, encoding="utf-8") as f:
                 data = json.load(f)
 
             # Perform Pydantic validation if available
@@ -210,132 +222,138 @@ class AgentFlow:
             raise
 
     @classmethod
-    def _from_dict(cls, data: dict[str, Any]) -> 'AgentFlow':
+    def _from_dict(cls, data: dict[str, Any]) -> "AgentFlow":
         """Convert dictionary data to AgentFlow instance."""
         try:
             # Parse agent dependencies
             agent_deps = {}
-            for dep_name, dep_data in data.get('agent_dependencies', {}).items():
+            for dep_name, dep_data in data.get("agent_dependencies", {}).items():
                 agent_deps[dep_name] = AgentDependency(
-                    agent_id=dep_data['agent_id'],
-                    description=dep_data['description'],
-                    required=dep_data['required'],
-                    capabilities=dep_data['capabilities'],
-                    integration_points=dep_data.get('integration_points', [])
+                    agent_id=dep_data["agent_id"],
+                    description=dep_data["description"],
+                    required=dep_data["required"],
+                    capabilities=dep_data["capabilities"],
+                    integration_points=dep_data.get("integration_points", []),
                 )
 
             # Parse phases
             phases = {}
-            for phase_name, phase_data in data.get('core_phases', {}).items():
+            for phase_name, phase_data in data.get("core_phases", {}).items():
                 tasks = []
-                for task_data in phase_data.get('tasks', []):
+                for task_data in phase_data.get("tasks", []):
                     # Parse validation config
                     validation = None
-                    if 'validation' in task_data:
-                        val_data = task_data['validation']
+                    if "validation" in task_data:
+                        val_data = task_data["validation"]
                         validation = ValidationConfig(
-                            agent=val_data['agent'],
-                            validate_syntax=val_data.get('validate_syntax', True),
-                            optimize_performance=val_data.get('optimize_performance', False),
-                            per_sourcetype_validation=val_data.get('per_sourcetype_validation', False)
+                            agent=val_data["agent"],
+                            validate_syntax=val_data.get("validate_syntax", True),
+                            optimize_performance=val_data.get("optimize_performance", False),
+                            per_sourcetype_validation=val_data.get(
+                                "per_sourcetype_validation", False
+                            ),
                         )
 
                     # Parse interpretation config
                     interpretation = None
-                    if 'result_interpretation' in task_data:
-                        interp_data = task_data['result_interpretation']
+                    if "result_interpretation" in task_data:
+                        interp_data = task_data["result_interpretation"]
                         interpretation = InterpretationConfig(
-                            agent=interp_data['agent'],
-                            interpret_results=interp_data.get('interpret_results', True),
-                            generate_insights=interp_data.get('generate_insights', True),
-                            interpretation_prompt=interp_data.get('interpretation_prompt'),
-                            output_format=interp_data.get('output_format')
+                            agent=interp_data["agent"],
+                            interpret_results=interp_data.get("interpret_results", True),
+                            generate_insights=interp_data.get("generate_insights", True),
+                            interpretation_prompt=interp_data.get("interpretation_prompt"),
+                            output_format=interp_data.get("output_format"),
                         )
 
                     # Parse LLM loop configuration
                     llm_loop = None
-                    if 'llm_loop' in task_data:
-                        llm_loop_data = task_data['llm_loop']
+                    if "llm_loop" in task_data:
+                        llm_loop_data = task_data["llm_loop"]
                         llm_loop = LLMLoopConfig(
-                            enabled=llm_loop_data.get('enabled', False),
-                            max_iterations=llm_loop_data.get('max_iterations', 3),
-                            allowed_tools=llm_loop_data.get('allowed_tools', []),
-                            context_resources=llm_loop_data.get('context_resources', []),
-                            prompt=llm_loop_data.get('prompt'),
-                            step_validation=llm_loop_data.get('step_validation', True),
-                            bounded_execution=llm_loop_data.get('bounded_execution', True),
-                            consistency_checks=llm_loop_data.get('consistency_checks', [])
+                            enabled=llm_loop_data.get("enabled", False),
+                            max_iterations=llm_loop_data.get("max_iterations", 3),
+                            allowed_tools=llm_loop_data.get("allowed_tools", []),
+                            context_resources=llm_loop_data.get("context_resources", []),
+                            prompt=llm_loop_data.get("prompt"),
+                            step_validation=llm_loop_data.get("step_validation", True),
+                            bounded_execution=llm_loop_data.get("bounded_execution", True),
+                            consistency_checks=llm_loop_data.get("consistency_checks", []),
                         )
 
                     # Parse context resources
                     context_resources = []
-                    if 'context_resources' in task_data:
-                        for res_data in task_data['context_resources']:
-                            context_resources.append(ContextResource(
-                                resource_type=res_data['resource_type'],
-                                resource_id=res_data['resource_id'],
-                                description=res_data['description'],
-                                parameters=res_data.get('parameters', {}),
-                                priority=res_data.get('priority', 1)
-                            ))
+                    if "context_resources" in task_data:
+                        for res_data in task_data["context_resources"]:
+                            context_resources.append(
+                                ContextResource(
+                                    resource_type=res_data["resource_type"],
+                                    resource_id=res_data["resource_id"],
+                                    description=res_data["description"],
+                                    parameters=res_data.get("parameters", {}),
+                                    priority=res_data.get("priority", 1),
+                                )
+                            )
 
                     task = FlowTask(
-                        task_id=task_data['task_id'],
-                        title=task_data['title'],
-                        description=task_data['description'],
-                        goal=task_data['goal'],
-                        tool=task_data['tool'],
-                        search_query=task_data.get('search_query'),
-                        parameters=task_data.get('parameters', {}),
+                        task_id=task_data["task_id"],
+                        title=task_data["title"],
+                        description=task_data["description"],
+                        goal=task_data["goal"],
+                        tool=task_data["tool"],
+                        search_query=task_data.get("search_query"),
+                        parameters=task_data.get("parameters", {}),
                         validation=validation,
                         result_interpretation=interpretation,
-                        analysis_focus=task_data.get('analysis_focus', []),
-                        execution_mode=task_data.get('execution_mode'),
-                        llm_analysis=task_data.get('llm_analysis'),
-                        cross_sourcetype_preparation=task_data.get('cross_sourcetype_preparation'),
-                        note=task_data.get('note'),
+                        analysis_focus=task_data.get("analysis_focus", []),
+                        execution_mode=task_data.get("execution_mode"),
+                        llm_analysis=task_data.get("llm_analysis"),
+                        cross_sourcetype_preparation=task_data.get("cross_sourcetype_preparation"),
+                        note=task_data.get("note"),
                         # Enhanced LLM-in-the-loop support
                         llm_loop=llm_loop,
                         context_resources=context_resources,
-                        dynamic_instructions=task_data.get('dynamic_instructions'),
-                        step_constraints=task_data.get('step_constraints', {})
+                        dynamic_instructions=task_data.get("dynamic_instructions"),
+                        step_constraints=task_data.get("step_constraints", {}),
                     )
                     tasks.append(task)
 
                 phase = FlowPhase(
-                    name=phase_data['name'],
-                    description=phase_data['description'],
-                    mandatory=phase_data['mandatory'],
+                    name=phase_data["name"],
+                    description=phase_data["description"],
+                    mandatory=phase_data["mandatory"],
                     tasks=tasks,
-                    goal_selection_strategy=phase_data.get('goal_selection_strategy'),
-                    analysis_goals=phase_data.get('analysis_goals', []),
-                    correlation_tasks=phase_data.get('correlation_tasks', []),
-                    synthesis_tasks=phase_data.get('synthesis_tasks', []),
-                    parallel=phase_data.get('parallel', False),
-                    max_parallel=phase_data.get('max_parallel', 1)
+                    goal_selection_strategy=phase_data.get("goal_selection_strategy"),
+                    analysis_goals=phase_data.get("analysis_goals", []),
+                    correlation_tasks=phase_data.get("correlation_tasks", []),
+                    synthesis_tasks=phase_data.get("synthesis_tasks", []),
+                    parallel=phase_data.get("parallel", False),
+                    max_parallel=phase_data.get("max_parallel", 1),
                 )
                 phases[phase_name] = phase
 
             # Parse execution flow
-            exec_flow_data = data.get('execution_flow', {})
+            exec_flow_data = data.get("execution_flow", {})
             # Support both 'sequential_phases' and 'phase_order' field names
-            sequential_phases = exec_flow_data.get('sequential_phases') or exec_flow_data.get('phase_order', [])
+            sequential_phases = exec_flow_data.get("sequential_phases") or exec_flow_data.get(
+                "phase_order", []
+            )
             execution_flow = ExecutionFlow(
                 sequential_phases=sequential_phases,
-                parallel_execution=exec_flow_data.get('parallel_execution', {}),
-                validation_workflow=exec_flow_data.get('validation_workflow', {}),
-                adaptive_behavior=exec_flow_data.get('adaptive_behavior', {})
+                parallel_execution=exec_flow_data.get("parallel_execution", {}),
+                validation_workflow=exec_flow_data.get("validation_workflow", {}),
+                adaptive_behavior=exec_flow_data.get("adaptive_behavior", {}),
             )
 
             return cls(
-                workflow_name=data['workflow_name'],
-                version=data['version'],
-                description=data['description'],
+                workflow_name=data["workflow_name"],
+                version=data["version"],
+                description=data["description"],
                 agent_dependencies=agent_deps,
                 core_phases=phases,
                 execution_flow=execution_flow,
-                output_structure=data.get('output_structure', {}),
-                _raw_data=data  # Store complete raw data for custom fields
+                output_structure=data.get("output_structure", {}),
+                _raw_data=data,  # Store complete raw data for custom fields
             )
 
         except KeyError as e:
@@ -354,18 +372,18 @@ class AgentFlow:
         """Get validated metadata if available."""
         if self._validated_template:
             return {
-                'workflow_id': getattr(self._validated_template, 'workflow_id', None),
-                'workflow_type': getattr(self._validated_template, 'workflow_type', None),
-                'workflow_category': getattr(self._validated_template, 'workflow_category', None),
-                'source': getattr(self._validated_template, 'source', None),
-                'maintainer': getattr(self._validated_template, 'maintainer', None),
-                'stability': getattr(self._validated_template, 'stability', None),
-                'complexity_level': getattr(self._validated_template, 'complexity_level', None),
-                'estimated_duration': getattr(self._validated_template, 'estimated_duration', None),
-                'target_audience': getattr(self._validated_template, 'target_audience', None),
-                'business_value': getattr(self._validated_template, 'business_value', None),
-                'use_cases': getattr(self._validated_template, 'use_cases', None),
-                'success_metrics': getattr(self._validated_template, 'success_metrics', None),
+                "workflow_id": getattr(self._validated_template, "workflow_id", None),
+                "workflow_type": getattr(self._validated_template, "workflow_type", None),
+                "workflow_category": getattr(self._validated_template, "workflow_category", None),
+                "source": getattr(self._validated_template, "source", None),
+                "maintainer": getattr(self._validated_template, "maintainer", None),
+                "stability": getattr(self._validated_template, "stability", None),
+                "complexity_level": getattr(self._validated_template, "complexity_level", None),
+                "estimated_duration": getattr(self._validated_template, "estimated_duration", None),
+                "target_audience": getattr(self._validated_template, "target_audience", None),
+                "business_value": getattr(self._validated_template, "business_value", None),
+                "use_cases": getattr(self._validated_template, "use_cases", None),
+                "success_metrics": getattr(self._validated_template, "success_metrics", None),
             }
         return None
 
@@ -416,10 +434,17 @@ class AgentFlow:
 
                 # Check agent dependencies
                 if task.validation and task.validation.agent not in self.agent_dependencies:
-                    errors.append(f"Task '{task.task_id}' references unknown validation agent: {task.validation.agent}")
+                    errors.append(
+                        f"Task '{task.task_id}' references unknown validation agent: {task.validation.agent}"
+                    )
 
-                if task.result_interpretation and task.result_interpretation.agent not in self.agent_dependencies:
-                    errors.append(f"Task '{task.task_id}' references unknown interpretation agent: {task.result_interpretation.agent}")
+                if (
+                    task.result_interpretation
+                    and task.result_interpretation.agent not in self.agent_dependencies
+                ):
+                    errors.append(
+                        f"Task '{task.task_id}' references unknown interpretation agent: {task.result_interpretation.agent}"
+                    )
 
         # Validate execution flow
         for phase_name in self.execution_flow.sequential_phases:
@@ -442,7 +467,4 @@ class AgentFlow:
 
     def get_required_agents(self) -> list[str]:
         """Get list of all required agent dependencies."""
-        return [
-            dep.agent_id for dep in self.agent_dependencies.values()
-            if dep.required
-        ]
+        return [dep.agent_id for dep in self.agent_dependencies.values() if dep.required]

@@ -12,7 +12,9 @@ import os
 from pathlib import Path
 
 
-def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, unified_file: str | None = None) -> None:
+def setup_logging(
+    level: str | int | None = None, *, log_to_file: bool = True, unified_file: str | None = None
+) -> None:
     """Configure root and package loggers.
 
     Args:
@@ -21,7 +23,7 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
         log_to_file: When True, also writes logs to unified_file.
         unified_file: Path to the single unified log file relative to project root.
             If None, uses env var LOG_FILE_PATH or defaults to "logs/app.log".
-        """
+    """
     if level is None:
         level = os.getenv("LOG_LEVEL", "INFO").upper()
 
@@ -85,15 +87,19 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
             has_file = any(
-                isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", "").endswith(str(file_path))
+                isinstance(h, logging.FileHandler)
+                and getattr(h, "baseFilename", "").endswith(str(file_path))
                 for h in root_logger.handlers
             )
             if not has_file:
                 fh = logging.FileHandler(file_path)
                 fh.setLevel(resolved_level)
-                fh.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+                fh.setFormatter(
+                    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                )
                 root_logger.addHandler(fh)
         except Exception as e:
             # Log the error to stderr but don't fail completely
             import sys
+
             print(f"Warning: Failed to setup file logging: {e}", file=sys.stderr)

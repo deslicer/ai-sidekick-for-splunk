@@ -21,5 +21,5 @@ __all__ = [
     "DynamicFlowPilotFactory",
     "create_dynamic_flowpilot_agents",
     "get_dynamic_factory",
-    "get_all_dynamic_agents"
+    "get_all_dynamic_agents",
 ]

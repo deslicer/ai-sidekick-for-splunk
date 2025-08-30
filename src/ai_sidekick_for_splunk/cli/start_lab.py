@@ -119,7 +119,9 @@ def read_env_file(env_path: Path) -> dict[str, str]:
             continue
         key, raw_val = line.split("=", 1)
         val = raw_val.strip()
-        if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        if (val.startswith('"') and val.endswith('"')) or (
+            val.startswith("'") and val.endswith("'")
+        ):
             val = val[1:-1]
         result[key.strip()] = val
     return result
@@ -128,7 +130,10 @@ def read_env_file(env_path: Path) -> dict[str, str]:
 def ensure_virtualenv(project_root: Path) -> None:
     """Verify that a local virtual environment exists (parity with bash script)."""
     if not (project_root / ".venv").exists():
-        print("[ERROR] Virtual environment not found. Please run ./scripts/check-prerequisites.sh first", file=sys.stderr)
+        print(
+            "[ERROR] Virtual environment not found. Please run ./scripts/check-prerequisites.sh first",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -143,7 +148,9 @@ def validate_env_values(env_values: dict[str, str]) -> None:
         print("[ERROR] GOOGLE_API_KEY not configured in .env file", file=sys.stderr)
         sys.exit(1)
 
-    mcp_url = env_values.get("SPLUNK_MCP_SERVER_URL", "") or os.environ.get("SPLUNK_MCP_SERVER_URL", "")
+    mcp_url = env_values.get("SPLUNK_MCP_SERVER_URL", "") or os.environ.get(
+        "SPLUNK_MCP_SERVER_URL", ""
+    )
     if not mcp_url:
         print("[ERROR] SPLUNK_MCP_SERVER_URL not configured in .env file", file=sys.stderr)
         sys.exit(1)
@@ -193,7 +200,11 @@ def main() -> None:
     # Ensure no previous instance (best-effort): call our stop-lab entry if available
     try:
         # Use this same interpreter to invoke package entry
-        subprocess.run([sys.executable, "-m", "ai_sidekick_for_splunk.cli.stop_lab"], cwd=str(project_root), check=False)
+        subprocess.run(
+            [sys.executable, "-m", "ai_sidekick_for_splunk.cli.stop_lab"],
+            cwd=str(project_root),
+            check=False,
+        )
     except OSError:
         pass
 
@@ -246,5 +257,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

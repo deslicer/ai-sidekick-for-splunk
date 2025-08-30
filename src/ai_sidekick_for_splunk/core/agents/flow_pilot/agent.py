@@ -45,7 +45,7 @@ class FlowPilot(BaseAgent):
         workflow_template_path: str | None = None,
         workflow_template: AgentFlow | None = None,
         config: Config | None = None,
-        metadata: AgentMetadata | None = None
+        metadata: AgentMetadata | None = None,
     ) -> None:
         """
         Initialize FlowPilot with a workflow template.
@@ -61,12 +61,16 @@ class FlowPilot(BaseAgent):
             config: Configuration instance
             metadata: Agent metadata
         """
-        if isinstance(config_or_template_path, Config) and isinstance(metadata_or_template, AgentMetadata):
+        if isinstance(config_or_template_path, Config) and isinstance(
+            metadata_or_template, AgentMetadata
+        ):
             actual_config = config_or_template_path
             actual_metadata = metadata_or_template
             self.agent_flow = self._reconstruct_workflow_from_metadata(actual_metadata)
         else:
-            actual_config = config or (config_or_template_path if isinstance(config_or_template_path, Config) else None)
+            actual_config = config or (
+                config_or_template_path if isinstance(config_or_template_path, Config) else None
+            )
             actual_metadata = metadata
 
             if workflow_template or isinstance(metadata_or_template, AgentFlow):
@@ -75,7 +79,9 @@ class FlowPilot(BaseAgent):
                 template_path = workflow_template_path or config_or_template_path
                 self.agent_flow = AgentFlow.load_from_json(template_path)
             else:
-                raise ValueError("Either workflow_template_path or workflow_template must be provided")
+                raise ValueError(
+                    "Either workflow_template_path or workflow_template must be provided"
+                )
 
         self.name = self.agent_flow.workflow_name
         self.description = f"Workflow agent for {self.agent_flow.workflow_name}"
@@ -84,17 +90,14 @@ class FlowPilot(BaseAgent):
             actual_metadata = self._generate_metadata_from_workflow()
 
         super().__init__(
-            config=actual_config,
-            metadata=actual_metadata,
-            tools=tools,
-            session_state=session_state
+            config=actual_config, metadata=actual_metadata, tools=tools, session_state=session_state
         )
 
         self.orchestrator = orchestrator
         self.flow_engine = FlowEngine(
             config=self.config,
             orchestrator=orchestrator,
-            progress_callback=self._handle_progress_update
+            progress_callback=self._handle_progress_update,
         )
         self._instructions = self._generate_instructions_from_workflow()
 
@@ -122,12 +125,14 @@ class FlowPilot(BaseAgent):
         template_mappings = {
             "HealthCheck": "health_check/health_check.json",
             "IndexAnalysis": "index_analysis/index_analysis.json",
-            "SystemInfo": "system_info/system_info.json"
+            "SystemInfo": "system_info/system_info.json",
         }
 
         template_path = None
         if workflow_name in template_mappings:
-            template_path = Path(__file__).parent.parent / "definitions" / template_mappings[workflow_name]
+            template_path = (
+                Path(__file__).parent.parent / "definitions" / template_mappings[workflow_name]
+            )
         else:
             # Generic search for any workflow template
             definitions_dir = Path(__file__).parent.parent / "definitions"
@@ -137,7 +142,7 @@ class FlowPilot(BaseAgent):
                         try:
                             with open(json_file) as f:
                                 data = json.load(f)
-                                if data.get('workflow_name', '') == workflow_name:
+                                if data.get("workflow_name", "") == workflow_name:
                                     template_path = json_file
                                     break
                         except Exception:
@@ -158,7 +163,8 @@ class FlowPilot(BaseAgent):
     def _sanitize_name(self, name: str) -> str:
         """Sanitize workflow name for use as agent name."""
         import re
-        return re.sub(r'[^a-zA-Z0-9_]', '_', name).strip('_')
+
+        return re.sub(r"[^a-zA-Z0-9_]", "_", name).strip("_")
 
     def _generate_metadata_from_workflow(self) -> AgentMetadata:
         """Generate agent metadata from workflow template."""
@@ -180,7 +186,7 @@ class FlowPilot(BaseAgent):
             version="1.0.0",
             author="Saikrishna Gundeti",
             tags=tags,
-            dependencies=dependencies
+            dependencies=dependencies,
         )
 
     def _generate_instructions_from_workflow(self) -> str:
@@ -240,15 +246,15 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
 
         return instructions.strip()
 
-
-
     def _get_workflow_specific_instructions_from_template(self) -> str:
         """Get workflow-specific instructions from template."""
-        workflow_instructions = self.agent_flow._raw_data.get('workflow_instructions', {})
+        workflow_instructions = self.agent_flow._raw_data.get("workflow_instructions", {})
 
         if workflow_instructions:
-            specialization = workflow_instructions.get('specialization', '🎯 WORKFLOW SPECIALIZATION')
-            focus_areas = workflow_instructions.get('focus_areas', [])
+            specialization = workflow_instructions.get(
+                "specialization", "🎯 WORKFLOW SPECIALIZATION"
+            )
+            focus_areas = workflow_instructions.get("focus_areas", [])
 
             instructions = f"\n## {specialization}\n"
             for area in focus_areas:
@@ -291,8 +297,7 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
 
             # Execute workflow using FlowEngine
             result = await self.flow_engine.execute_flow(
-                flow=self.agent_flow,
-                context=execution_context
+                flow=self.agent_flow, context=execution_context
             )
 
             # Format results for user consumption
@@ -307,7 +312,7 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
                 "success": False,
                 "error": str(e),
                 "workflow": self.agent_flow.workflow_name,
-                "message": f"FlowPilot encountered an error executing {self.agent_flow.workflow_name}: {str(e)}"
+                "message": f"FlowPilot encountered an error executing {self.agent_flow.workflow_name}: {str(e)}",
             }
 
     def _extract_parameters_from_task(self, task: str) -> dict[str, Any]:
@@ -317,29 +322,33 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
         parameters = {}
 
         # Extract index name (common pattern)
-        index_match = re.search(r'index[=\s]+([a-zA-Z0-9_\-]+)', task, re.IGNORECASE)
+        index_match = re.search(r"index[=\s]+([a-zA-Z0-9_\-]+)", task, re.IGNORECASE)
         if index_match:
-            parameters['INDEX_NAME'] = index_match.group(1)
+            parameters["INDEX_NAME"] = index_match.group(1)
 
         # Extract other common patterns
         # Add more extraction patterns as needed
 
         return parameters
 
-    def _format_execution_result(self, result: FlowExecutionResult, original_task: str) -> dict[str, Any]:
+    def _format_execution_result(
+        self, result: FlowExecutionResult, original_task: str
+    ) -> dict[str, Any]:
         """Format execution result for user consumption."""
         return {
             "success": result.success,
             "workflow": self.agent_flow.workflow_name,
             "workflow_version": self.agent_flow.version,
-            "execution_time": str(result.execution_time) if hasattr(result, 'execution_time') else None,
+            "execution_time": str(result.execution_time)
+            if hasattr(result, "execution_time")
+            else None,
             "phases_completed": len(result.phase_results),
             "phase_results": result.phase_results,
             "error_summary": result.error_summary,
             "message": f"🎭 FlowPilot completed {self.agent_flow.workflow_name}",
             "original_task": original_task,
             "ready_for_synthesis": result.success,
-            "synthesis_data": self._prepare_synthesis_data(result) if result.success else None
+            "synthesis_data": self._prepare_synthesis_data(result) if result.success else None,
         }
 
     def _prepare_synthesis_data(self, result: FlowExecutionResult) -> dict[str, Any]:
@@ -352,8 +361,10 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
                 "total_phases": len(result.phase_results),
                 "successful_phases": len([p for p in result.phase_results if p.success]),
                 "total_tasks": sum(len(p.task_results) for p in result.phase_results),
-                "successful_tasks": sum(len([t for t in p.task_results if t.success]) for p in result.phase_results)
-            }
+                "successful_tasks": sum(
+                    len([t for t in p.task_results if t.success]) for p in result.phase_results
+                ),
+            },
         }
 
         return synthesis_data
@@ -363,18 +374,21 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
         try:
             # Check if config is available - if not, try to get from orchestrator
             config_to_use = self.config
-            if not config_to_use and self.orchestrator and hasattr(self.orchestrator, 'config'):
+            if not config_to_use and self.orchestrator and hasattr(self.orchestrator, "config"):
                 config_to_use = self.orchestrator.config
-                logger.debug(f"FlowPilot {self.name} using orchestrator config for ADK agent creation")
+                logger.debug(
+                    f"FlowPilot {self.name} using orchestrator config for ADK agent creation"
+                )
 
-            if not config_to_use or not hasattr(config_to_use, 'model') or not config_to_use.model:
+            if not config_to_use or not hasattr(config_to_use, "model") or not config_to_use.model:
                 logger.warning(f"FlowPilot {self.name} has no config - cannot create ADK agent")
                 return None
 
             flow_tools = list(tools) if tools else []
 
-
-            def execute_workflow(task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+            def execute_workflow(
+                task: str, context: Optional[dict[str, Any]] = None
+            ) -> dict[str, Any]:
                 """Execute the loaded workflow with the given task."""
                 try:
                     loop = asyncio.get_event_loop()
@@ -404,10 +418,12 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
                 name=self._sanitize_name(self.name),
                 description=self.description,
                 instruction=self._instructions,
-                tools=flow_tools
+                tools=flow_tools,
             )
 
-            logger.debug(f"Created FlowPilot ADK agent for workflow: {self.agent_flow.workflow_name}")
+            logger.debug(
+                f"Created FlowPilot ADK agent for workflow: {self.agent_flow.workflow_name}"
+            )
             return agent
 
         except Exception as e:
@@ -432,16 +448,14 @@ def create_flow_pilot(template_path: str, orchestrator=None, **kwargs) -> FlowPi
     Returns:
         FlowPilot instance configured for the specified workflow template
     """
-    return FlowPilot(
-        workflow_template_path=template_path,
-        orchestrator=orchestrator,
-        **kwargs
-    )
+    return FlowPilot(workflow_template_path=template_path, orchestrator=orchestrator, **kwargs)
+
 
 # Legacy convenience functions - DEPRECATED
 # These are now replaced by the dynamic factory system that automatically
 # discovers and creates FlowPilot agents for all workflows.
 # Keeping for backward compatibility but will be removed in future versions.
+
 
 def create_health_check_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     """
@@ -450,8 +464,11 @@ def create_health_check_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     DEPRECATED: Use dynamic factory system instead.
     This function is kept for backward compatibility only.
     """
-    template_path = Path(__file__).parent.parent.parent / "flows" / "health_check" / "health_check.json"
+    template_path = (
+        Path(__file__).parent.parent.parent / "flows" / "health_check" / "health_check.json"
+    )
     return create_flow_pilot(str(template_path), orchestrator, **kwargs)
+
 
 def create_index_analysis_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     """
@@ -460,8 +477,11 @@ def create_index_analysis_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     DEPRECATED: Use dynamic factory system instead.
     This function is kept for backward compatibility only.
     """
-    template_path = Path(__file__).parent.parent.parent / "flows" / "index_analysis" / "index_analysis.json"
+    template_path = (
+        Path(__file__).parent.parent.parent / "flows" / "index_analysis" / "index_analysis.json"
+    )
     return create_flow_pilot(str(template_path), orchestrator, **kwargs)
+
 
 def create_system_info_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     """
@@ -470,5 +490,7 @@ def create_system_info_flow_pilot(orchestrator=None, **kwargs) -> FlowPilot:
     DEPRECATED: Use dynamic factory system instead.
     This function is kept for backward compatibility only.
     """
-    template_path = Path(__file__).parent.parent.parent / "flows" / "system_info" / "system_info.json"
+    template_path = (
+        Path(__file__).parent.parent.parent / "flows" / "system_info" / "system_info.json"
+    )
     return create_flow_pilot(str(template_path), orchestrator, **kwargs)

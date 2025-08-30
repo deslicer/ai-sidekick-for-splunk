@@ -29,7 +29,7 @@ _researcher = Agent(
     Instead of a detailed answer, provide the developer with an immediate action item in a single sentence.
     Don't ask the user to verify or look up information on their own; that's your job; do your best to be informative.
     """,
-    tools=[google_search]
+    tools=[google_search],
 )
 
 google_search_grounding = AgentTool(agent=_researcher)

@@ -10,7 +10,7 @@ from .agent import DataExplorerAgent, create_data_explorer_agent, data_explorer_
 
 __all__ = [
     # MAIN: DataExplorer Agent with Tool Integration
-    "DataExplorerAgent",          # DataExplorerAgent with get_adk_agent support
-    "create_data_explorer_agent", # Factory function
-    "data_explorer_agent"         # Instance for auto-discovery
+    "DataExplorerAgent",  # DataExplorerAgent with get_adk_agent support
+    "create_data_explorer_agent",  # Factory function
+    "data_explorer_agent",  # Instance for auto-discovery
 ]

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ToolMetadata:
     """Metadata for tool registration and discovery."""
+
     name: str
     description: str
     version: str = "1.0.0"
@@ -43,11 +44,7 @@ class BaseTool(ABC):
         _is_initialized: Whether the tool has been initialized
     """
 
-    def __init__(
-        self,
-        config: Config,
-        metadata: ToolMetadata
-    ):
+    def __init__(self, config: Config, metadata: ToolMetadata):
         """
         Initialize the base tool.
 
@@ -108,18 +105,20 @@ class BaseTool(ABC):
         schema = self.schema
 
         # Check required parameters
-        required_params = schema.get('required', [])
+        required_params = schema.get("required", [])
         for param in required_params:
             if param not in parameters:
                 errors.append(f"Missing required parameter: {param}")
 
         # Check parameter types
-        properties = schema.get('properties', {})
+        properties = schema.get("properties", {})
         for param_name, param_value in parameters.items():
             if param_name in properties:
-                expected_type = properties[param_name].get('type')
+                expected_type = properties[param_name].get("type")
                 if expected_type and not self._validate_type(param_value, expected_type):
-                    errors.append(f"Invalid type for parameter '{param_name}': expected {expected_type}")
+                    errors.append(
+                        f"Invalid type for parameter '{param_name}': expected {expected_type}"
+                    )
 
         return errors
 
@@ -135,12 +134,12 @@ class BaseTool(ABC):
             True if valid, False otherwise
         """
         type_mapping = {
-            'string': str,
-            'integer': int,
-            'number': (int, float),
-            'boolean': bool,
-            'array': list,
-            'object': dict
+            "string": str,
+            "integer": int,
+            "number": (int, float),
+            "boolean": bool,
+            "array": list,
+            "object": dict,
         }
 
         expected_python_type = type_mapping.get(expected_type)
@@ -164,8 +163,8 @@ class BaseTool(ABC):
             validation_errors = self.validate_parameters(kwargs)
             if validation_errors:
                 return {
-                    'success': False,
-                    'error': f"Parameter validation failed: {'; '.join(validation_errors)}"
+                    "success": False,
+                    "error": f"Parameter validation failed: {'; '.join(validation_errors)}",
                 }
 
             # Initialize if needed
@@ -175,17 +174,11 @@ class BaseTool(ABC):
             # Execute the tool
             result = await self.execute(**kwargs)
 
-            return {
-                'success': True,
-                'result': result
-            }
+            return {"success": True, "result": result}
 
         except Exception as e:
             logger.error(f"Error executing tool {self.metadata.name}: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     async def initialize(self) -> None:
         """
@@ -216,15 +209,15 @@ class BaseTool(ABC):
             Dictionary containing tool metadata and schema
         """
         return {
-            'name': self.metadata.name,
-            'description': self.metadata.description,
-            'version': self.metadata.version,
-            'author': self.metadata.author,
-            'tags': self.metadata.tags,
-            'dependencies': self.metadata.dependencies,
-            'parameters': self.metadata.parameters,
-            'schema': self.schema,
-            'initialized': self._is_initialized
+            "name": self.metadata.name,
+            "description": self.metadata.description,
+            "version": self.metadata.version,
+            "author": self.metadata.author,
+            "tags": self.metadata.tags,
+            "dependencies": self.metadata.dependencies,
+            "parameters": self.metadata.parameters,
+            "schema": self.schema,
+            "initialized": self._is_initialized,
         }
 
     def __repr__(self) -> str:
@@ -243,11 +236,7 @@ class SplunkTool(BaseTool):
     This class extends BaseTool with Splunk connection and query capabilities.
     """
 
-    def __init__(
-        self,
-        config: Config,
-        metadata: ToolMetadata
-    ):
+    def __init__(self, config: Config, metadata: ToolMetadata):
         """
         Initialize the Splunk tool.
 
@@ -301,11 +290,7 @@ class SplunkTool(BaseTool):
         # return await client.search(search_query, **kwargs)
 
         # Placeholder implementation
-        return {
-            'query': search_query,
-            'results': [],
-            'message': 'Placeholder implementation'
-        }
+        return {"query": search_query, "results": [], "message": "Placeholder implementation"}
 
     async def cleanup(self) -> None:
         """Clean up Splunk tool resources."""

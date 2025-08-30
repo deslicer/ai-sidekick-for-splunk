@@ -1,0 +1,159 @@
+{
+  "workflow_id": "contrib.test_workshop",
+  "workflow_name": "DevTest_Workshop System Health Agent",
+  "workflow_type": "troubleshooting",
+  "workflow_category": "system_health",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "2-3 minutes",
+  "version": "1.0.0",
+  "splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "last_updated": "2025-08-30",
+  "documentation_url": "./README.md",
+  "description": "A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
+  "business_value": "Provides quick health assessment of Splunk environment for workshop participants to understand system status and learn workflow execution patterns.",
+  "use_cases": [
+    "Workshop demonstrations",
+    "Learning FlowPilot system",
+    "Basic health monitoring",
+    "Educational purposes"
+  ],
+  "target_audience": [
+    "Workshop participants",
+    "Splunk beginners",
+    "FlowPilot learners"
+  ],
+  "prerequisites": [
+    "Basic Splunk access",
+    "MCP server running",
+    "Workshop environment setup"
+  ],
+  "required_permissions": [
+    "search",
+    "rest_api_access"
+  ],
+  "data_requirements": {
+    "minimum_data_volume": "Any amount",
+    "data_freshness": "24 hours",
+    "required_indexes": ["Any available indexes"],
+    "data_types": ["System logs", "Application data"]
+  },
+  "success_metrics": [
+    "Successful system information retrieval",
+    "Health check completion",
+    "Educational value delivered",
+    "Workshop objectives met"
+  ],
+  "workflow_instructions": {
+    "persona": "You are the DevTest_Workshop System Health Agent - a friendly workshop demonstration agent that helps participants learn about Splunk health monitoring.",
+    "approach": "Execute each phase step by step, providing clear explanations of what you're checking and why it matters for system health.",
+    "tone": "Educational and encouraging - this is for learning purposes!",
+    "specialization": "Workshop demonstration and educational health monitoring",
+    "focus_areas": [
+      "System health assessment",
+      "Educational explanations",
+      "Workshop engagement",
+      "Basic troubleshooting"
+    ],
+    "execution_style": "step_by_step_with_explanations",
+    "domain": "splunk_system_health"
+  },
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "required": true,
+      "description": "Splunk MCP server for executing searches and gathering system information",
+      "capabilities": [
+        "search_execution",
+        "index_listing",
+        "system_info_retrieval"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "required": true,
+      "description": "Synthesizes results from multiple phases into comprehensive reports",
+      "capabilities": [
+        "result_synthesis",
+        "report_generation",
+        "summary_creation"
+      ]
+    }
+  },
+  "core_phases": {
+    "system_info": {
+      "name": "system_info",
+      "phase_name": "System Information Gathering",
+      "description": "Collect basic Splunk system information and configuration details",
+      "mandatory": true,
+      "tasks": [
+        {
+          "task_id": "gather_splunk_version",
+          "title": "Gather Splunk Version",
+          "description": "Get Splunk version and basic system information",
+          "tool": "splunk_mcp",
+          "goal": "Get Splunk version and basic system information",
+          "prompt": "Please retrieve the Splunk version information and basic system details. This helps us understand what Splunk environment we're working with.",
+          "expected_output": "Splunk version, build information, and system configuration summary"
+        },
+        {
+          "task_id": "list_available_indexes",
+          "title": "List Available Indexes",
+          "description": "List all available indexes to understand data landscape",
+          "tool": "splunk_mcp",
+          "goal": "List all available indexes to understand data landscape",
+          "prompt": "List all available Splunk indexes. This gives us an overview of what data sources are configured in this environment.",
+          "expected_output": "Complete list of indexes with basic metadata"
+        }
+      ]
+    },
+    "health_checks": {
+      "name": "health_checks",
+      "phase_name": "Basic Health Assessment",
+      "description": "Perform fundamental health checks on the Splunk environment",
+      "mandatory": true,
+      "tasks": [
+        {
+          "task_id": "check_recent_data",
+          "title": "Check Recent Data",
+          "description": "Verify that recent data is being indexed",
+          "tool": "splunk_mcp",
+          "goal": "Verify that recent data is being indexed",
+          "prompt": "Search for events from the last 24 hours across all indexes to verify data is flowing. Use a simple search like: search earliest=-24h | head 10 | stats count. This confirms the system is actively receiving and indexing data.",
+          "expected_output": "Count of recent events and confirmation of data flow"
+        },
+        {
+          "task_id": "check_system_performance",
+          "title": "Check System Performance",
+          "description": "Basic performance indicators check",
+          "tool": "splunk_mcp",
+          "goal": "Basic performance indicators check",
+          "prompt": "Check basic system performance by running a simple search to measure response time. Search for: | rest /services/server/info | eval response_time=now() | table response_time. This gives us a baseline performance indicator.",
+          "expected_output": "Basic performance metrics and response time information"
+        }
+      ]
+    },
+    "summary_report": {
+      "name": "summary_report",
+      "phase_name": "Health Summary Report",
+      "description": "Compile findings into a clear, actionable summary",
+      "mandatory": true,
+      "tasks": [
+        {
+          "task_id": "generate_health_summary",
+          "title": "Generate Health Summary",
+          "description": "Create a comprehensive but beginner-friendly health report",
+          "tool": "result_synthesizer",
+          "goal": "Create a comprehensive but beginner-friendly health report",
+          "prompt": "Based on the system information and health checks performed, create a clear and friendly summary report. Include: 1) System overview (version, indexes), 2) Health status (data flow, performance), 3) Any recommendations for workshop participants. Keep it educational and encouraging - this is for learning purposes!",
+          "expected_output": "Comprehensive health report with educational insights for workshop participants"
+        }
+      ]
+    }
+  }
+}

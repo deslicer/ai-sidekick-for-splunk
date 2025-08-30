@@ -7,27 +7,24 @@ Uses Pydantic models for validation and automatic schema adaptation.
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
 
 # Import Pydantic models for validation
 try:
     from ai_sidekick_for_splunk.core.flows_engine.workflow_models import (
-        WorkflowTemplate,
-        WorkflowType,
+        AgentDependency,
+        ComplexityLevel,
+        DataRequirements,
         WorkflowCategory,
+        WorkflowInstructions,
+        WorkflowPhase,
         WorkflowSource,
         WorkflowStability,
-        ComplexityLevel,
-        WorkflowInstructions,
-        DataRequirements,
-        AgentDependency,
-        WorkflowPhase,
         WorkflowTask,
-        validate_workflow_template
+        WorkflowTemplate,
+        WorkflowType,
     )
 except ImportError as e:
     print(f"❌ Error importing Pydantic models: {e}", file=sys.stderr)
@@ -165,7 +162,7 @@ def create_workflow_template(name: str, output_dir: Path) -> WorkflowTemplate:
         workflow_id=f"contrib.{name}",
         workflow_name=f"Dev{name.title()}_Workshop System Health Agent",
         version="1.0.0",
-        description=f"A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
+        description="A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
         workflow_type=WorkflowType.TROUBLESHOOTING,
         workflow_category=WorkflowCategory.SYSTEM_HEALTH,
         source=WorkflowSource.CONTRIB,
@@ -346,7 +343,7 @@ Examples:
         print()
         print(f"✅ Created directory: {output_dir}")
         print(f"✅ Created workflow: {args.name}.json")
-        print(f"✅ Created README: README.md")
+        print("✅ Created README: README.md")
         print()
         print(f"🎉 SUCCESS! {workflow_template.workflow_name} Created!")
         print("=" * 60)

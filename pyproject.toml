@@ -54,7 +54,8 @@ packages = ["src/ai_sidekick_for_splunk"]
 # lockfile support
 
 [project.scripts]
-ai-sidekick = "ai_sidekick_for_splunk.cli.start_lab:main"
+ai-sidekick = "ai_sidekick_for_splunk.cli.main:main"
+# Legacy commands (deprecated - use ai-sidekick with flags instead)
 ai-sidekick-stop = "ai_sidekick_for_splunk.cli.stop_lab:main"
 ai-sidekick-create-agent = "ai_sidekick_for_splunk.cli.create_agent_cli:main"
 ai-sidekick-add-agent = "ai_sidekick_for_splunk.cli.add_agent:main"

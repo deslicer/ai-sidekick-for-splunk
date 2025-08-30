@@ -1,0 +1,28 @@
+# Global ownership
+* @deslicer
+
+# Core system components
+/src/ai_sidekick_for_splunk/core/ @deslicer
+/src/ai_sidekick_for_splunk/cli/ @deslicer
+
+# Configuration and build files
+/pyproject.toml @deslicer
+/.github/ @deslicer
+/scripts/ @deslicer
+
+# Documentation
+/docs/ @deslicer
+/README.md @deslicer
+/CONTRIBUTING.md @deslicer
+
+# Security and governance
+/SECURITY.md @deslicer
+/CODE_OF_CONDUCT.md @deslicer
+/.github/workflows/ @deslicer
+
+# Community contributions (require review but more flexible)
+/src/ai_sidekick_for_splunk/contrib/ @deslicer
+
+# Workflow definitions and templates
+/src/ai_sidekick_for_splunk/core/flows/ @deslicer
+/src/ai_sidekick_for_splunk/contrib/flows/ @deslicer

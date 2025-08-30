@@ -4,123 +4,211 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Google ADK](https://img.shields.io/badge/Google%20ADK-1.11+-green.svg)](https://google.github.io/adk-docs/)
 
-**AI Sidekick for Splunk** is a powerful multi-agent system that brings AI-powered assistance to Splunk operations. Built on Google's Agent Development Kit (ADK), it provides intelligent automation for Splunk administration, troubleshooting, and data analysis.
+**AI Sidekick for Splunk** is a revolutionary multi-agent system that transforms complex Splunk operations into simple, accessible workflows. Built on Google's Agent Development Kit (ADK), it features a sophisticated architecture combining universal workflow agents with specialized intelligent agents.
 
-## 🚀 Features
+## 🏗️ **Modern Architecture**
 
-### **Multi-Agent Architecture**
-- **FlowPilot Agents**: Template-driven workflow execution for systematic operations
-- **Specialized Agents**: Purpose-built agents for specific Splunk tasks
-- **Result Synthesizer**: Converts technical results into actionable business insights
-- **Dynamic Discovery**: Automatically discovers and registers new workflows
+### **FlowPilot System - Universal Workflow Execution**
 
-### **Workflow-Driven Operations**
-- **System Health Checks**: Comprehensive Splunk environment monitoring
-- **Index Analysis**: Deep-dive analysis of data ingestion and performance
-- **Performance Monitoring**: Real-time system performance insights
-- **Extensible Framework**: Easy addition of custom workflows via JSON templates
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AI Sidekick for Splunk                  │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
+│  │   FlowPilot     │  │  Specialized    │  │ Auto-Discovery│ │
+│  │   Agents        │  │    Agents       │  │    System    │ │
+│  │                 │  │                 │  │              │ │
+│  │ • Universal     │  │ • Result        │  │ • Workflow   │ │
+│  │ • Template-     │  │   Synthesizer   │  │   Scanner    │ │
+│  │   Driven        │  │ • Splunk MCP    │  │ • Validation │ │
+│  │ • JSON Config   │  │ • Researcher    │  │ • Dynamic    │ │
+│  │ • Scalable      │  │ • Custom Agents │  │   Factory    │ │
+│  └─────────────────┘  └─────────────────┘  └──────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│                    Workflow Engine                         │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │ • Dynamic Discovery  • Pydantic Validation             │ │
+│  │ • Template Engine    • Parallel Execution              │ │
+│  │ • Agent Coordination • Result Synthesis                │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
 
-### **Enterprise-Ready**
-- **Scalable Architecture**: Supports both community and enterprise workflows
+### **Core Components**
+
+1. **🚀 FlowPilot Agents**: Universal agents that execute any JSON-defined workflow
+2. **🎯 Specialized Agents**: Purpose-built agents for complex operations
+3. **🔍 Auto-Discovery**: Automatically finds and registers workflows from `core/` and `contrib/`
+4. **⚡ Workflow Engine**: Orchestrates multi-agent workflows with parallel execution
+
+## ✨ **Key Features**
+
+### **Template-Driven Workflows**
+- **JSON Configuration**: Define workflows without code changes
+- **Dynamic Discovery**: Automatically discovers workflows in `core/flows/` and `contrib/flows/`
+- **Pydantic Validation**: Robust schema validation for workflow templates
+- **Hot Reload**: Add new workflows without restarting the system
+
+### **Multi-Agent Orchestration**
+- **FlowPilot Factory**: Dynamically creates agents from workflow templates
+- **Agent Dependencies**: Declare required agents (e.g., `splunk_mcp`, `result_synthesizer`)
+- **Parallel Execution**: Execute multiple tasks simultaneously
+- **Result Synthesis**: Convert technical results into business insights
+
+### **Enterprise-Ready Architecture**
+- **Hybrid Model**: Core workflows (stable) + Community workflows (experimental)
+- **Scalable Naming**: Generic task-based execution patterns
 - **MCP Integration**: Model Context Protocol for seamless tool integration
-- **Web Interface**: Modern web UI powered by Google ADK
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Web Interface**: Web UI powered by Google ADK
 
-## 📋 Prerequisites
+## 🚀 **Quick Start**
 
-- **Python 3.11+**
-- **Google API Key** (for Gemini models)
-- **Splunk Environment** (for MCP server connectivity)
-- **uv** (Fast Python package manager)
-
-## 🛠️ Quick Start
-
-### 1. **Check Prerequisites**
+### **1. Prerequisites Check**
 
 ```bash
-# Download and run the prerequisites checker
+# Download and run prerequisites checker
 curl -O https://raw.githubusercontent.com/your-org/ai-sidekick-for-splunk/main/scripts/check-prerequisites.py
 python check-prerequisites.py
 ```
 
-### 2. **Install AI Sidekick**
+### **2. Installation**
 
 ```bash
-# Install from PyPI (when available)
+# Minimal installation (recommended)
 pip install ai-sidekick-for-splunk
 
-# Or install from source
+# With web interface
+pip install ai-sidekick-for-splunk[web]
+
+# For development
+pip install ai-sidekick-for-splunk[dev]
+
+# From source
 git clone https://github.com/your-org/ai-sidekick-for-splunk.git
 cd ai-sidekick-for-splunk
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv venv && source .venv/bin/activate
 uv pip install -e .
 ```
 
-### 3. **Set Up Environment**
+### **3. Configuration**
 
 ```bash
-# Copy and configure environment variables
+# Copy environment template
 cp .env.example .env
-# Edit .env with your Google API key and Splunk MCP server URL
+
+# Edit with your settings
+# GOOGLE_API_KEY=your_gemini_api_key
+# SPLUNK_MCP_SERVER_URL=http://localhost:8003
 ```
 
-### 4. **Start AI Sidekick**
+### **4. Start AI Sidekick**
 
 ```bash
 ai-sidekick
 ```
 
-Open your browser to `http://localhost:8087` and start interacting with your AI agents!
+Open `http://localhost:8087` and start using your AI agents!
 
-## 🎯 Usage Examples
+## 💡 **Usage Examples**
 
 ### **System Health Check**
 ```
-Ask: "Run a comprehensive health check on my Splunk environment"
+User: "Run a comprehensive health check on my Splunk environment"
+
+FlowPilot Agent:
+├── Phase 1: System Information Gathering
+├── Phase 2: Health Assessment
+├── Phase 3: Performance Analysis
+└── Phase 4: Summary Report (via Result Synthesizer)
 ```
-The FlowPilot agent will execute a systematic health check workflow, analyzing:
-- System information and version details
-- Index status and data flow
-- Performance metrics
-- Actionable recommendations
 
 ### **Index Analysis**
 ```
-Ask: "Analyze the performance of my main index"
+User: "Analyze the performance of my main index"
+
+FlowPilot Agent:
+├── Gather index metadata
+├── Analyze data ingestion patterns
+├── Check storage utilization
+└── Generate optimization recommendations
 ```
-Get detailed insights into:
-- Data ingestion rates
-- Storage utilization
-- Search performance
-- Optimization suggestions
 
 ### **Custom Workflows**
-Create your own workflows by adding JSON templates to the `src/core/flows/` or `src/contrib/flows/` directories.
+Add your own workflows by creating JSON templates:
 
-## 🏗️ Architecture
-
+```json
+{
+  "workflow_name": "Security Audit",
+  "workflow_id": "security.audit",
+  "workflow_type": "security",
+  "source": "contrib",
+  "core_phases": {
+    "scan": {
+      "name": "Security Scan",
+      "tasks": [
+        {
+          "task_id": "check_failed_logins",
+          "title": "Check Failed Login Attempts",
+          "tool": "search",
+          "prompt": "Search for failed login attempts in the last 24 hours"
+        }
+      ]
+    }
+  }
+}
 ```
-AI Sidekick for Splunk
-├── Core Agents
-│   ├── FlowPilot (Universal workflow executor)
-│   ├── Result Synthesizer (Business insights)
-│   └── Splunk MCP (Splunk operations)
-├── Workflow Engine
-│   ├── Dynamic Discovery
-│   ├── Template Validation
-│   └── Execution Orchestration
-└── Extensible Framework
-    ├── Core Workflows (Built-in)
-    └── Contrib Workflows (Community)
+
+## 🏗️ **Architecture Deep Dive**
+
+### **Workflow Discovery System**
+```python
+# Automatic discovery from:
+src/ai_sidekick_for_splunk/
+├── core/flows/           # Stable, production workflows
+│   ├── health_check/
+│   ├── index_analysis/
+│   └── system_info/
+└── contrib/flows/        # Community, experimental workflows
+    ├── security/
+    ├── performance/
+    └── custom/
 ```
 
-## 🔧 Development
+### **FlowPilot Agent Factory**
+```python
+# Dynamic agent creation
+discovery = WorkflowDiscovery()
+workflows = discovery.discover_workflows()
 
-### **Adding Custom Agents**
+factory = DynamicFlowPilotFactory()
+agents = factory.create_all_flow_pilot_agents()
+# Creates: System Health Check, Index Analysis, etc.
+```
+
+### **Agent Dependencies**
+```json
+{
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "required": true,
+      "description": "Splunk MCP server for data operations"
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "required": false,
+      "description": "Converts technical results to business insights"
+    }
+  }
+}
+```
+
+## 🛠️ **Development**
+
+### **Creating Custom Agents**
 
 ```bash
-# Create a new agent
+# Generate agent boilerplate
 ai-sidekick-create-agent my_custom_agent
 
 # Add implementation
@@ -130,57 +218,94 @@ ai-sidekick-add-agent my_custom_agent
 ### **Creating Workflow Templates**
 
 ```bash
-# Generate a workflow template
-python src/scripts/generate_workflow_template.py
+# Generate workflow template
+python src/ai_sidekick_for_splunk/scripts/generate_workflow_template.py
+
+# Choose core or contrib
+# Fill in workflow details
+# Template automatically validated
 ```
 
-### **Running Tests**
+### **Testing & Quality**
 
 ```bash
-# Install development dependencies
-uv pip install -e ".[dev]"
-
 # Run tests
 pytest
 
-# Run linting
+# Code quality
 ruff check src/
+ruff format src/
+
+# Type checking
+mypy src/
 ```
 
-## 📚 Documentation
+## 📁 **Project Structure**
 
-- **[Getting Started Guide](docs/getting-started/)**
-- **[Agent Development](docs/development/)**
-- **[Workflow Templates](docs/workflows/)**
-- **[API Reference](docs/api/)**
+```
+src/ai_sidekick_for_splunk/
+├── core/
+│   ├── agents/              # Core agents
+│   │   ├── flow_pilot/      # Universal workflow agent
+│   │   ├── result_synthesizer/
+│   │   └── splunk_mcp/
+│   ├── flows/               # Core workflow templates
+│   │   ├── health_check/
+│   │   ├── index_analysis/
+│   │   └── system_info/
+│   └── flows_engine/        # Workflow execution engine
+├── contrib/
+│   ├── agents/              # Community agents
+│   └── flows/               # Community workflows
+├── cli/                     # Command-line interface
+└── services/                # Supporting services
+```
 
-## 🤝 Contributing
+## 🌟 **Why AI Sidekick for Splunk?**
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+### **For Splunk Administrators**
+- **Instant Expertise**: Access to best-practice workflows
+- **Reduced Complexity**: Complex operations simplified to conversations
+- **Consistent Results**: Standardized, repeatable processes
+- **Time Savings**: Automated routine tasks
 
-### **Quick Contribution Steps**
+### **For Developers**
+- **Template-Driven**: Add workflows without coding
+- **Extensible Architecture**: Build on solid foundations
+- **Community Driven**: Share and benefit from collective knowledge
+- **Modern Stack**: Built on Google ADK with latest AI capabilities
+
+### **For Organizations**
+- **Scalable Operations**: Handle growing Splunk environments
+- **Knowledge Preservation**: Capture expertise in reusable workflows
+- **Compliance Ready**: Consistent, auditable processes
+- **Cost Effective**: Reduce manual operations overhead
+
+## 🤝 **Contributing**
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### **Quick Contribution**
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a workflow template in `contrib/flows/`
+3. Test with the workflow generator
+4. Submit a Pull Request
 
-## 📄 License
+## 📚 **Documentation**
+
+- **[Architecture Guide](docs/architecture/)** - Deep dive into system design
+- **[Workflow Templates](docs/workflows/)** - Template creation guide
+- **[Agent Development](docs/development/)** - Custom agent development
+
+## 🔗 **Related Projects**
+
+- **[MCP Server for Splunk](https://github.com/deslicer/mcp-for-splunk)** - Splunk MCP integration
+- **[Google ADK](https://google.github.io/adk-docs/)** - Agent Development Kit
+
+## 📄 **License**
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- **Google ADK Team** - For the powerful Agent Development Kit
-- **Splunk Community** - For inspiration and feedback
-- **Contributors** - For making this project better
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/your-org/ai-sidekick-for-splunk/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/ai-sidekick-for-splunk/discussions)
-- **Documentation**: [Project Wiki](https://github.com/your-org/ai-sidekick-for-splunk/wiki)
-
 ---
 
-**Made with ❤️ for the Splunk Community**
+**Transform your Splunk operations with AI-powered workflows** 🚀

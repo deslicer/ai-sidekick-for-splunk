@@ -12,7 +12,7 @@ This agent performs a simple but comprehensive health assessment of your Splunk 
 - **Splunk Version Check**: Retrieves version and build information
 - **Index Discovery**: Lists all available indexes in the environment
 
-### Phase 2: Basic Health Assessment  
+### Phase 2: Basic Health Assessment
 - **Data Flow Verification**: Confirms recent data is being indexed
 - **Performance Check**: Measures basic system response times
 
@@ -59,7 +59,7 @@ Watch as the agent:
 
 After execution, you'll receive:
 - **System Overview**: Version, configuration, and available data sources
-- **Health Status**: Data flow confirmation and performance indicators  
+- **Health Status**: Data flow confirmation and performance indicators
 - **Educational Insights**: Explanations of what each check means
 - **Learning Summary**: Key takeaways for workshop participants
 

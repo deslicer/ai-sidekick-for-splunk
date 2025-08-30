@@ -13,7 +13,7 @@
     "8.0+",
     "9.0+"
   ],
-  "last_updated": "2025-08-29",
+  "last_updated": "2025-08-30",
   "documentation_url": "README.md",
   "description": "A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
   "business_value": "Provides quick health assessment of Splunk environment for workshop participants to understand system status and learn workflow execution patterns.",

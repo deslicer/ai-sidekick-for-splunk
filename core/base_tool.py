@@ -1,5 +1,5 @@
 """
-Base tool class for Splunk AI Sidekick.
+Base tool class for AI Sidekick for Splunk.
 
 This module provides the foundational BaseTool class that all Splunk AI tools
 should inherit from. It implements common functionality and enforces the
@@ -33,7 +33,7 @@ class BaseTool(ABC):
     Base class for all Splunk AI tools.
 
     This class provides the foundational structure and common functionality
-    that all tools in the Splunk AI Sidekick framework should implement.
+    that all tools in the AI Sidekick for Splunk framework should implement.
     It integrates with Google ADK's tool patterns while providing
     Splunk-specific abstractions.
 

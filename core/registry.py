@@ -1,5 +1,5 @@
 """
-Registry system for Splunk AI Sidekick agents and tools.
+Registry system for AI Sidekick for Splunk agents and tools.
 
 This module provides centralized registration and management of agents and tools
 in the framework, supporting dynamic discovery and dependency resolution.
@@ -478,7 +478,7 @@ class RegistryManager:
     Manager for coordinating agent and tool registries.
 
     Provides a unified interface for managing both agents and tools
-    within the Splunk AI Sidekick framework.
+    within the AI Sidekick for Splunk framework.
     """
 
     def __init__(self, config: Config):

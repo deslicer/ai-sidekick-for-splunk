@@ -1,8 +1,8 @@
 """
-Community contributions for Splunk AI Sidekick.
+Community contributions for AI Sidekick for Splunk.
 
 This package contains community-contributed agents and tools that extend
-the functionality of the Splunk AI Sidekick framework. All contributions
+the functionality of the AI Sidekick for Splunk framework. All contributions
 in this directory are dynamically discovered and loaded at runtime.
 
 Structure:

@@ -1,5 +1,5 @@
 """
-Researcher Agent for Splunk AI Sidekick.
+Researcher Agent for AI Sidekick for Splunk.
 
 A specialized core agent that provides research capabilities using Google Search grounding
 to access real-time information from the internet. This agent is used by the root agent

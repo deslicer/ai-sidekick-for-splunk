@@ -1,5 +1,5 @@
 """
-Researcher agent for Splunk AI Sidekick.
+Researcher agent for AI Sidekick for Splunk.
 
 A specialized core agent for research operations using Google Search grounding
 to access real-time information from the internet.
@@ -118,7 +118,7 @@ class ResearcherAgent(BaseAgent):
 
     def _get_instructions(self) -> str:
         """Get detailed instructions for the researcher agent."""
-        return """You are the Researcher Agent, a specialized sub-agent of the Splunk AI Sidekick focused on
+        return """You are the Researcher Agent, a specialized sub-agent of the AI Sidekick for Splunk focused on
 deep analysis, investigation, and comprehensive insights for Splunk-related topics.
 
 ## Your Expertise Areas

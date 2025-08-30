@@ -1,5 +1,5 @@
 """
-Splunk AI Sidekick - Modular Multi-Agent System
+AI Sidekick for Splunk - Modular Multi-Agent System
 
 A contribution-driven, modular architecture for Splunk AI agents using Google ADK.
 This package provides a core framework for building extensible Splunk AI capabilities
@@ -14,7 +14,7 @@ Key Features:
 """
 
 __version__ = "0.1.0"
-__author__ = "Splunk AI Sidekick Team"
+__author__ = "AI Sidekick for Splunk Team"
 
 # Core exports for framework consumers
 from .core.base_agent import AgentMetadata, BaseAgent

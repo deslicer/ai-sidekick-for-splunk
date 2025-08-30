@@ -1,5 +1,5 @@
 """
-Search Guru implementation for Splunk AI Sidekick.
+Search Guru implementation for AI Sidekick for Splunk.
 
 A specialized agent for Splunk search operations, SPL guidance, search optimization,
 and comprehensive index data analysis with insights generation.

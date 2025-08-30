@@ -1,5 +1,5 @@
 """
-Prompts for the Splunk AI Sidekick researcher agent.
+Prompts for the AI Sidekick for Splunk researcher agent.
 
 This module contains the instruction prompts used by the researcher agent
 for conducting web searches and gathering information related to Splunk

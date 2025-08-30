@@ -1,5 +1,5 @@
 """
-Centralized logging configuration for Splunk AI Sidekick.
+Centralized logging configuration for AI Sidekick for Splunk.
 
 This module configures Python logging for both our application and Google ADK,
 following ADK guidance to use the standard logging module.

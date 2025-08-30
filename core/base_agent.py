@@ -1,5 +1,5 @@
 """
-Base agent class for Splunk AI Sidekick.
+Base agent class for AI Sidekick for Splunk.
 
 This module provides the foundational BaseAgent class that all Splunk AI agents
 should inherit from. It implements common functionality and enforces the
@@ -32,7 +32,7 @@ class BaseAgent(ABC):
     Base class for all Splunk AI agents.
 
     This class provides the foundational structure and common functionality
-    that all agents in the Splunk AI Sidekick framework should implement.
+    that all agents in the AI Sidekick for Splunk framework should implement.
     It integrates with Google ADK's LlmAgent pattern while providing
     Splunk-specific abstractions.
 

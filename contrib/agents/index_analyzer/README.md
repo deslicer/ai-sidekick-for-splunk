@@ -1,6 +1,6 @@
 # IndexAnalyzer Agent
 
-Demo agent for the Splunk AI Sidekick Lab demonstrating systematic index analysis.
+Demo agent for the AI Sidekick for Splunk Lab demonstrating systematic index analysis.
 
 ## Overview
 

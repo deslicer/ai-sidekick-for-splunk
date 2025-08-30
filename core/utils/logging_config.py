@@ -1,5 +1,5 @@
 """
-Centralized logging configuration for Splunk AI Sidekick.
+Centralized logging configuration for AI Sidekick for Splunk.
 
 Follows ADK guidance to use Python's logging and config from the application
 entrypoint. Exposes setup_logging for unified stdout + file logging.
@@ -59,5 +59,3 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
                 root_logger.addHandler(fh)
         except Exception:
             pass
-
-

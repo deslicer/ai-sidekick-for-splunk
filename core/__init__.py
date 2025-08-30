@@ -1,5 +1,5 @@
 """
-Core framework components for Splunk AI Sidekick.
+Core framework components for AI Sidekick for Splunk.
 
 This module contains the foundational classes and utilities for building
 modular, extensible Splunk AI agents using Google ADK.

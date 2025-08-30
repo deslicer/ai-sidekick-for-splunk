@@ -1,7 +1,7 @@
 """
-Setup Runner for Splunk AI Sidekick agent execution.
+Setup Runner for AI Sidekick for Splunk agent execution.
 
-This module provides a runner for setting up and executing the Splunk AI Sidekick agents
+This module provides a runner for setting up and executing the AI Sidekick for Splunk agents
 with proper session management, artifact service, and LLM configuration.
 """
 import logging
@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 class SetupRunner:
     """
-    Runner for Splunk AI Sidekick agent setup and execution.
+    Runner for AI Sidekick for Splunk agent setup and execution.
 
-    This class handles the setup and execution of the Splunk AI Sidekick agents
+    This class handles the setup and execution of the AI Sidekick for Splunk agents
     with the appropriate session management, artifact service, LLM configuration,
     and execution context.
     """

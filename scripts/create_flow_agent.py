@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create Flow Agent Script for Splunk AI Sidekick Workshop
+Create Flow Agent Script for AI Sidekick for Splunk Workshop
 
 This script creates a simple workflow agent for workshop participants to demonstrate
 the FlowPilot system's capabilities. It generates a complete workflow definition
@@ -44,48 +44,48 @@ def create_workflow_definition() -> dict[str, Any]:
         "splunk_versions": ["8.0+", "9.0+"],
         "last_updated": datetime.now().strftime("%Y-%m-%d"),
         "documentation_url": "README.md",
-        
+
         "description": "A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
-        
+
         "business_value": "Provides quick health assessment of Splunk environment for workshop participants to understand system status and learn workflow execution patterns.",
-        
+
         "use_cases": [
             "workshop_demonstration",
             "basic_health_monitoring",
             "system_status_overview",
             "learning_workflow_patterns"
         ],
-        
+
         "success_metrics": [
             "successful_health_check_completion",
             "system_info_retrieval",
             "clear_status_reporting"
         ],
-        
+
         "target_audience": [
             "workshop_participants",
             "splunk_beginners",
             "workflow_learners"
         ],
-        
+
         "prerequisites": [
             "splunk_mcp_server",
             "basic_splunk_access"
         ],
-        
+
         "required_permissions": [
             "search",
             "list_indexes"
         ],
-        
+
         "supported_splunk_versions": ["8.0+", "9.0+"],
-        
+
         "data_requirements": {
             "minimum_events": 100,
             "required_sourcetypes": [],
             "optional_fields": []
         },
-        
+
         "agent": "FlowPilot",
         "agent_dependencies": {
             "splunk_mcp": {
@@ -93,14 +93,14 @@ def create_workflow_definition() -> dict[str, Any]:
                 "description": "Splunk MCP server for executing searches and gathering system information",
                 "capabilities": [
                     "search_execution",
-                    "index_listing", 
+                    "index_listing",
                     "system_info_retrieval"
                 ]
             }
         },
-        
+
         "workflow_instructions": "You are the Dev1666 System Health Agent - a friendly workshop demonstration agent that helps participants learn about Splunk health monitoring. Execute each phase step by step, providing clear explanations of what you're checking and why it matters for system health.",
-        
+
         "core_phases": {
             "system_info": {
                 "phase_name": "System Information Gathering",
@@ -115,7 +115,7 @@ def create_workflow_definition() -> dict[str, Any]:
                     },
                     {
                         "task_name": "list_available_indexes",
-                        "agent": "splunk_mcp", 
+                        "agent": "splunk_mcp",
                         "goal": "List all available indexes to understand data landscape",
                         "prompt": "List all available Splunk indexes. This gives us an overview of what data sources are configured in this environment.",
                         "expected_output": "Complete list of indexes with basic metadata"
@@ -174,7 +174,7 @@ This agent performs a simple but comprehensive health assessment of your Splunk 
 - **Splunk Version Check**: Retrieves version and build information
 - **Index Discovery**: Lists all available indexes in the environment
 
-### Phase 2: Basic Health Assessment  
+### Phase 2: Basic Health Assessment
 - **Data Flow Verification**: Confirms recent data is being indexed
 - **Performance Check**: Measures basic system response times
 
@@ -221,7 +221,7 @@ Watch as the agent:
 
 After execution, you'll receive:
 - **System Overview**: Version, configuration, and available data sources
-- **Health Status**: Data flow confirmation and performance indicators  
+- **Health Status**: Data flow confirmation and performance indicators
 - **Educational Insights**: Explanations of what each check means
 - **Learning Summary**: Key takeaways for workshop participants
 
@@ -255,17 +255,17 @@ def write_workflow_files(agent_dir: Path) -> tuple[Path, Path]:
     # Write the workflow definition
     workflow_def = create_workflow_definition()
     workflow_file = agent_dir / "dev1666_agent.json"
-    
+
     with open(workflow_file, 'w', encoding='utf-8') as f:
         json.dump(workflow_def, f, indent=2, ensure_ascii=False)
-    
+
     # Write the README
     readme_content = create_readme_content()
     readme_file = agent_dir / "README.md"
-    
+
     with open(readme_file, 'w', encoding='utf-8') as f:
         f.write(readme_content)
-    
+
     return workflow_file, readme_file
 
 def print_success_message(workflow_file: Path, readme_file: Path) -> None:
@@ -302,29 +302,29 @@ def main():
     print("🛠 Creating Dev1666 System Health Agent for Workshop")
     print("=" * 60)
     print()
-    
+
     # Determine the base path (src/ai_sidekick_for_splunk)
     script_dir = Path(__file__).parent
     base_path = script_dir.parent
-    
+
     print(f"📍 Base path: {base_path}")
     print("🎯 Creating workflow in: contrib/flows/dev1666_agent/")
     print()
-    
+
     try:
         # Create directory structure
         agent_dir = create_agent_directory_structure(base_path)
         print(f"✅ Created directory: {agent_dir}")
-        
+
         # Write workflow files
         workflow_file, readme_file = write_workflow_files(agent_dir)
         print(f"✅ Created workflow: {workflow_file.name}")
         print(f"✅ Created README: {readme_file.name}")
         print()
-        
+
         # Print success message
         print_success_message(workflow_file, readme_file)
-        
+
     except Exception as e:
         print(f"❌ Error creating dev1666_agent: {e}")
         sys.exit(1)

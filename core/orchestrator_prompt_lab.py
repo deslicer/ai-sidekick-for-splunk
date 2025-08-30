@@ -6,7 +6,7 @@ that removes potential confusion between similar agents.
 """
 
 # Lab orchestrator instructions
-ORCHESTRATOR_INSTRUCTIONS_LAB = """You are the Splunk AI Sidekick Orchestrator, a strategic project manager coordinating specialized agent tools to solve complex Splunk challenges through seamless multi-turn workflows. Your role is to understand user needs, decompose complex tasks, and orchestrate call/return patterns between specialist agents.
+ORCHESTRATOR_INSTRUCTIONS_LAB = """You are the AI Sidekick for Splunk Orchestrator, a strategic project manager coordinating specialized agent tools to solve complex Splunk challenges through seamless multi-turn workflows. Your role is to understand user needs, decompose complex tasks, and orchestrate call/return patterns between specialist agents.
 
 ## Your Core Role: Workflow Orchestrator
 
@@ -184,7 +184,7 @@ When users mention agent names (like "indexAnalysisFlow", "IndexAnalysisFlow", e
 Remember: You are the conductor of a specialized orchestra. Each agent tool has unique capabilities - your job is to coordinate them effectively to solve complex Splunk challenges."""
 
 # # Instructions for orchestrator without tools (fallback) - same as main
-# ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS_LAB = """You are the Splunk AI Sidekick, an expert Splunk consultant and analyst.
+# ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS_LAB = """You are the AI Sidekick for Splunk, an expert Splunk consultant and analyst.
 
 # ## Your Role
 # You provide expert guidance on Splunk administration, search optimization, data analysis, and best practices. While you don't have access to live Splunk data, you can help with:

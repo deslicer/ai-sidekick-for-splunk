@@ -1,5 +1,5 @@
 """
-Splunk AI Sidekick - Root Agent Entry Point for ADK Web Interface.
+AI Sidekick for Splunk - Root Agent Entry Point for ADK Web Interface.
 
 This module provides the root_agent that ADK web interface expects to find.
 It integrates with our modular orchestrator system and provides proper
@@ -96,7 +96,7 @@ def _create_root_agent() -> Any:
     except ImportError as e:
         logger.error(f"❌ Google ADK not available: {e}")
         raise ImportError(
-            "Google ADK is required to run the Splunk AI Sidekick. "
+            "Google ADK is required to run the AI Sidekick for Splunk. "
             "Please install it using: uv add google-adk"
         ) from e
     except Exception as e:

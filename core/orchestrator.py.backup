@@ -1,5 +1,5 @@
 """
-Splunk AI Sidekick Orchestrator - Main coordination system.
+AI Sidekick for Splunk Orchestrator - Main coordination system.
 
 This module provides the SplunkOrchestrator class that coordinates between
 agents, tools, and external systems using our modular architecture.
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 class SplunkOrchestrator:
     """
-    Main orchestrator for the Splunk AI Sidekick system.
+    Main orchestrator for the AI Sidekick for Splunk system.
 
     Coordinates between agents, tools, and external systems using our
     modular architecture with dynamic discovery and registration.
@@ -72,7 +72,7 @@ class SplunkOrchestrator:
         """Create the main ADK agent that can route to sub-agents.
 
         Returns:
-            ADK LlmAgent configured for the Splunk AI Sidekick
+            ADK LlmAgent configured for the AI Sidekick for Splunk
         """
         if self._adk_agent is not None:
             return self._adk_agent
@@ -97,7 +97,7 @@ class SplunkOrchestrator:
             self._adk_agent = LlmAgent(
                 model=self.config.model.primary_model,  # Use Gemini 2.0 model for Google Search compatibility
                 name="splunk_ai_sidekick",
-                description="Splunk AI Sidekick orchestrator with specialized agent tools for collaborative workflows",
+                description="AI Sidekick for Splunk orchestrator with specialized agent tools for collaborative workflows",
                 instruction=self._get_main_agent_instructions(),
                 tools=all_tools
             )
@@ -311,7 +311,7 @@ class SplunkOrchestrator:
 
 
 def create_agent(config: Config | None = None) -> Any:
-    """Factory function to create the main Splunk AI Sidekick agent.
+    """Factory function to create the main AI Sidekick for Splunk agent.
 
     Args:
         config: Optional configuration instance

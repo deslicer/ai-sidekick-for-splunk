@@ -2,7 +2,7 @@
 Core Agents - Reusable System Agents.
 
 This module contains core system agents that provide reusable functionality
-across the entire Splunk AI Sidekick system, including workflow execution agents.
+across the entire AI Sidekick for Splunk system, including workflow execution agents.
 """
 
 from .flow_pilot import FlowPilot, create_dynamic_flowpilot_agents, get_all_dynamic_agents

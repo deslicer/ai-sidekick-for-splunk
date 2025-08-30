@@ -1,5 +1,5 @@
 """
-Official Splunk AI Sidekick tools.
+Official AI Sidekick for Splunk tools.
 
 This package contains officially maintained and supported tools that are
 part of the core framework. These tools provide essential Splunk functionality

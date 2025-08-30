@@ -1,5 +1,5 @@
 """
-Google Search Grounding Tool for Splunk AI Sidekick.
+Google Search Grounding Tool for AI Sidekick for Splunk.
 
 Provides centralized Google Search grounding capability for agents that need
 real-time web search functionality. This tool uses ADK's built-in Google Search

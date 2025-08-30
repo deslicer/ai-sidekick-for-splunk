@@ -1,5 +1,5 @@
 """
-Configuration management for Splunk AI Sidekick.
+Configuration management for AI Sidekick for Splunk.
 
 This module provides centralized configuration management for the framework,
 including model settings, discovery paths, and runtime parameters.
@@ -69,7 +69,7 @@ class SplunkConfig:
 @dataclass
 class Config:
     """
-    Main configuration class for Splunk AI Sidekick.
+    Main configuration class for AI Sidekick for Splunk.
 
     This class manages all configuration aspects of the framework including
     model settings, discovery paths, Splunk connection details, and runtime parameters.

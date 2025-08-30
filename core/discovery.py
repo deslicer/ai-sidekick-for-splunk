@@ -1,5 +1,5 @@
 """
-Enhanced Discovery system for Splunk AI Sidekick components.
+Enhanced Discovery system for AI Sidekick for Splunk components.
 
 This module provides functionality to automatically discover and register
 agents and tools from various directories, supporting both core and contrib

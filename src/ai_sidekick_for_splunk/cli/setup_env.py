@@ -139,7 +139,7 @@ def write_env_file(
         "# =============================================================================\n"
         "# Workshop Server Configuration\n"
         "# =============================================================================\n"
-        "APP_NAME=\"AI Sidekick for Splunk\"\n"
+        'APP_NAME="AI Sidekick for Splunk"\n'
         "DEBUG=false\n"
         "HOST=0.0.0.0\n"
         f"PORT={port}\n"
@@ -151,7 +151,7 @@ def write_env_file(
         "# =============================================================================\n"
         "VERSION=1.0.0\n"
         "RELOAD=false\n"
-        "CORS_ORIGINS=[\"*\"]\n"
+        'CORS_ORIGINS=["*"]\n'
         "CORS_ALLOW_CREDENTIALS=true\n"
         "DEV_MODE=true\n"
         "SHOW_DETAILED_ERRORS=true\n"
@@ -195,7 +195,9 @@ def read_existing_env(path: Path) -> dict[str, str]:
             continue
         key, raw_val = line.split("=", 1)
         val = raw_val.strip()
-        if (val.startswith("\"") and val.endswith("\"")) or (val.startswith("'") and val.endswith("'")):
+        if (val.startswith('"') and val.endswith('"')) or (
+            val.startswith("'") and val.endswith("'")
+        ):
             val = val[1:-1]
         result[key.strip()] = val
     return result
@@ -245,10 +247,14 @@ def interactive_setup(target_path: Path) -> None:
     print("\n🔑 Google AI Studio Configuration")
     print("Get your API key from: https://aistudio.google.com/app/apikey")
 
-    workshop_csv = resolve_project_root() / "internal/admin/workshop-management/workshop-participants.csv"
+    workshop_csv = (
+        resolve_project_root() / "internal/admin/workshop-management/workshop-participants.csv"
+    )
     google_api_key = existing.get("GOOGLE_API_KEY", "")
     if workshop_csv.exists():
-        auto_choice = (input("Autogenerate Google API key for this workshop? (Y/n): ").strip() or "Y").lower()
+        auto_choice = (
+            input("Autogenerate Google API key for this workshop? (Y/n): ").strip() or "Y"
+        ).lower()
         if auto_choice == "y":
             suggestion = suggest_workshop_key(workshop_csv)
             if suggestion:
@@ -263,12 +269,16 @@ def interactive_setup(target_path: Path) -> None:
         print("Please provide a valid Google API key")
 
     print("\n🔧 MCP Server Configuration")
-    default_mcp = existing.get("SPLUNK_MCP_SERVER_URL", DEFAULTS["MCP_URL"])  # keep existing if present
+    default_mcp = existing.get(
+        "SPLUNK_MCP_SERVER_URL", DEFAULTS["MCP_URL"]
+    )  # keep existing if present
     mcp_url = input(f"MCP server URL [{default_mcp}]: ").strip() or default_mcp
 
     print("\n🔗 Splunk Connection Configuration")
     print("The MCP server needs to connect to your Splunk instance.")
-    use_workshop = (input("Use workshop Splunk instance (dev*.splunk.show)? (Y/n): ").strip() or "Y").lower() == "y"
+    use_workshop = (
+        input("Use workshop Splunk instance (dev*.splunk.show)? (Y/n): ").strip() or "Y"
+    ).lower() == "y"
     if use_workshop:
         splunk_host = "dev1666-i-035e95d7e4ea1c310.splunk.show"
         splunk_port = 8089
@@ -277,12 +287,22 @@ def interactive_setup(target_path: Path) -> None:
         splunk_verify_ssl = True
         print("Using workshop Splunk instance")
     else:
-        splunk_host = input("Splunk host [blank keeps existing if present]: ").strip() or existing.get("SPLUNK_HOST", "")
-        splunk_port_str = input("Splunk port [8089]: ").strip() or existing.get("SPLUNK_PORT", "8089")
+        splunk_host = input(
+            "Splunk host [blank keeps existing if present]: "
+        ).strip() or existing.get("SPLUNK_HOST", "")
+        splunk_port_str = input("Splunk port [8089]: ").strip() or existing.get(
+            "SPLUNK_PORT", "8089"
+        )
         splunk_port = int(splunk_port_str)
-        splunk_scheme = input("Splunk scheme (http/https) [https]: ").strip() or existing.get("SPLUNK_SCHEME", "https")
-        splunk_username = input("Splunk username [admin]: ").strip() or existing.get("SPLUNK_USERNAME", "admin")
-        verify_str = input("Verify SSL certificates? (true/false) [true]: ").strip() or existing.get("SPLUNK_VERIFY_SSL", "true")
+        splunk_scheme = input("Splunk scheme (http/https) [https]: ").strip() or existing.get(
+            "SPLUNK_SCHEME", "https"
+        )
+        splunk_username = input("Splunk username [admin]: ").strip() or existing.get(
+            "SPLUNK_USERNAME", "admin"
+        )
+        verify_str = input(
+            "Verify SSL certificates? (true/false) [true]: "
+        ).strip() or existing.get("SPLUNK_VERIFY_SSL", "true")
         splunk_verify_ssl = verify_str.lower() == "true"
 
     print("")
@@ -362,8 +382,12 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         # Interactive by default when no non-interactive flag and insufficient flags provided
-        if args.interactive or not args.non_interactive and not (
-            args.google_api_key and args.mcp_url and args.splunk_host and args.splunk_password
+        if (
+            args.interactive
+            or not args.non_interactive
+            and not (
+                args.google_api_key and args.mcp_url and args.splunk_host and args.splunk_password
+            )
         ):
             interactive_setup(target_path)
             return

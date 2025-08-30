@@ -29,7 +29,7 @@ class IndexAnalyzerAgent(BaseAgent):
         version="1.0.0",
         author="Workshop Participant",
         tags=["index_analyzer", "agent", "base"],
-        dependencies=["splunk_mcp", "result_synthesizer"]
+        dependencies=["splunk_mcp", "result_synthesizer"],
     )
 
     name = "IndexAnalyzer"
@@ -39,29 +39,36 @@ class IndexAnalyzerAgent(BaseAgent):
         self,
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
-        tools: list[Any] | None = None
+        tools: list[Any] | None = None,
     ) -> None:
         """Initialize the IndexAnalyzer agent."""
-        logger.info("🔧 Initializing IndexAnalyzer agent", extra={
-            "event_type": "index_analyzer_initialization",
-            "event_data": {"agent_name": "IndexAnalyzer", "version": "1.0.0"}
-        })
+        logger.info(
+            "🔧 Initializing IndexAnalyzer agent",
+            extra={
+                "event_type": "index_analyzer_initialization",
+                "event_data": {"agent_name": "IndexAnalyzer", "version": "1.0.0"},
+            },
+        )
 
         super().__init__(config or Config(), metadata or self.METADATA, tools or [])
 
-        logger.info("✅ IndexAnalyzer agent initialized successfully", extra={
-            "event_type": "index_analyzer_created",
-            "event_data": {
-                "agent_name": self.name,
-                "description": self.description,
-                "tools_count": len(tools or [])
-            }
-        })
+        logger.info(
+            "✅ IndexAnalyzer agent initialized successfully",
+            extra={
+                "event_type": "index_analyzer_created",
+                "event_data": {
+                    "agent_name": self.name,
+                    "description": self.description,
+                    "tools_count": len(tools or []),
+                },
+            },
+        )
 
     @property
     def instructions(self) -> str:
         """Get the agent instructions/prompt."""
         from .prompt import INDEX_ANALYZER_INSTRUCTIONS
+
         return INDEX_ANALYZER_INSTRUCTIONS
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> LlmAgent | None:
@@ -82,7 +89,7 @@ class IndexAnalyzerAgent(BaseAgent):
                 model="gemini-2.5-pro",
                 instruction=self.instructions,
                 description=self.description,
-                tools=tools or []
+                tools=tools or [],
             )
 
             # Store the ADK agent for use in execute method
@@ -111,12 +118,13 @@ class IndexAnalyzerAgent(BaseAgent):
 
             # Extract index name from task
             import re
-            index_match = re.search(r'index[=\s]+([^\s]+)', task.lower())
+
+            index_match = re.search(r"index[=\s]+([^\s]+)", task.lower())
             if not index_match:
                 return {
                     "success": False,
                     "error": "No index specified in task",
-                    "message": "Please specify an index to analyze (e.g., 'analyze index=pas')"
+                    "message": "Please specify an index to analyze (e.g., 'analyze index=pas')",
                 }
 
             index_name = index_match.group(1)
@@ -126,11 +134,7 @@ class IndexAnalyzerAgent(BaseAgent):
 
         except Exception as e:
             logger.error(f"IndexAnalyzer execution failed: {e}")
-            return {
-                "success": False,
-                "error": str(e),
-                "message": "Index analysis execution failed"
-            }
+            return {"success": False, "error": str(e), "message": "Index analysis execution failed"}
 
     def _execute_analysis_workflow(self, index_name: str) -> dict[str, Any]:
         """
@@ -149,7 +153,7 @@ class IndexAnalyzerAgent(BaseAgent):
             return {
                 "success": False,
                 "error": "splunk_mcp agent not available",
-                "message": "Cannot execute searches without splunk_mcp agent"
+                "message": "Cannot execute searches without splunk_mcp agent",
             }
 
         # Execute each task with actual Splunk searches
@@ -161,24 +165,24 @@ class IndexAnalyzerAgent(BaseAgent):
 
             try:
                 # Execute the SPL query through splunk_mcp
-                search_result = self._execute_splunk_search(splunk_agent, task_config['spl_query'])
+                search_result = self._execute_splunk_search(splunk_agent, task_config["spl_query"])
 
                 analysis_results[task_id] = {
-                    "name": task_config['name'],
+                    "name": task_config["name"],
                     "status": "completed",
-                    "spl_query": task_config['spl_query'],
+                    "spl_query": task_config["spl_query"],
                     "search_results": search_result,
-                    "findings": self._analyze_task_results(task_id, search_result)
+                    "findings": self._analyze_task_results(task_id, search_result),
                 }
 
             except Exception as e:
                 logger.error(f"Task {task_id} execution failed: {e}")
                 analysis_results[task_id] = {
-                    "name": task_config['name'],
+                    "name": task_config["name"],
                     "status": "failed",
-                    "spl_query": task_config['spl_query'],
+                    "spl_query": task_config["spl_query"],
                     "error": str(e),
-                    "findings": f"Task execution encountered an error: {str(e)}"
+                    "findings": f"Task execution encountered an error: {str(e)}",
                 }
 
         total_tasks = len(workflow_tasks)
@@ -189,14 +193,14 @@ class IndexAnalyzerAgent(BaseAgent):
             "execution_method": "analysis_workflow",
             "analysis_tasks": analysis_results,
             "ready_for_synthesis": True,
-            "transfer_message": "🎯 **READY FOR BUSINESS INTELLIGENCE SYNTHESIS** - Analysis complete"
+            "transfer_message": "🎯 **READY FOR BUSINESS INTELLIGENCE SYNTHESIS** - Analysis complete",
         }
 
     def _get_splunk_agent(self):
         """Get the splunk_mcp agent from orchestrator."""
-        orchestrator = getattr(self, 'orchestrator', None)
+        orchestrator = getattr(self, "orchestrator", None)
         if orchestrator:
-            return orchestrator.registry_manager.agent_registry.get_agent('splunk_mcp')
+            return orchestrator.registry_manager.agent_registry.get_agent("splunk_mcp")
         return None
 
     def _get_workflow_tasks(self, index_name: str) -> dict[str, dict[str, str]]:
@@ -212,24 +216,24 @@ class IndexAnalyzerAgent(BaseAgent):
         return {
             "task_1": {
                 "name": "📊 Data Types Discovery",
-                "spl_query": f"| tstats summariesonly=true count WHERE index={index_name} by _time, sourcetype | timechart span=1h sum(count) by sourcetype"
+                "spl_query": f"| tstats summariesonly=true count WHERE index={index_name} by _time, sourcetype | timechart span=1h sum(count) by sourcetype",
             },
             "task_2": {
                 "name": "🔍 Field Analysis",
-                "spl_query": f"index={index_name} | head 5000 | fields * | fieldsummary"
+                "spl_query": f"index={index_name} | head 5000 | fields * | fieldsummary",
             },
             "task_3": {
                 "name": "📋 Sample Data Collection",
-                "spl_query": f"index={index_name} | head 10 | table _time, index, source, sourcetype, _raw"
+                "spl_query": f"index={index_name} | head 10 | table _time, index, source, sourcetype, _raw",
             },
             "task_4": {
                 "name": "⚡ Volume Assessment",
-                "spl_query": f"| rest /services/data/indexes | search title={index_name} | table title, currentDBSizeMB, totalEventCount, maxTime, minTime"
+                "spl_query": f"| rest /services/data/indexes | search title={index_name} | table title, currentDBSizeMB, totalEventCount, maxTime, minTime",
             },
             "task_5": {
                 "name": "🎯 Cross-Reference Analysis",
-                "spl_query": f"index={index_name} | stats count by sourcetype, source | sort -count"
-            }
+                "spl_query": f"index={index_name} | stats count by sourcetype, source | sort -count",
+            },
         }
 
     def _execute_splunk_search(self, splunk_agent, spl_query: str) -> dict[str, Any]:
@@ -273,7 +277,7 @@ class IndexAnalyzerAgent(BaseAgent):
             "task_2": f"Analyzed field distribution across {result_count} sample events",
             "task_3": f"Collected {result_count} representative data samples for review",
             "task_4": f"Retrieved volume metrics: {result_count} index statistics",
-            "task_5": f"Cross-referenced {result_count} sourcetype and source combinations"
+            "task_5": f"Cross-referenced {result_count} sourcetype and source combinations",
         }
 
         return task_analysis.get(task_id, f"Processed {result_count} search results")
@@ -321,7 +325,7 @@ class IndexAnalyzerAgent(BaseAgent):
             "Basic task execution",
             "Input validation",
             "ADK integration",
-            "Orchestrator compatibility"
+            "Orchestrator compatibility",
         ]
 
 

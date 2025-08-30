@@ -11,7 +11,7 @@ import sys
 from typing import Any
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from .config import Config
 from .discovery import ComponentDiscovery
@@ -20,6 +20,7 @@ from .registry import RegistryManager
 # Import Google ADK components
 
 logger = logging.getLogger(__name__)
+
 
 class SplunkOrchestrator:
     """
@@ -62,17 +63,16 @@ class SplunkOrchestrator:
         # Import directly from the module hierarchy
         agent_paths = [
             "ai_sidekick_for_splunk.contrib.agents",
-            "ai_sidekick_for_splunk.core.agents"  # Includes all core agents (flow_pilot, index_analysis_flow, etc.)
+            "ai_sidekick_for_splunk.core.agents",  # Includes all core agents (flow_pilot, index_analysis_flow, etc.)
         ]
-        tool_paths = [
-            "ai_sidekick_for_splunk.contrib.tools",
-            "ai_sidekick_for_splunk.core.tools"
-        ]
+        tool_paths = ["ai_sidekick_for_splunk.contrib.tools", "ai_sidekick_for_splunk.core.tools"]
 
         # Use enhanced discovery with tool-to-agent mapping
         discovery_result = self.discovery.discover_all(agent_paths, tool_paths)
 
-        logger.info(f"Discovery complete: {discovery_result['agents']} agents, {discovery_result['tools']} tools")
+        logger.info(
+            f"Discovery complete: {discovery_result['agents']} agents, {discovery_result['tools']} tools"
+        )
 
     def create_adk_agent(self) -> Any:
         """Create the main ADK agent that can route to sub-agents.
@@ -94,21 +94,26 @@ class SplunkOrchestrator:
             # Combine standalone tools with agent tools
             all_tools = root_tools + agent_tools
 
-            logger.debug(f"Total tools for root agent: {len(root_tools)} root tools + {len(agent_tools)} agent tools = {len(all_tools)} total")
+            logger.debug(
+                f"Total tools for root agent: {len(root_tools)} root tools + {len(agent_tools)} agent tools = {len(all_tools)} total"
+            )
             logger.debug(f"All tools: {all_tools}")
 
             # Create main ADK agent using LlmAgent for simpler, more reliable coordination
             # LlmAgent provides better call-return patterns
             from google.adk.agents import LlmAgent
+
             self._adk_agent = LlmAgent(
                 model=self.config.model.primary_model,  # Use Gemini 2.0 model for Google Search compatibility
                 name="ai_sidekick_for_splunk",
                 description="AI Sidekick for Splunk orchestrator with specialized agent tools for collaborative workflows",
                 instruction=self._get_main_agent_instructions(),
-                tools=all_tools
+                tools=all_tools,
             )
 
-            logger.info(f"Created main ADK agent with {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)")
+            logger.info(
+                f"Created main ADK agent with {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
+            )
             return self._adk_agent
 
         except ImportError:
@@ -146,7 +151,7 @@ class SplunkOrchestrator:
                     tool_instance = entry.cls(self.config, entry.metadata)
 
                     # Check if it's an ADK tool wrapper with get_adk_tool method
-                    if hasattr(tool_instance, 'get_adk_tool'):
+                    if hasattr(tool_instance, "get_adk_tool"):
                         adk_tool = tool_instance.get_adk_tool()
                         if adk_tool:
                             root_tools.append(adk_tool)
@@ -184,17 +189,17 @@ class SplunkOrchestrator:
                     logger.debug(f"Created new instance for {name}")
 
                 # Check if it's an ADK agent wrapper
-                if hasattr(agent_instance, 'get_adk_agent'):
+                if hasattr(agent_instance, "get_adk_agent"):
                     # Get associated tools for this agent
                     agent_tool_names = agent_tool_mapping.get_agent_tools(name)
                     agent_instance_tools = self._get_tools_for_sub_agent(agent_tool_names)
 
                 # CRITICAL: Set orchestrator on agent before creating ADK agent
                 # This allows agents to access other agents through the orchestrator
-                if hasattr(agent_instance, 'set_orchestrator'):
+                if hasattr(agent_instance, "set_orchestrator"):
                     agent_instance.set_orchestrator(self)
                     logger.debug(f"✅ Set orchestrator on agent: {name}")
-                elif hasattr(agent_instance, 'orchestrator'):
+                elif hasattr(agent_instance, "orchestrator"):
                     agent_instance.orchestrator = self
                     logger.debug(f"✅ Set orchestrator property on agent: {name}")
 
@@ -204,7 +209,9 @@ class SplunkOrchestrator:
                     registry_entry = self.registry_manager.agent_registry._entries.get(name)
                     if registry_entry:
                         registry_entry.instance = agent_instance
-                        logger.debug(f"✅ Updated registry with orchestrator-injected agent: {name}")
+                        logger.debug(
+                            f"✅ Updated registry with orchestrator-injected agent: {name}"
+                        )
                 except Exception as e:
                     logger.warning(f"Could not update registry entry for {name}: {e}")
 
@@ -213,14 +220,15 @@ class SplunkOrchestrator:
 
                 if adk_agent:
                     # Wrap agent as AgentTool for seamless delegation
-                    agent_tool = AgentTool(
-                        agent=adk_agent,
-                        skip_summarization=False
-                    )
+                    agent_tool = AgentTool(agent=adk_agent, skip_summarization=False)
                     agent_tools.append(agent_tool)
-                    logger.debug(f"Created AgentTool: {name}_agent with {len(agent_instance_tools)} tools")
+                    logger.debug(
+                        f"Created AgentTool: {name}_agent with {len(agent_instance_tools)} tools"
+                    )
                 else:
-                    logger.debug(f"Agent {name} is not ADK-compatible - skipping AgentTool creation")
+                    logger.debug(
+                        f"Agent {name} is not ADK-compatible - skipping AgentTool creation"
+                    )
 
             except Exception as e:
                 logger.error(f"Error creating AgentTool for {name}: {e}")
@@ -245,7 +253,7 @@ class SplunkOrchestrator:
                 agent_instance = entry.cls(self.config, entry.metadata)
 
                 # Check if it's an ADK agent wrapper
-                if hasattr(agent_instance, 'get_adk_agent'):
+                if hasattr(agent_instance, "get_adk_agent"):
                     # Get associated tools for this agent
                     agent_tool_names = agent_tool_mapping.get_agent_tools(name)
                     agent_tools = self._get_tools_for_sub_agent(agent_tool_names)
@@ -257,7 +265,9 @@ class SplunkOrchestrator:
                         sub_agents.append(adk_agent)
                         logger.debug(f"Added sub-agent: {name} with {len(agent_tools)} tools")
                 else:
-                    logger.debug(f"Agent {name} is not ADK-compatible - skipping sub-agent registration")
+                    logger.debug(
+                        f"Agent {name} is not ADK-compatible - skipping sub-agent registration"
+                    )
 
             except Exception as e:
                 logger.error(f"Error creating sub-agent instance {name}: {e}")
@@ -283,7 +293,7 @@ class SplunkOrchestrator:
                     tool_instance = tool_entry.cls(self.config, tool_entry.metadata)
 
                     # Check if it's an ADK tool wrapper
-                    if hasattr(tool_instance, 'get_adk_tool'):
+                    if hasattr(tool_instance, "get_adk_tool"):
                         adk_tool = tool_instance.get_adk_tool()
                         if adk_tool:
                             tools.append(adk_tool)
@@ -302,6 +312,7 @@ class SplunkOrchestrator:
         from .orchestrator_prompt_lab import (
             ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS,
         )
+
         return ORCHESTRATOR_INSTRUCTIONS
 
     def _get_main_agent_instructions_no_tools(self) -> str:
@@ -313,6 +324,7 @@ class SplunkOrchestrator:
         from .orchestrator_prompt_lab import (
             ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS,
         )
+
         return ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS
 
     def get_summary(self) -> dict[str, Any]:
@@ -331,16 +343,20 @@ class SplunkOrchestrator:
         return {
             "agent_count": len(agent_entries),
             "tool_count": len(tool_entries),
-            "agents": {name: {"description": entry.metadata.description}
-                      for name, entry in agent_entries.items()},
-            "tools": {name: {"description": entry.metadata.description}
-                     for name, entry in tool_entries.items()},
+            "agents": {
+                name: {"description": entry.metadata.description}
+                for name, entry in agent_entries.items()
+            },
+            "tools": {
+                name: {"description": entry.metadata.description}
+                for name, entry in tool_entries.items()
+            },
             "agent_tool_mapping": agent_tool_mapping.get_all_agent_tool_mappings(),
             "config": {
                 "model": self.config.model.primary_model,
-                "use_vertex_ai": self.config.model.use_vertex_ai
+                "use_vertex_ai": self.config.model.use_vertex_ai,
             },
-            "adk_agent_created": self._adk_agent is not None
+            "adk_agent_created": self._adk_agent is not None,
         }
 
 

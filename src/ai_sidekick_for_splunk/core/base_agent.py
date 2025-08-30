@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AgentMetadata:
     """Metadata for agent registration and discovery."""
+
     name: str
     description: str
     version: str = "1.0.0"
@@ -49,7 +50,7 @@ class BaseAgent(ABC):
         config: Config,
         metadata: AgentMetadata,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None
+        session_state: dict[str, Any] | None = None,
     ):
         """
         Initialize the base agent.
@@ -115,13 +116,15 @@ class BaseAgent(ABC):
                 name=self.metadata.name,
                 description=self.metadata.description,
                 instruction=self.instructions,
-                tools=self.tools
+                tools=self.tools,
             )
             self._is_initialized = True
             logger.debug(f"Initialized LlmAgent for: {self.metadata.name}")
         except ImportError as e:
             logger.error(f"ADK LlmAgent not available for {self.metadata.name}: {e}")
-            raise RuntimeError(f"ADK LlmAgent is required for agent {self.metadata.name} but not available") from e
+            raise RuntimeError(
+                f"ADK LlmAgent is required for agent {self.metadata.name} but not available"
+            ) from e
         except Exception as e:
             logger.error(f"Failed to initialize LlmAgent for {self.metadata.name}: {e}")
             raise
@@ -144,7 +147,9 @@ class BaseAgent(ABC):
             self._initialize_llm_agent()
 
         if self._llm_agent is None:
-            raise RuntimeError(f"Agent {self.metadata.name} failed to initialize LlmAgent - cannot process request")
+            raise RuntimeError(
+                f"Agent {self.metadata.name} failed to initialize LlmAgent - cannot process request"
+            )
 
         try:
             # Merge context with session state

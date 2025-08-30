@@ -15,10 +15,13 @@ from typing import Any
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
     logging.getLogger(__name__).debug("✅ Environment variables loaded from .env file")
 except ImportError:
-    logging.getLogger(__name__).warning("⚠️ python-dotenv not available, relying on system environment variables")
+    logging.getLogger(__name__).warning(
+        "⚠️ python-dotenv not available, relying on system environment variables"
+    )
 
 from ..config import Config
 from .agent_flow import FlowTask
@@ -29,6 +32,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class MicroAgentResult:
     """Result from a micro agent execution."""
+
     task_id: str
     agent_name: str
     success: bool
@@ -58,7 +62,9 @@ class MicroAgentBuilder:
         self.agent_coordinator = agent_coordinator
         self._created_agents = {}
 
-    def create_micro_agent_for_task(self, task: FlowTask, phase_context: dict[str, Any]) -> dict[str, Any]:
+    def create_micro_agent_for_task(
+        self, task: FlowTask, phase_context: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Create a micro agent configuration for a specific task.
 
@@ -100,10 +106,12 @@ class MicroAgentBuilder:
                 "description": self._resolve_placeholders(task.description, phase_context),
                 "goal": self._resolve_placeholders(task.goal, phase_context),
                 "execution_mode": task.execution_mode,
-                "search_query": self._resolve_placeholders(task.search_query, phase_context) if task.search_query else None,
-                "parameters": task.parameters
+                "search_query": self._resolve_placeholders(task.search_query, phase_context)
+                if task.search_query
+                else None,
+                "parameters": task.parameters,
             },
-            "context": phase_context
+            "context": phase_context,
         }
 
         logger.debug(f"🤖 Created micro agent config for task {task.task_id}: {agent_name}")
@@ -130,8 +138,8 @@ class MicroAgentBuilder:
         resolved_description = self._resolve_placeholders(task.description, context)
         resolved_goal = self._resolve_placeholders(task.goal, context)
         resolved_instructions = self._resolve_placeholders(
-            task.dynamic_instructions or 'Execute the task according to the goal and description.',
-            context
+            task.dynamic_instructions or "Execute the task according to the goal and description.",
+            context,
         )
 
         # Base instruction template
@@ -141,7 +149,7 @@ You are a specialized micro agent executing task: {task.task_id} - {resolved_tit
 **Task Description**: {resolved_description}
 **Goal**: {resolved_goal}
 
-**Context**: INDEX_NAME = {context.get('INDEX_NAME', 'N/A')}
+**Context**: INDEX_NAME = {context.get("INDEX_NAME", "N/A")}
 
 **Your Mission**:
 {resolved_instructions}
@@ -180,12 +188,12 @@ Call run_oneshot_search directly with your search query: "index=s4c_www | head 1
             direct_tools = []
 
             mcp_tool_mapping = {
-                'run_oneshot_search': 'splunk_mcp',
-                'run_splunk_search': 'splunk_mcp',
-                'get_spl_reference': 'splunk_mcp',
-                'get_splunk_documentation': 'splunk_mcp',
-                'list_spl_commands': 'splunk_mcp',
-                'get_splunk_cheat_sheet': 'splunk_mcp'
+                "run_oneshot_search": "splunk_mcp",
+                "run_splunk_search": "splunk_mcp",
+                "get_spl_reference": "splunk_mcp",
+                "get_splunk_documentation": "splunk_mcp",
+                "list_spl_commands": "splunk_mcp",
+                "get_splunk_cheat_sheet": "splunk_mcp",
             }
 
             for tool in task.llm_loop.allowed_tools:
@@ -199,14 +207,20 @@ Call run_oneshot_search directly with your search query: "index=s4c_www | head 1
                 # Create specific instructions for each MCP tool
                 mcp_instructions = []
                 for tool in mcp_tools:
-                    if tool == 'run_oneshot_search':
-                        mcp_instructions.append("- For Splunk searches: Call run_oneshot_search directly with your query")
-                    elif tool == 'run_splunk_search':
-                        mcp_instructions.append("- For Splunk searches: Call run_splunk_search directly with your query")
-                    elif tool == 'get_spl_reference':
+                    if tool == "run_oneshot_search":
+                        mcp_instructions.append(
+                            "- For Splunk searches: Call run_oneshot_search directly with your query"
+                        )
+                    elif tool == "run_splunk_search":
+                        mcp_instructions.append(
+                            "- For Splunk searches: Call run_splunk_search directly with your query"
+                        )
+                    elif tool == "get_spl_reference":
                         mcp_instructions.append("- For SPL help: Call get_spl_reference directly")
-                    elif tool == 'get_splunk_documentation':
-                        mcp_instructions.append("- For Splunk docs: Call get_splunk_documentation directly")
+                    elif tool == "get_splunk_documentation":
+                        mcp_instructions.append(
+                            "- For Splunk docs: Call get_splunk_documentation directly"
+                        )
                     else:
                         mcp_instructions.append(f"- For {tool}: Call {tool} directly")
 
@@ -220,7 +234,7 @@ Example: Call run_oneshot_search directly with your search query: "index=s4c_www
 
             if direct_tools:
                 tool_usage_guide += f"""
-**Direct Tools**: {', '.join(direct_tools)}
+**Direct Tools**: {", ".join(direct_tools)}
 """
 
             llm_instructions = f"""
@@ -231,7 +245,7 @@ Example: Call run_oneshot_search directly with your search query: "index=s4c_www
 - Bounded execution: {task.llm_loop.bounded_execution}
 
 **LLM Loop Instructions**:
-{self._resolve_placeholders(task.llm_loop.prompt or 'Use iterative reasoning to achieve the task goal.', context)}
+{self._resolve_placeholders(task.llm_loop.prompt or "Use iterative reasoning to achieve the task goal.", context)}
 """
             base_instructions += llm_instructions
 
@@ -241,8 +255,8 @@ Example: Call run_oneshot_search directly with your search query: "index=s4c_www
             search_instructions = f"""
 **Search Task Details**:
 - Base query: {resolved_search_query}
-- Parameters: {task.parameters or 'None'}
-- Execution mode: {task.execution_mode or 'standard'}
+- Parameters: {task.parameters or "None"}
+- Execution mode: {task.execution_mode or "standard"}
 
 Remember to validate SPL syntax and optimize queries for performance.
 """
@@ -282,7 +296,7 @@ Remember to validate SPL syntax and optimize queries for performance.
         self,
         micro_agent_configs: list[dict[str, Any]],
         max_parallel: int,
-        progress_callback: Callable | None = None
+        progress_callback: Callable | None = None,
     ) -> list[MicroAgentResult]:
         """
         Execute multiple micro agents in parallel using asyncio.gather().
@@ -297,7 +311,9 @@ Remember to validate SPL syntax and optimize queries for performance.
         Returns:
             List of MicroAgentResult objects
         """
-        logger.info(f"🚀 Starting parallel execution of {len(micro_agent_configs)} micro agents (max_parallel={max_parallel})")
+        logger.info(
+            f"🚀 Starting parallel execution of {len(micro_agent_configs)} micro agents (max_parallel={max_parallel})"
+        )
 
         # Create semaphore to limit concurrency
         semaphore = asyncio.Semaphore(max_parallel)
@@ -317,17 +333,23 @@ Remember to validate SPL syntax and optimize queries for performance.
             processed_results = []
             for i, result in enumerate(results):
                 if isinstance(result, Exception):
-                    logger.error(f"❌ Micro agent {micro_agent_configs[i]['name']} failed with exception: {result}")
-                    processed_results.append(MicroAgentResult(
-                        task_id=micro_agent_configs[i]['task_id'],
-                        agent_name=micro_agent_configs[i]['name'],
-                        success=False,
-                        error=str(result)
-                    ))
+                    logger.error(
+                        f"❌ Micro agent {micro_agent_configs[i]['name']} failed with exception: {result}"
+                    )
+                    processed_results.append(
+                        MicroAgentResult(
+                            task_id=micro_agent_configs[i]["task_id"],
+                            agent_name=micro_agent_configs[i]["name"],
+                            success=False,
+                            error=str(result),
+                        )
+                    )
                 else:
                     processed_results.append(result)
 
-            logger.info(f"✅ Parallel execution completed. Success: {sum(1 for r in processed_results if r.success)}/{len(processed_results)}")
+            logger.info(
+                f"✅ Parallel execution completed. Success: {sum(1 for r in processed_results if r.success)}/{len(processed_results)}"
+            )
             return processed_results
 
         except Exception as e:
@@ -335,10 +357,10 @@ Remember to validate SPL syntax and optimize queries for performance.
             # Return error results for all agents
             return [
                 MicroAgentResult(
-                    task_id=config['task_id'],
-                    agent_name=config['name'],
+                    task_id=config["task_id"],
+                    agent_name=config["name"],
                     success=False,
-                    error=f"Parallel execution failed: {e}"
+                    error=f"Parallel execution failed: {e}",
                 )
                 for config in micro_agent_configs
             ]
@@ -347,27 +369,29 @@ Remember to validate SPL syntax and optimize queries for performance.
         self,
         config: dict[str, Any],
         semaphore: asyncio.Semaphore,
-        progress_callback: Callable | None = None
+        progress_callback: Callable | None = None,
     ) -> MicroAgentResult:
         """Execute a single micro agent with concurrency control."""
 
         async with semaphore:  # Limit concurrency
-            agent_name = config['name']
-            task_id = config['task_id']
-            timeout = config.get('timeout_sec', self.config.micro_agent_timeout)
+            agent_name = config["name"]
+            task_id = config["task_id"]
+            timeout = config.get("timeout_sec", self.config.micro_agent_timeout)
 
             logger.debug(f"🔧 Starting micro agent {agent_name} for task {task_id}")
 
             # Send progress update
             if progress_callback:
                 try:
-                    progress_callback({
-                        "phase_name": "parallel_execution",
-                        "task_id": task_id,
-                        "message": f"🤖 **Started Micro Agent**: {agent_name}\n*Task*: {config['task_metadata']['title']}",
-                        "status": "starting",
-                        "data": {"agent_name": agent_name}
-                    })
+                    progress_callback(
+                        {
+                            "phase_name": "parallel_execution",
+                            "task_id": task_id,
+                            "message": f"🤖 **Started Micro Agent**: {agent_name}\n*Task*: {config['task_metadata']['title']}",
+                            "status": "starting",
+                            "data": {"agent_name": agent_name},
+                        }
+                    )
                 except Exception as e:
                     logger.error(f"Progress callback failed: {e}")
 
@@ -376,24 +400,30 @@ Remember to validate SPL syntax and optimize queries for performance.
             try:
                 # Execute with timeout
                 result = await asyncio.wait_for(
-                    self._run_micro_agent_logic(config),
-                    timeout=timeout
+                    self._run_micro_agent_logic(config), timeout=timeout
                 )
 
                 execution_time = asyncio.get_event_loop().time() - start_time
 
-                logger.debug(f"✅ Micro agent {agent_name} completed successfully in {execution_time:.2f}s")
+                logger.debug(
+                    f"✅ Micro agent {agent_name} completed successfully in {execution_time:.2f}s"
+                )
 
                 # Send completion progress update
                 if progress_callback:
                     try:
-                        progress_callback({
-                            "phase_name": "parallel_execution",
-                            "task_id": task_id,
-                            "message": f"✅ **Completed Micro Agent**: {agent_name}\n*Duration*: {execution_time:.1f}s",
-                            "status": "completed",
-                            "data": {"agent_name": agent_name, "execution_time": execution_time}
-                        })
+                        progress_callback(
+                            {
+                                "phase_name": "parallel_execution",
+                                "task_id": task_id,
+                                "message": f"✅ **Completed Micro Agent**: {agent_name}\n*Duration*: {execution_time:.1f}s",
+                                "status": "completed",
+                                "data": {
+                                    "agent_name": agent_name,
+                                    "execution_time": execution_time,
+                                },
+                            }
+                        )
                     except Exception as e:
                         logger.error(f"Progress callback failed: {e}")
 
@@ -402,7 +432,7 @@ Remember to validate SPL syntax and optimize queries for performance.
                     agent_name=agent_name,
                     success=True,
                     data=result,
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
 
             except TimeoutError:
@@ -413,13 +443,15 @@ Remember to validate SPL syntax and optimize queries for performance.
                 # Send timeout progress update
                 if progress_callback:
                     try:
-                        progress_callback({
-                            "phase_name": "parallel_execution",
-                            "task_id": task_id,
-                            "message": f"⏰ **Timeout**: {agent_name}\n*Duration*: {execution_time:.1f}s",
-                            "status": "error",
-                            "data": {"agent_name": agent_name, "timeout": True}
-                        })
+                        progress_callback(
+                            {
+                                "phase_name": "parallel_execution",
+                                "task_id": task_id,
+                                "message": f"⏰ **Timeout**: {agent_name}\n*Duration*: {execution_time:.1f}s",
+                                "status": "error",
+                                "data": {"agent_name": agent_name, "timeout": True},
+                            }
+                        )
                     except Exception as e:
                         logger.error(f"Progress callback failed: {e}")
 
@@ -429,7 +461,7 @@ Remember to validate SPL syntax and optimize queries for performance.
                     success=False,
                     error=error_msg,
                     execution_time=execution_time,
-                    timeout_occurred=True
+                    timeout_occurred=True,
                 )
 
             except Exception as e:
@@ -440,13 +472,15 @@ Remember to validate SPL syntax and optimize queries for performance.
                 # Send error progress update
                 if progress_callback:
                     try:
-                        progress_callback({
-                            "phase_name": "parallel_execution",
-                            "task_id": task_id,
-                            "message": f"❌ **Failed**: {agent_name}\n*Error*: {str(e)[:100]}...",
-                            "status": "error",
-                            "data": {"agent_name": agent_name, "error": str(e)}
-                        })
+                        progress_callback(
+                            {
+                                "phase_name": "parallel_execution",
+                                "task_id": task_id,
+                                "message": f"❌ **Failed**: {agent_name}\n*Error*: {str(e)[:100]}...",
+                                "status": "error",
+                                "data": {"agent_name": agent_name, "error": str(e)},
+                            }
+                        )
                     except Exception as e:
                         logger.error(f"Progress callback failed: {e}")
 
@@ -455,19 +489,21 @@ Remember to validate SPL syntax and optimize queries for performance.
                     agent_name=agent_name,
                     success=False,
                     error=error_msg,
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
 
     async def _run_micro_agent_logic(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Run the actual micro agent logic using real ADK LlmAgent.
         """
-        task_metadata = config['task_metadata']
-        task_id = config['task_id']
-        allowed_tools = config['allowed_tools']
-        instructions = config['instructions']
+        task_metadata = config["task_metadata"]
+        task_id = config["task_id"]
+        allowed_tools = config["allowed_tools"]
+        instructions = config["instructions"]
 
-        logger.debug(f"🔍 Executing real micro agent logic for {task_id} with tools: {allowed_tools}")
+        logger.debug(
+            f"🔍 Executing real micro agent logic for {task_id} with tools: {allowed_tools}"
+        )
 
         try:
             # Create real LlmAgent with the provided configuration
@@ -482,12 +518,12 @@ Remember to validate SPL syntax and optimize queries for performance.
 
             # Map MCP server tools to their corresponding agents
             mcp_tool_mapping = {
-                'run_oneshot_search': 'splunk_mcp',
-                'run_splunk_search': 'splunk_mcp',
-                'get_spl_reference': 'splunk_mcp',
-                'get_splunk_documentation': 'splunk_mcp',
-                'list_spl_commands': 'splunk_mcp',
-                'get_splunk_cheat_sheet': 'splunk_mcp'
+                "run_oneshot_search": "splunk_mcp",
+                "run_splunk_search": "splunk_mcp",
+                "get_spl_reference": "splunk_mcp",
+                "get_splunk_documentation": "splunk_mcp",
+                "list_spl_commands": "splunk_mcp",
+                "get_splunk_cheat_sheet": "splunk_mcp",
             }
 
             # Track which agents we've already added to avoid duplicates
@@ -500,51 +536,67 @@ Remember to validate SPL syntax and optimize queries for performance.
                     if agent_name not in added_agents:
                         # Get the agent that provides this MCP tool
                         tool_instance = await self.agent_coordinator.get_agent(agent_name)
-                        if tool_instance and hasattr(tool_instance, 'execute'):
+                        if tool_instance and hasattr(tool_instance, "execute"):
                             # For SplunkMCPAgent, get the MCP toolset directly instead of wrapping the agent
-                            if agent_name == 'splunk_mcp' and hasattr(tool_instance, '_create_mcp_toolset'):
+                            if agent_name == "splunk_mcp" and hasattr(
+                                tool_instance, "_create_mcp_toolset"
+                            ):
                                 logger.debug(f"Getting MCP toolset directly from {agent_name}")
                                 mcp_toolset = tool_instance._create_mcp_toolset()
                                 if mcp_toolset:
-                                    logger.debug(f"Adding MCP toolset directly to micro agent for tools: {[t for t in allowed_tools if t in mcp_tool_mapping]}")
+                                    logger.debug(
+                                        f"Adding MCP toolset directly to micro agent for tools: {[t for t in allowed_tools if t in mcp_tool_mapping]}"
+                                    )
                                     agent_tools.append(mcp_toolset)
                                     added_agents.add(agent_name)
                                 else:
-                                    logger.warning(f"Could not create MCP toolset from {agent_name}")
+                                    logger.warning(
+                                        f"Could not create MCP toolset from {agent_name}"
+                                    )
                             else:
                                 # Get the underlying ADK LlmAgent for other agents (skip if ADK not available)
                                 adk_agent = None
-                                if hasattr(tool_instance, 'get_llm_agent'):
+                                if hasattr(tool_instance, "get_llm_agent"):
                                     try:
                                         adk_agent = tool_instance.get_llm_agent()
                                     except RuntimeError as e:
                                         if "ADK LlmAgent is required" in str(e):
-                                            logger.debug(f"Skipping ADK agent for '{agent_name}' - ADK not available")
+                                            logger.debug(
+                                                f"Skipping ADK agent for '{agent_name}' - ADK not available"
+                                            )
                                             adk_agent = None
                                         else:
                                             raise
                                 else:
                                     adk_agent = tool_instance
                                 if adk_agent:
-                                    logger.debug(f"Adding ADK agent '{agent_name}' for MCP tool '{tool_name}'")
+                                    logger.debug(
+                                        f"Adding ADK agent '{agent_name}' for MCP tool '{tool_name}'"
+                                    )
                                     agent_tools.append(AgentTool(agent=adk_agent))
                                     added_agents.add(agent_name)
                                 else:
-                                    logger.warning(f"Could not get ADK agent from '{agent_name}' for MCP tool '{tool_name}'")
+                                    logger.warning(
+                                        f"Could not get ADK agent from '{agent_name}' for MCP tool '{tool_name}'"
+                                    )
                         else:
-                            logger.warning(f"Agent '{agent_name}' for MCP tool '{tool_name}' not found")
+                            logger.warning(
+                                f"Agent '{agent_name}' for MCP tool '{tool_name}' not found"
+                            )
                 else:
                     # Try to get as a direct agent/tool
                     tool_instance = await self.agent_coordinator.get_agent(tool_name)
-                    if tool_instance and hasattr(tool_instance, 'execute'):
+                    if tool_instance and hasattr(tool_instance, "execute"):
                         # Get the underlying ADK LlmAgent for AgentTool (skip if ADK not available)
                         adk_agent = None
-                        if hasattr(tool_instance, 'get_llm_agent'):
+                        if hasattr(tool_instance, "get_llm_agent"):
                             try:
                                 adk_agent = tool_instance.get_llm_agent()
                             except RuntimeError as e:
                                 if "ADK LlmAgent is required" in str(e):
-                                    logger.debug(f"Skipping ADK agent for '{tool_name}' - ADK not available")
+                                    logger.debug(
+                                        f"Skipping ADK agent for '{tool_name}' - ADK not available"
+                                    )
                                     adk_agent = None
                                 else:
                                     raise
@@ -556,7 +608,9 @@ Remember to validate SPL syntax and optimize queries for performance.
                         else:
                             logger.warning(f"Could not get ADK agent from '{tool_name}'")
                     else:
-                        logger.warning(f"Tool '{tool_name}' not found or not executable for micro agent")
+                        logger.warning(
+                            f"Tool '{tool_name}' not found or not executable for micro agent"
+                        )
 
             # Check if ADK is available before attempting LlmAgent creation
             try:
@@ -570,7 +624,7 @@ Remember to validate SPL syntax and optimize queries for performance.
                 return await self._try_direct_agent_coordination(task_metadata, allowed_tools)
 
             # Verify Google API key is available
-            google_api_key = os.getenv('GOOGLE_API_KEY')
+            google_api_key = os.getenv("GOOGLE_API_KEY")
             if google_api_key:
                 logger.debug(f"✅ Google API key found for micro agent {task_id}")
             else:
@@ -583,30 +637,26 @@ Remember to validate SPL syntax and optimize queries for performance.
                 name=f"MicroAgent_{task_id}",
                 description=f"Specialized agent for task: {task_metadata.get('title', task_id)}",
                 instruction=instructions,
-                tools=agent_tools
+                tools=agent_tools,
             )
 
             # Create session and runner for execution
             session_service = InMemorySessionService()
             session = await session_service.create_session(
-                app_name="micro_agent",
-                user_id="system",
-                session_id=f"micro_{task_id}"
+                app_name="micro_agent", user_id="system", session_id=f"micro_{task_id}"
             )
 
             runner = Runner(
-                agent=micro_agent,
-                app_name="micro_agent",
-                session_service=session_service
+                agent=micro_agent, app_name="micro_agent", session_service=session_service
             )
 
             # Create the execution prompt with context
             execution_prompt = f"Execute the task: {task_metadata.get('title', task_id)}"
-            if task_metadata.get('search_query'):
+            if task_metadata.get("search_query"):
                 execution_prompt += f"\nSearch query: {task_metadata['search_query']}"
 
             # Add context variables to the prompt
-            context_vars = config.get('context', {})
+            context_vars = config.get("context", {})
             if context_vars:
                 execution_prompt += f"\nContext variables: {context_vars}"
 
@@ -616,9 +666,7 @@ Remember to validate SPL syntax and optimize queries for performance.
             response_text = None
             try:
                 async for event in runner.run_async(
-                    user_id="system",
-                    session_id=session.id,
-                    new_message=content
+                    user_id="system", session_id=session.id, new_message=content
                 ):
                     if event.is_final_response() and event.content and event.content.parts:
                         response_text = event.content.parts[0].text
@@ -629,7 +677,9 @@ Remember to validate SPL syntax and optimize queries for performance.
             except RuntimeError as runtime_error:
                 # Handle MCP client task group issues
                 if "cancel scope" in str(runtime_error) or "different task" in str(runtime_error):
-                    logger.debug(f"MCP client task group issue for {task_id} (expected): {runtime_error}")
+                    logger.debug(
+                        f"MCP client task group issue for {task_id} (expected): {runtime_error}"
+                    )
                     # This is a known MCP client library issue - continue with execution
                 else:
                     logger.warning(f"Runtime error for micro agent {task_id}: {runtime_error}")
@@ -642,8 +692,8 @@ Remember to validate SPL syntax and optimize queries for performance.
                 "task_id": task_id,
                 "success": True,
                 "response": response_text or "No response received",
-                "tools_used": [getattr(tool, 'name', type(tool).__name__) for tool in agent_tools],
-                "execution_type": "real_llm_agent"
+                "tools_used": [getattr(tool, "name", type(tool).__name__) for tool in agent_tools],
+                "execution_type": "real_llm_agent",
             }
 
         except Exception as e:
@@ -653,26 +703,28 @@ Remember to validate SPL syntax and optimize queries for performance.
         finally:
             # Ensure proper cleanup of async resources
             try:
-                if 'session_service' in locals() and 'session' in locals():
+                if "session_service" in locals() and "session" in locals():
                     # Clean up session if needed
                     pass  # InMemorySessionService handles cleanup automatically
             except Exception as cleanup_error:
                 logger.debug(f"Session cleanup for {task_id}: {cleanup_error}")
 
-    async def _try_direct_agent_coordination(self, task_metadata: dict[str, Any], allowed_tools: list[str]) -> dict[str, Any]:
+    async def _try_direct_agent_coordination(
+        self, task_metadata: dict[str, Any], allowed_tools: list[str]
+    ) -> dict[str, Any]:
         """Try direct agent coordination when LlmAgent creation fails."""
-        task_id = task_metadata.get('task_id', 'unknown')
+        task_id = task_metadata.get("task_id", "unknown")
         logger.info(f"Attempting direct agent coordination for task {task_id}")
 
         # Check if we have a search query to execute
-        search_query = task_metadata.get('search_query')
+        search_query = task_metadata.get("search_query")
         if search_query and self.agent_coordinator:
             try:
                 # Use the AgentCoordinator to execute the search directly
                 result = await self.agent_coordinator.execute_search(
                     search_query=search_query,
-                    parameters=task_metadata.get('parameters', {}),
-                    agent_id="splunk_mcp"
+                    parameters=task_metadata.get("parameters", {}),
+                    agent_id="splunk_mcp",
                 )
 
                 if result.success:
@@ -681,7 +733,7 @@ Remember to validate SPL syntax and optimize queries for performance.
                         "success": True,
                         "response": result.data,
                         "tools_used": ["splunk_mcp"],
-                        "execution_type": "direct_agent_coordination"
+                        "execution_type": "direct_agent_coordination",
                     }
                 else:
                     logger.error(f"Direct agent coordination failed for {task_id}: {result.error}")
@@ -690,6 +742,8 @@ Remember to validate SPL syntax and optimize queries for performance.
                 logger.error(f"Agent coordination error for {task_id}: {coord_error}")
 
         # If direct coordination fails, raise an error
-        error_msg = f"Task {task_id} failed: Both LlmAgent creation and direct agent coordination failed"
+        error_msg = (
+            f"Task {task_id} failed: Both LlmAgent creation and direct agent coordination failed"
+        )
         logger.error(error_msg)
         raise RuntimeError(error_msg)

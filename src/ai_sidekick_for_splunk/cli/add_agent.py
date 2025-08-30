@@ -52,33 +52,33 @@ def add_specific_execute(agent_file: Path, agent_name: str) -> bool:
 
     old_execute = (
         "    def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:\n"
-        "        \"\"\"\n"
+        '        """\n'
         "        Execute agent task - Override this method with specific implementation.\n\n"
         "        Args:\n"
         "            task: The task description from the user\n"
         "            context: Optional context information\n\n"
         "        Returns:\n"
         "            Dictionary containing the results\n"
-        "        \"\"\"\n"
-        "        logger.info(f\"{self.name} executing task: {task}\")\n\n"
+        '        """\n'
+        '        logger.info(f"{self.name} executing task: {task}")\n\n'
         "        # Default implementation - contributors should override this\n"
         "        return {\n"
-        "            \"success\": True,\n"
-        "            \"message\": f\"{self.name} agent is ready for implementation\",\n"
-        "            \"task\": task,\n"
-        "            \"agent\": self.name,\n"
-        "            \"status\": \"base_implementation\",\n"
-        "            \"next_steps\": [\n"
-        "                \"Override the execute() method with specific logic\",\n"
-        "                \"Add workflow-specific implementation\",\n"
-        "                \"Test with real data and scenarios\"\n"
+        '            "success": True,\n'
+        '            "message": f"{self.name} agent is ready for implementation",\n'
+        '            "task": task,\n'
+        '            "agent": self.name,\n'
+        '            "status": "base_implementation",\n'
+        '            "next_steps": [\n'
+        '                "Override the execute() method with specific logic",\n'
+        '                "Add workflow-specific implementation",\n'
+        '                "Test with real data and scenarios"\n'
         "            ]\n"
         "        }\n"
     )
 
     new_execute = (
         "    def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:\n"
-        "        \"\"\"\n"
+        '        """\n'
         "        Execute index analysis task with complete 5-phase workflow.\n\n"
         "        This method implements the full systematic analysis workflow\n"
         "        that delegates to SplunkMCP for real data collection.\n\n"
@@ -87,95 +87,97 @@ def add_specific_execute(agent_file: Path, agent_name: str) -> bool:
         "            context: Optional context information\n\n"
         "        Returns:\n"
         "            Dictionary containing the analysis results\n"
-        "        \"\"\"\n"
+        '        """\n'
         f"        try:\n"
-        f"            logger.info(f\"{to_class_name(agent_name)} executing task: {{task}}\")\n\n"
+        f'            logger.info(f"{to_class_name(agent_name)} executing task: {{task}}")\n\n'
         "            # Extract index name from task\n"
         "            import re\n"
         "            index_match = re.search(r'index[=\\s]+([^\\s]+)', task.lower())\n"
         "            if not index_match:\n"
         "                return {\n"
-        "                    \"success\": False,\n"
-        "                    \"error\": \"No index specified in task\",\n"
-        "                    \"message\": \"Please specify an index to analyze (e.g., 'analyze index=pas')\"\n"
+        '                    "success": False,\n'
+        '                    "error": "No index specified in task",\n'
+        '                    "message": "Please specify an index to analyze (e.g., \'analyze index=pas\')"\n'
         "                }\n\n"
         "            index_name = index_match.group(1)\n"
-        "            logger.info(f\"Analyzing index: {index_name}\")\n\n"
+        '            logger.info(f"Analyzing index: {index_name}")\n\n'
         "            # Implementation note: In a real implementation, this would delegate to SplunkMCP\n"
         "            # For the workshop, we return a structured response showing the workflow\n\n"
         "            return {\n"
-        "                \"success\": True,\n"
-        "                \"message\": f\"Index analysis completed for index={index_name}\",\n"
-        "                \"index\": index_name,\n"
-        "                \"analysis_phases\": {\n"
-        "                    \"phase_1\": {\n"
-        "                        \"name\": \"Data Types Discovery\",\n"
-        "                        \"status\": \"completed\",\n"
-        "                        \"spl_query\": f\"| tstats count WHERE index={index_name} by _time, sourcetype | timechart span=1h sum(count) by sourcetype\",\n"
-        "                        \"findings\": \"Discovered primary data types and ingestion patterns\"\n"
+        '                "success": True,\n'
+        '                "message": f"Index analysis completed for index={index_name}",\n'
+        '                "index": index_name,\n'
+        '                "analysis_phases": {\n'
+        '                    "phase_1": {\n'
+        '                        "name": "Data Types Discovery",\n'
+        '                        "status": "completed",\n'
+        '                        "spl_query": f"| tstats count WHERE index={index_name} by _time, sourcetype | timechart span=1h sum(count) by sourcetype",\n'
+        '                        "findings": "Discovered primary data types and ingestion patterns"\n'
         "                    },\n"
-        "                    \"phase_2\": {\n"
-        "                        \"name\": \"Field Analysis\",\n"
-        "                        \"status\": \"completed\",\n"
-        "                        \"spl_query\": f\"index={index_name} | head 5000 | fields * | fieldsummary\",\n"
-        "                        \"findings\": \"Analyzed field distribution and data quality\"\n"
+        '                    "phase_2": {\n'
+        '                        "name": "Field Analysis",\n'
+        '                        "status": "completed",\n'
+        '                        "spl_query": f"index={index_name} | head 5000 | fields * | fieldsummary",\n'
+        '                        "findings": "Analyzed field distribution and data quality"\n'
         "                    },\n"
-        "                    \"phase_3\": {\n"
-        "                        \"name\": \"Sample Data Collection\",\n"
-        "                        \"status\": \"completed\",\n"
-        "                        \"spl_query\": f\"index={index_name} | head 10 | table _time, index, source, sourcetype, _raw\",\n"
-        "                        \"findings\": \"Collected representative data samples\"\n"
+        '                    "phase_3": {\n'
+        '                        "name": "Sample Data Collection",\n'
+        '                        "status": "completed",\n'
+        '                        "spl_query": f"index={index_name} | head 10 | table _time, index, source, sourcetype, _raw",\n'
+        '                        "findings": "Collected representative data samples"\n'
         "                    },\n"
-        "                    \"phase_4\": {\n"
-        "                        \"name\": \"Volume Assessment\",\n"
-        "                        \"status\": \"completed\",\n"
-        "                        \"spl_query\": f\"| rest /services/data/indexes | search title={index_name} | table title, currentDBSizeMB, totalEventCount, maxTime, minTime\",\n"
-        "                        \"findings\": \"Assessed data volume and retention\"\n"
+        '                    "phase_4": {\n'
+        '                        "name": "Volume Assessment",\n'
+        '                        "status": "completed",\n'
+        '                        "spl_query": f"| rest /services/data/indexes | search title={index_name} | table title, currentDBSizeMB, totalEventCount, maxTime, minTime",\n'
+        '                        "findings": "Assessed data volume and retention"\n'
         "                    },\n"
-        "                    \"phase_5\": {\n"
-        "                        \"name\": \"Business Insights Generation\",\n"
-        "                        \"status\": \"completed\",\n"
-        "                        \"findings\": \"Generated actionable business insights and use cases\"\n"
+        '                    "phase_5": {\n'
+        '                        "name": "Business Insights Generation",\n'
+        '                        "status": "completed",\n'
+        '                        "findings": "Generated actionable business insights and use cases"\n'
         "                    }\n"
         "                },\n"
-        "                \"business_insights\": [\n"
+        '                "business_insights": [\n'
         "                    {\n"
-        "                        \"persona\": \"SecOps Analyst\",\n"
-        "                        \"use_case\": \"Security Monitoring Dashboard\",\n"
-        "                        \"value\": \"Real-time threat detection and incident response\",\n"
-        "                        \"dashboard_query\": f\"index={index_name} | stats count by sourcetype, source | sort -count\"\n"
+        '                        "persona": "SecOps Analyst",\n'
+        '                        "use_case": "Security Monitoring Dashboard",\n'
+        '                        "value": "Real-time threat detection and incident response",\n'
+        '                        "dashboard_query": f"index={index_name} | stats count by sourcetype, source | sort -count"\n'
         "                    },\n"
         "                    {\n"
-        "                        \"persona\": \"DevOps Engineer\",\n"
-        "                        \"use_case\": \"Application Performance Monitoring\",\n"
-        "                        \"value\": \"Proactive performance optimization and troubleshooting\",\n"
-        "                        \"alert_query\": f\"index={index_name} error OR failed | stats count by host | where count > 10\"\n"
+        '                        "persona": "DevOps Engineer",\n'
+        '                        "use_case": "Application Performance Monitoring",\n'
+        '                        "value": "Proactive performance optimization and troubleshooting",\n'
+        '                        "alert_query": f"index={index_name} error OR failed | stats count by host | where count > 10"\n'
         "                    },\n"
         "                    {\n"
-        "                        \"persona\": \"Business Analyst\",\n"
-        "                        \"use_case\": \"Operational Intelligence\",\n"
-        "                        \"value\": \"Data-driven business decision making\",\n"
-        "                        \"dashboard_query\": f\"index={index_name} | timechart span=1h count | predict count\"\n"
+        '                        "persona": "Business Analyst",\n'
+        '                        "use_case": "Operational Intelligence",\n'
+        '                        "value": "Data-driven business decision making",\n'
+        '                        "dashboard_query": f"index={index_name} | timechart span=1h count | predict count"\n'
         "                    }\n"
         "                ],\n"
-        "                \"recommendations\": [\n"
-        "                    \"Set up automated dashboards for continuous monitoring\",\n"
-        "                    \"Configure alerts for anomaly detection\",\n"
-        "                    \"Implement data quality checks and validation\",\n"
-        "                    \"Create role-based access controls for sensitive data\"\n"
+        '                "recommendations": [\n'
+        '                    "Set up automated dashboards for continuous monitoring",\n'
+        '                    "Configure alerts for anomaly detection",\n'
+        '                    "Implement data quality checks and validation",\n'
+        '                    "Create role-based access controls for sensitive data"\n'
         "                ]\n"
         "            }\n\n"
         "        except Exception as e:\n"
-        f"            logger.error(f\"{to_class_name(agent_name)} execution failed: {{e}}\")\n"
+        f'            logger.error(f"{to_class_name(agent_name)} execution failed: {{e}}")\n'
         "            return {\n"
-        "                \"success\": False,\n"
-        "                \"error\": str(e),\n"
-        "                \"message\": \"Index analysis execution failed\"\n"
+        '                "success": False,\n'
+        '                "error": str(e),\n'
+        '                "message": "Index analysis execution failed"\n'
         "            }\n"
     )
 
     if "# Extract index name from task" in content:
-        echo_warn("⚠️  Specific implementation already exists in agent.py, skipping implementation update")
+        echo_warn(
+            "⚠️  Specific implementation already exists in agent.py, skipping implementation update"
+        )
         return False
 
     if old_execute in content:
@@ -344,5 +346,3 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
-
-

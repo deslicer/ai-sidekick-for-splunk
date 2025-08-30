@@ -17,53 +17,75 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ModelConfig:
     """Configuration for LLM models."""
+
     # Default to Gemini models for Google ADK compatibility
     # Note: Using 2.0-flash for better multi-tool support (Google Search + sub-agents)
     # See: https://ai.google.dev/gemini-api/docs/function-calling for supported models
-    primary_model: str = field(default_factory=lambda: os.getenv("SPLUNK_AI_MODEL", "gemini-2.0-flash"))
-    fallback_model: str = field(default_factory=lambda: os.getenv("SPLUNK_AI_FALLBACK_MODEL", "gemini-2.0-flash"))
-    temperature: float = field(default_factory=lambda: float(os.getenv("SPLUNK_AI_TEMPERATURE", "0.7")))
+    primary_model: str = field(
+        default_factory=lambda: os.getenv("SPLUNK_AI_MODEL", "gemini-2.0-flash")
+    )
+    fallback_model: str = field(
+        default_factory=lambda: os.getenv("SPLUNK_AI_FALLBACK_MODEL", "gemini-2.0-flash")
+    )
+    temperature: float = field(
+        default_factory=lambda: float(os.getenv("SPLUNK_AI_TEMPERATURE", "0.7"))
+    )
     max_tokens: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_TOKENS", "4096")))
     timeout: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_TIMEOUT", "30")))
 
     # Google ADK specific settings
-    use_vertex_ai: bool = field(default_factory=lambda: os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true")
+    use_vertex_ai: bool = field(
+        default_factory=lambda: os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true"
+    )
     google_api_key: str | None = field(default_factory=lambda: os.getenv("GOOGLE_API_KEY"))
-    google_cloud_project: str | None = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT"))
-    google_cloud_location: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1"))
+    google_cloud_project: str | None = field(
+        default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT")
+    )
+    google_cloud_location: str = field(
+        default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    )
 
 
 @dataclass
 class DiscoveryConfig:
     """Configuration for agent and tool discovery."""
-    contrib_agents_paths: list[str] = field(default_factory=lambda: [
-        "src/ai_sidekick_for_splunk/contrib/agents",
-        "src/ai_sidekick_for_splunk/agents"
-    ])
-    contrib_tools_paths: list[str] = field(default_factory=lambda: [
-        "src/ai_sidekick_for_splunk/contrib/tools",
-        "src/ai_sidekick_for_splunk/tools"
-    ])
+
+    contrib_agents_paths: list[str] = field(
+        default_factory=lambda: [
+            "src/ai_sidekick_for_splunk/contrib/agents",
+            "src/ai_sidekick_for_splunk/agents",
+        ]
+    )
+    contrib_tools_paths: list[str] = field(
+        default_factory=lambda: [
+            "src/ai_sidekick_for_splunk/contrib/tools",
+            "src/ai_sidekick_for_splunk/tools",
+        ]
+    )
     auto_discover: bool = True
-    discovery_patterns: list[str] = field(default_factory=lambda: [
-        "agent.py",
-        "tool.py",
-        "*_agent.py",
-        "*_tool.py"
-    ])
+    discovery_patterns: list[str] = field(
+        default_factory=lambda: ["agent.py", "tool.py", "*_agent.py", "*_tool.py"]
+    )
 
 
 @dataclass
 class SplunkConfig:
     """Splunk-specific configuration."""
+
     host: str = field(default_factory=lambda: os.getenv("SPLUNK_HOST", "localhost"))
     port: int = field(default_factory=lambda: int(os.getenv("SPLUNK_PORT", "8089")))
     username: str = field(default_factory=lambda: os.getenv("SPLUNK_USERNAME", "admin"))
     password: str = field(default_factory=lambda: os.getenv("SPLUNK_PASSWORD", "Chang3d!"))
     app_context: str = field(default_factory=lambda: os.getenv("SPLUNK_APP_CONTEXT", "search"))
-    enable_ssl: bool = field(default_factory=lambda: os.getenv("SPLUNK_ENABLE_SSL", "true").lower() == "true")
-    verify_ssl: bool = field(default_factory=lambda: os.getenv("SPLUNK_VERIFY_SSL", "false").lower() == "true")
-    mcp_server_url: str = field(default_factory=lambda: os.getenv("SPLUNK_MCP_SERVER_URL", "http://localhost:8003/mcp/"))
+    enable_ssl: bool = field(
+        default_factory=lambda: os.getenv("SPLUNK_ENABLE_SSL", "true").lower() == "true"
+    )
+    verify_ssl: bool = field(
+        default_factory=lambda: os.getenv("SPLUNK_VERIFY_SSL", "false").lower() == "true"
+    )
+    mcp_server_url: str = field(
+        default_factory=lambda: os.getenv("SPLUNK_MCP_SERVER_URL", "http://localhost:8003/mcp/")
+    )
 
 
 @dataclass
@@ -83,15 +105,27 @@ class Config:
 
     # Framework settings
     project_root: Path = field(default_factory=Path.cwd)
-    debug_mode: bool = field(default_factory=lambda: os.getenv("SPLUNK_AI_DEBUG", "false").lower() == "true")
+    debug_mode: bool = field(
+        default_factory=lambda: os.getenv("SPLUNK_AI_DEBUG", "false").lower() == "true"
+    )
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO").upper())
-    max_concurrent_agents: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_CONCURRENT_AGENTS", "5")))
-    session_timeout: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_SESSION_TIMEOUT", "3600")))  # 1 hour
+    max_concurrent_agents: int = field(
+        default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_CONCURRENT_AGENTS", "5"))
+    )
+    session_timeout: int = field(
+        default_factory=lambda: int(os.getenv("SPLUNK_AI_SESSION_TIMEOUT", "3600"))
+    )  # 1 hour
 
     # Parallel execution settings for Guided Agent Flows
-    max_parallel_tasks: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_PARALLEL_TASKS", "4")))
-    task_timeout_default: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_TASK_TIMEOUT", "300")))  # 5 minutes
-    micro_agent_timeout: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MICRO_AGENT_TIMEOUT", "180")))  # 3 minutes
+    max_parallel_tasks: int = field(
+        default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_PARALLEL_TASKS", "4"))
+    )
+    task_timeout_default: int = field(
+        default_factory=lambda: int(os.getenv("SPLUNK_AI_TASK_TIMEOUT", "300"))
+    )  # 5 minutes
+    micro_agent_timeout: int = field(
+        default_factory=lambda: int(os.getenv("SPLUNK_AI_MICRO_AGENT_TIMEOUT", "180"))
+    )  # 3 minutes
 
     # Custom extensions
     custom_settings: dict[str, Any] = field(default_factory=dict)
@@ -115,6 +149,7 @@ class Config:
         """Load environment variables from .env file."""
         try:
             from dotenv import load_dotenv
+
             load_dotenv()
             logger.debug("✅ Environment variables loaded from .env file")
 
@@ -160,7 +195,9 @@ class Config:
             if agents_str := os.getenv("SPLUNK_AI_MAX_CONCURRENT_AGENTS"):
                 agents = int(agents_str)
                 if agents <= 0:
-                    logger.warning(f"Max concurrent agents {agents} must be positive, using default")
+                    logger.warning(
+                        f"Max concurrent agents {agents} must be positive, using default"
+                    )
                 else:
                     self.max_concurrent_agents = agents
 
@@ -187,9 +224,7 @@ class Config:
                     "This may cause authentication issues."
                 )
             if not self.model.google_cloud_location:
-                logger.warning(
-                    "GOOGLE_CLOUD_LOCATION is not set, using default: us-central1"
-                )
+                logger.warning("GOOGLE_CLOUD_LOCATION is not set, using default: us-central1")
         else:
             if not self.model.google_api_key:
                 logger.warning(
@@ -210,7 +245,7 @@ class Config:
         """Configure logging based on current settings."""
         logging.basicConfig(
             level=getattr(logging, self.log_level, logging.INFO),
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         )
 
         if self.debug_mode:
@@ -223,16 +258,13 @@ class Config:
         Returns:
             Dictionary with 'agents' and 'tools' keys containing resolved paths
         """
-        result = {
-            'agents': [],
-            'tools': []
-        }
+        result = {"agents": [], "tools": []}
 
         # Resolve agent paths
         for path_str in self.discovery.contrib_agents_paths:
             path = self.project_root / path_str
             if path.exists():
-                result['agents'].append(path)
+                result["agents"].append(path)
             else:
                 logger.debug(f"Agent path does not exist: {path}")
 
@@ -240,7 +272,7 @@ class Config:
         for path_str in self.discovery.contrib_tools_paths:
             path = self.project_root / path_str
             if path.exists():
-                result['tools'].append(path)
+                result["tools"].append(path)
             else:
                 logger.debug(f"Tool path does not exist: {path}")
 
@@ -313,45 +345,45 @@ class Config:
             Dictionary representation of the configuration
         """
         return {
-            'model': {
-                'primary_model': self.model.primary_model,
-                'fallback_model': self.model.fallback_model,
-                'temperature': self.model.temperature,
-                'max_tokens': self.model.max_tokens,
-                'timeout': self.model.timeout,
-                'use_vertex_ai': self.model.use_vertex_ai,
-                'google_cloud_project': self.model.google_cloud_project,
-                'google_cloud_location': self.model.google_cloud_location,
+            "model": {
+                "primary_model": self.model.primary_model,
+                "fallback_model": self.model.fallback_model,
+                "temperature": self.model.temperature,
+                "max_tokens": self.model.max_tokens,
+                "timeout": self.model.timeout,
+                "use_vertex_ai": self.model.use_vertex_ai,
+                "google_cloud_project": self.model.google_cloud_project,
+                "google_cloud_location": self.model.google_cloud_location,
                 # Note: API key is excluded for security
             },
-            'discovery': {
-                'contrib_agents_paths': self.discovery.contrib_agents_paths,
-                'contrib_tools_paths': self.discovery.contrib_tools_paths,
-                'auto_discover': self.discovery.auto_discover,
-                'discovery_patterns': self.discovery.discovery_patterns,
+            "discovery": {
+                "contrib_agents_paths": self.discovery.contrib_agents_paths,
+                "contrib_tools_paths": self.discovery.contrib_tools_paths,
+                "auto_discover": self.discovery.auto_discover,
+                "discovery_patterns": self.discovery.discovery_patterns,
             },
-            'splunk': {
-                'host': self.splunk.host,
-                'port': self.splunk.port,
-                'username': self.splunk.username,
-                'app_context': self.splunk.app_context,
-                'enable_ssl': self.splunk.enable_ssl,
-                'verify_ssl': self.splunk.verify_ssl,
-                'mcp_server_url': self.splunk.mcp_server_url,
+            "splunk": {
+                "host": self.splunk.host,
+                "port": self.splunk.port,
+                "username": self.splunk.username,
+                "app_context": self.splunk.app_context,
+                "enable_ssl": self.splunk.enable_ssl,
+                "verify_ssl": self.splunk.verify_ssl,
+                "mcp_server_url": self.splunk.mcp_server_url,
                 # Note: password is excluded for security
             },
-            'framework': {
-                'project_root': str(self.project_root),
-                'debug_mode': self.debug_mode,
-                'log_level': self.log_level,
-                'max_concurrent_agents': self.max_concurrent_agents,
-                'session_timeout': self.session_timeout,
+            "framework": {
+                "project_root": str(self.project_root),
+                "debug_mode": self.debug_mode,
+                "log_level": self.log_level,
+                "max_concurrent_agents": self.max_concurrent_agents,
+                "session_timeout": self.session_timeout,
             },
-            'custom': self.custom_settings
+            "custom": self.custom_settings,
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> 'Config':
+    def from_dict(cls, data: dict[str, Any]) -> "Config":
         """
         Create configuration from dictionary.
 
@@ -364,34 +396,34 @@ class Config:
         config = cls()
 
         # Update model config
-        if model_data := data.get('model'):
+        if model_data := data.get("model"):
             for key, value in model_data.items():
                 if hasattr(config.model, key):
                     setattr(config.model, key, value)
 
         # Update discovery config
-        if discovery_data := data.get('discovery'):
+        if discovery_data := data.get("discovery"):
             for key, value in discovery_data.items():
                 if hasattr(config.discovery, key):
                     setattr(config.discovery, key, value)
 
         # Update splunk config
-        if splunk_data := data.get('splunk'):
+        if splunk_data := data.get("splunk"):
             for key, value in splunk_data.items():
                 if hasattr(config.splunk, key):
                     setattr(config.splunk, key, value)
 
         # Update framework settings
-        if framework_data := data.get('framework'):
+        if framework_data := data.get("framework"):
             for key, value in framework_data.items():
                 if hasattr(config, key):
-                    if key == 'project_root':
+                    if key == "project_root":
                         setattr(config, key, Path(value))
                     else:
                         setattr(config, key, value)
 
         # Update custom settings
-        if custom_data := data.get('custom'):
+        if custom_data := data.get("custom"):
             config.custom_settings.update(custom_data)
 
         return config

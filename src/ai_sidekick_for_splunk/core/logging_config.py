@@ -15,7 +15,9 @@ import os
 from pathlib import Path
 
 
-def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, unified_file: str = "logs/app.log") -> None:
+def setup_logging(
+    level: str | int | None = None, *, log_to_file: bool = True, unified_file: str = "logs/app.log"
+) -> None:
     """Configure root and package loggers.
 
     Args:
@@ -57,7 +59,8 @@ def setup_logging(level: str | int | None = None, *, log_to_file: bool = True, u
             file_path = Path(unified_file)
 
             has_file_handler = any(
-                isinstance(h, logging.FileHandler) and getattr(h, "baseFilename", "").endswith(str(file_path))
+                isinstance(h, logging.FileHandler)
+                and getattr(h, "baseFilename", "").endswith(str(file_path))
                 for h in root_logger.handlers
             )
             if not has_file_handler:

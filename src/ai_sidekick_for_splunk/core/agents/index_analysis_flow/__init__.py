@@ -29,6 +29,4 @@ Usage:
 
 from .agent import IndexAnalysisFlowAgent
 
-__all__ = [
-    "IndexAnalysisFlowAgent"
-]
+__all__ = ["IndexAnalysisFlowAgent"]

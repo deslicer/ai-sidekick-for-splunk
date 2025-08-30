@@ -15,6 +15,7 @@ from ai_sidekick_for_splunk.core.config import Config
 
 logger = logging.getLogger(__name__)
 
+
 class DataExplorerAgent(BaseAgent):
     """
     Simplified Data Explorer Agent for comprehensive Splunk data analysis.
@@ -30,41 +31,50 @@ class DataExplorerAgent(BaseAgent):
         version="2.0.0",
         author="Saikrishna Gundeti",
         tags=["data-exploration", "business-intelligence", "splunk-analysis"],
-        dependencies=["SplunkMCP"]
+        dependencies=["SplunkMCP"],
     )
 
     name = "DataExplorer"
-    description = "Systematic Splunk data exploration and business insight generation using real data"
+    description = (
+        "Systematic Splunk data exploration and business insight generation using real data"
+    )
 
     @property
     def instructions(self) -> str:
         """Get the agent instructions/prompt."""
         from .prompt import DATA_EXPLORER_INSTRUCTIONS
+
         return DATA_EXPLORER_INSTRUCTIONS
 
     def __init__(
         self,
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
-        tools: list[Any] | None = None
+        tools: list[Any] | None = None,
     ) -> None:
         """Initialize the simplified Data Explorer agent."""
-        logger.info("🔧 Initializing DataExplorer agent", extra={
-            "event_type": "dataexplorer_initialization",
-            "event_data": {"agent_name": "DataExplorer", "version": "simple_agent"}
-        })
+        logger.info(
+            "🔧 Initializing DataExplorer agent",
+            extra={
+                "event_type": "dataexplorer_initialization",
+                "event_data": {"agent_name": "DataExplorer", "version": "simple_agent"},
+            },
+        )
 
         super().__init__(config or Config(), metadata or self.METADATA, tools or [])
 
-        logger.info("✅ DataExplorer agent initialized successfully", extra={
-            "event_type": "dataexplorer_created",
-            "event_data": {
-                "agent_name": self.name,
-                "instruction_length": len(self.instructions),
-                "description": self.description,
-                "tools_count": len(tools or [])
-            }
-        })
+        logger.info(
+            "✅ DataExplorer agent initialized successfully",
+            extra={
+                "event_type": "dataexplorer_created",
+                "event_data": {
+                    "agent_name": self.name,
+                    "instruction_length": len(self.instructions),
+                    "description": self.description,
+                    "tools_count": len(tools or []),
+                },
+            },
+        )
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> LlmAgent | None:
         """
@@ -77,44 +87,54 @@ class DataExplorerAgent(BaseAgent):
             Configured LlmAgent instance
         """
         try:
-            logger.info("🔧 Creating DataExplorer LlmAgent", extra={
-                "event_type": "dataexplorer_adk_creation",
-                "event_data": {
-                    "agent_name": self.name,
-                    "tools_provided": len(tools or []),
-                    "model": self.config.model.primary_model
-                }
-            })
+            logger.info(
+                "🔧 Creating DataExplorer LlmAgent",
+                extra={
+                    "event_type": "dataexplorer_adk_creation",
+                    "event_data": {
+                        "agent_name": self.name,
+                        "tools_provided": len(tools or []),
+                        "model": self.config.model.primary_model,
+                    },
+                },
+            )
 
             agent = LlmAgent(
                 name=self.name,
                 model="gemini-1.5-pro-latest",
                 instruction=self.instructions,
                 description=self.description,
-                tools=tools or []
+                tools=tools or [],
             )
 
-            logger.info("✅ DataExplorer LlmAgent created successfully", extra={
-                "event_type": "dataexplorer_adk_created",
-                "event_data": {
-                    "agent_name": self.name,
-                    "model": agent.model,
-                    "tools_count": len(agent.tools or []),
-                    "instruction_length": len(agent.instruction),
-                }
-            })
+            logger.info(
+                "✅ DataExplorer LlmAgent created successfully",
+                extra={
+                    "event_type": "dataexplorer_adk_created",
+                    "event_data": {
+                        "agent_name": self.name,
+                        "model": agent.model,
+                        "tools_count": len(agent.tools or []),
+                        "instruction_length": len(agent.instruction),
+                    },
+                },
+            )
             return agent
 
         except Exception as e:
-            logger.error("❌ Failed to create DataExplorer LlmAgent", extra={
-                "event_type": "dataexplorer_adk_creation_failed",
-                "event_data": {
-                    "agent_name": self.name,
-                    "error": str(e),
-                    "tools_provided": len(tools or [])
-                }
-            })
+            logger.error(
+                "❌ Failed to create DataExplorer LlmAgent",
+                extra={
+                    "event_type": "dataexplorer_adk_creation_failed",
+                    "event_data": {
+                        "agent_name": self.name,
+                        "error": str(e),
+                        "tools_provided": len(tools or []),
+                    },
+                },
+            )
             return None
+
 
 # Factory function for easy instantiation
 def create_data_explorer_agent() -> DataExplorerAgent:
@@ -125,6 +145,7 @@ def create_data_explorer_agent() -> DataExplorerAgent:
         DataExplorerAgent: Configured agent instance
     """
     return DataExplorerAgent()
+
 
 # Agent instance for auto-discovery - TEMPORARILY DISABLED FOR AGENT FLOW TESTING
 # data_explorer_agent = create_data_explorer_agent()

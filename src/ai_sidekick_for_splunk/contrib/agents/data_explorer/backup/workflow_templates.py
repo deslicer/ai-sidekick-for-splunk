@@ -11,6 +11,7 @@ from typing import Any, TypedDict
 
 class PhaseResult(TypedDict):
     """Type definition for phase execution results."""
+
     phase_number: int
     phase_name: str
     status: str
@@ -21,6 +22,7 @@ class PhaseResult(TypedDict):
 
 class BusinessInsight(TypedDict):
     """Type definition for structured business insights."""
+
     insight_number: int
     title: str
     executive_summary: str
@@ -68,7 +70,6 @@ Total Events: {total_events}
 Size: {size_mb} MB
 Time Range: {earliest} to {latest}
 Status: ✅ Index validated""",
-
             2: """📊 **PHASE 2: Data Composition Analysis**
 Top Sourcetypes:
 {sourcetype_list}
@@ -80,7 +81,6 @@ Key Findings:
 - Primary data source: {dominant_sourcetype} ({percentage}% of data)
 - Host diversity: {host_count} unique hosts
 - Data concentration: {distribution_insights}""",
-
             3: """⏰ **PHASE 3: Temporal Pattern Analysis**
 Weekly Volume Trend:
 {daily_volume_analysis}
@@ -92,7 +92,6 @@ Operational Insights:
 - Peak usage: {peak_time_and_volume}
 - Baseline traffic: {baseline_volume}
 - Usage pattern: {business_hours_pattern}""",
-
             4: """🔍 **PHASE 4: Data Quality Assessment**
 Sample Events Analysis:
 {sample_events_analysis}
@@ -103,10 +102,9 @@ Field Completeness:
 Data Quality Score: {quality_score}/10
 Key Issues:
 {quality_issues_list}""",
-
             5: """💼 **PHASE 5: Business Intelligence Generation**
 Generated {insight_count} actionable business insights based on real data analysis.
-Each insight includes specific SPL queries, dashboard recommendations, and measurable success metrics."""
+Each insight includes specific SPL queries, dashboard recommendations, and measurable success metrics.""",
         }
 
         return templates.get(phase_number, "Unknown phase template")
@@ -169,17 +167,17 @@ Each insight includes specific SPL queries, dashboard recommendations, and measu
             ],
             2: [
                 f"index={self.index_name} | stats count by sourcetype | sort -count | head 10",
-                f"index={self.index_name} | stats count by host | sort -count | head 10"
+                f"index={self.index_name} | stats count by host | sort -count | head 10",
             ],
             3: [
                 f"index={self.index_name} earliest=-7d | timechart span=1d count",
-                f"index={self.index_name} earliest=-24h | timechart span=1h count"
+                f"index={self.index_name} earliest=-24h | timechart span=1h count",
             ],
             4: [
                 f"index={self.index_name} | head 20 | table _time, host, source, sourcetype, _raw",
-                f"index={self.index_name} | fieldsummary | sort -count | head 15"
+                f"index={self.index_name} | fieldsummary | sort -count | head 15",
             ],
-            5: []  # Phase 5 is analysis, not data collection
+            5: [],  # Phase 5 is analysis, not data collection
         }
 
         return query_templates.get(phase_number, [])
@@ -197,7 +195,7 @@ Each insight includes specific SPL queries, dashboard recommendations, and measu
             2: "Data Composition Analysis",
             3: "Temporal Patterns & Usage Analysis",
             4: "Data Quality & Structure Assessment",
-            5: "Business Intelligence Generation"
+            5: "Business Intelligence Generation",
         }
 
         phase_result: PhaseResult = {
@@ -206,7 +204,7 @@ Each insight includes specific SPL queries, dashboard recommendations, and measu
             "status": "completed",
             "data_collected": data,
             "insights": [],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.phases.append(phase_result)
@@ -247,17 +245,17 @@ def create_sample_insights() -> list[BusinessInsight]:
             "business_impact": {
                 "cost_impact": "15-25% reduction in storage costs",
                 "operational_impact": "Automated data lifecycle management",
-                "risk_impact": "Maintained compliance with reduced overhead"
+                "risk_impact": "Maintained compliance with reduced overhead",
             },
             "implementation_plan": {
                 "immediate_action": "Analyze data age and access patterns",
                 "dashboard_recommendation": "Data retention monitoring dashboard",
-                "alert_recommendation": "Storage threshold alerts"
+                "alert_recommendation": "Storage threshold alerts",
             },
             "success_metrics": [
                 {"name": "Storage cost reduction", "target": "20%"},
-                {"name": "Query performance improvement", "target": "15%"}
+                {"name": "Query performance improvement", "target": "15%"},
             ],
-            "next_steps": ["Configure retention policies", "Set up monitoring"]
+            "next_steps": ["Configure retention policies", "Set up monitoring"],
         }
     ]

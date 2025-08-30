@@ -45,7 +45,7 @@ class StructuredDataExplorerAgent(LlmAgent):
             name="DataExplorer",
             model="gemini-2.0-flash",
             instruction=DATA_EXPLORER_INSTRUCTIONS,
-            description="Systematic Splunk data exploration with structured 5-phase workflow and consistent business intelligence output"
+            description="Systematic Splunk data exploration with structured 5-phase workflow and consistent business intelligence output",
         )
 
 
@@ -56,7 +56,7 @@ METADATA = AgentMetadata(
     version="3.0.0",
     author="Saikrishna Gundeti",
     tags=["data-exploration", "business-intelligence", "structured-workflow", "splunk-analysis"],
-    dependencies=["SplunkMCP"]
+    dependencies=["SplunkMCP"],
 )
 
 

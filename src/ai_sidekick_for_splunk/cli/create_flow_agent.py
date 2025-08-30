@@ -11,6 +11,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from ai_sidekick_for_splunk.core.utils.cross_platform import safe_print
+
 # Import Pydantic models for validation
 try:
     from ai_sidekick_for_splunk.core.flows_engine.workflow_models import (
@@ -27,8 +29,8 @@ try:
         WorkflowType,
     )
 except ImportError as e:
-    print(f"❌ Error importing Pydantic models: {e}", file=sys.stderr)
-    print(
+    safe_print(f"❌ Error importing Pydantic models: {e}", file=sys.stderr)
+    safe_print(
         "Make sure you're running from the correct environment with all dependencies installed.",
         file=sys.stderr,
     )
@@ -329,44 +331,44 @@ Examples:
             f.write(readme_content)
 
         # Success output
-        print("🛠 Creating FlowPilot Workshop Agent")
-        print("=" * 60)
-        print(f"📍 Base path: {base_path}")
-        print(f"🎯 Creating workflow in: {output_dir.relative_to(base_path)}/")
-        print()
-        print(f"✅ Created directory: {output_dir}")
-        print(f"✅ Created workflow: {args.name}.json")
-        print("✅ Created README: README.md")
-        print()
-        print(f"🎉 SUCCESS! {workflow_template.workflow_name} Created!")
-        print("=" * 60)
-        print()
-        print("📁 Files Created:")
-        print(f"├── 📄 {workflow_file}")
-        print(f"└── 📖 {readme_file}")
-        print()
-        print("🚀 Next Steps for Workshop Participants:")
-        print("1️⃣  Restart ADK Web to discover the new agent")
-        print(f"2️⃣  Look for '{workflow_template.workflow_name}' in the agent list")
-        print("3️⃣  Query: 'Please perform a health check on this Splunk environment'")
-        print("4️⃣  Watch the multi-phase workflow execution!")
-        print()
-        print("🎯 What You'll See:")
-        print("├── 🔍 System information gathering")
-        print("├── 💓 Health checks execution")
-        print("├── 📊 Performance assessment")
-        print("└── 📋 Comprehensive summary report")
-        print()
-        print("🎓 Learning Outcomes:")
-        print("├── ✅ Multi-agent workflow orchestration")
-        print("├── ✅ Real Splunk environment interaction")
-        print("├── ✅ Educational health monitoring")
-        print("└── ✅ FlowPilot system capabilities")
-        print()
-        print("🎪 Ready for an amazing workshop demonstration!")
+        safe_print("🛠 Creating FlowPilot Workshop Agent")
+        safe_print("=" * 60)
+        safe_print(f"📍 Base path: {base_path}")
+        safe_print(f"🎯 Creating workflow in: {output_dir.relative_to(base_path)}/")
+        safe_print()
+        safe_print(f"✅ Created directory: {output_dir}")
+        safe_print(f"✅ Created workflow: {args.name}.json")
+        safe_print("✅ Created README: README.md")
+        safe_print()
+        safe_print(f"🎉 SUCCESS! {workflow_template.workflow_name} Created!")
+        safe_print("=" * 60)
+        safe_print()
+        safe_print("📁 Files Created:")
+        safe_print(f"├── 📄 {workflow_file}")
+        safe_print(f"└── 📖 {readme_file}")
+        safe_print()
+        safe_print("🚀 Next Steps for Workshop Participants:")
+        safe_print("1️⃣  Restart ADK Web to discover the new agent")
+        safe_print(f"2️⃣  Look for '{workflow_template.workflow_name}' in the agent list")
+        safe_print("3️⃣  Query: 'Please perform a health check on this Splunk environment'")
+        safe_print("4️⃣  Watch the multi-phase workflow execution!")
+        safe_print()
+        safe_print("🎯 What You'll See:")
+        safe_print("├── 🔍 System information gathering")
+        safe_print("├── 💓 Health checks execution")
+        safe_print("├── 📊 Performance assessment")
+        safe_print("└── 📋 Comprehensive summary report")
+        safe_print()
+        safe_print("🎓 Learning Outcomes:")
+        safe_print("├── ✅ Multi-agent workflow orchestration")
+        safe_print("├── ✅ Real Splunk environment interaction")
+        safe_print("├── ✅ Educational health monitoring")
+        safe_print("└── ✅ FlowPilot system capabilities")
+        safe_print()
+        safe_print("🎪 Ready for an amazing workshop demonstration!")
 
     except Exception as e:
-        print(f"❌ Error creating workflow agent: {e}", file=sys.stderr)
+        safe_print(f"❌ Error creating workflow agent: {e}", file=sys.stderr)
         sys.exit(1)
 
 

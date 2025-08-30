@@ -1,327 +1,166 @@
 # Contributing to AI Sidekick for Splunk
 
-Thank you for your interest in contributing to AI Sidekick for Splunk! We welcome contributions from the community and are excited to see what you'll build.
+Welcome to the AI Sidekick for Splunk project! 🎉 We're excited to have you contribute to our open-source community of AI agents for Splunk operations.
 
-## 🚀 Getting Started
+## 🚀 Getting Started for Contributors
 
-### Prerequisites
-
-- Python 3.11+
-- uv (Fast Python package manager)
-- Git
-- Google API Key (for testing)
-
-### Development Setup
-
-1. **Fork and Clone**
-   ```bash
-   git clone https://github.com/your-username/ai-sidekick-for-splunk.git
-   cd ai-sidekick-for-splunk
-   ```
-
-2. **Set Up Development Environment**
-   ```bash
-   # Create virtual environment
-   uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   
-   # Install in development mode
-   uv pip install -e ".[dev]"
-   ```
-
-3. **Configure Environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your development settings
-   ```
-
-4. **Verify Setup**
-   ```bash
-   # Run tests
-   pytest
-   
-   # Check code quality
-   ruff check src/
-   
-   # Start development server
-   ai-sidekick
-   ```
-
-## 📋 How to Contribute
-
-### 🐛 Reporting Bugs
-
-1. **Check Existing Issues**: Search [existing issues](https://github.com/your-org/ai-sidekick-for-splunk/issues) first
-2. **Create Detailed Report**: Include:
-   - Clear description of the bug
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Environment details (OS, Python version, etc.)
-   - Error messages and logs
-
-### 💡 Suggesting Features
-
-1. **Check Discussions**: Look at [GitHub Discussions](https://github.com/your-org/ai-sidekick-for-splunk/discussions)
-2. **Create Feature Request**: Include:
-   - Clear description of the feature
-   - Use case and motivation
-   - Proposed implementation (if any)
-   - Examples of similar features
-
-### 🔧 Code Contributions
-
-#### **Types of Contributions**
-
-1. **Bug Fixes**: Fix existing issues
-2. **New Agents**: Add specialized agents for specific tasks
-3. **Workflow Templates**: Create new workflow definitions
-4. **Documentation**: Improve guides, examples, and API docs
-5. **Tests**: Add or improve test coverage
-6. **Performance**: Optimize existing functionality
-
-#### **Development Workflow**
-
-1. **Create Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/bug-description
-   ```
-
-2. **Make Changes**
-   - Follow our coding standards (see below)
-   - Add tests for new functionality
-   - Update documentation as needed
-
-3. **Test Your Changes**
-   ```bash
-   # Run all tests
-   pytest
-   
-   # Run specific tests
-   pytest tests/test_your_feature.py
-   
-   # Check code quality
-   ruff check src/
-   ruff format src/
-   
-   # Type checking
-   mypy src/
-   ```
-
-4. **Commit Changes**
-   ```bash
-   git add .
-   git commit -m "feat: add amazing new feature"
-   ```
-
-5. **Push and Create PR**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-   Then create a Pull Request on GitHub.
-
-## 📝 Coding Standards
-
-### **Code Style**
-
-- **Formatter**: Use `ruff format` for consistent formatting
-- **Linter**: Use `ruff check` for code quality
-- **Type Hints**: Add type hints to all functions and methods
-- **Docstrings**: Use Google-style docstrings
-
-### **Commit Messages**
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add new workflow template for security analysis
-fix: resolve issue with agent discovery
-docs: update installation guide
-test: add tests for workflow validation
-refactor: improve error handling in flow engine
-```
-
-### **Code Organization**
-
-```
-src/
-├── core/                 # Core system components
-│   ├── agents/          # Built-in agents
-│   ├── flows/           # Core workflow definitions
-│   └── flows_engine/    # Workflow execution engine
-├── contrib/             # Community contributions
-│   ├── agents/          # Community agents
-│   └── flows/           # Community workflows
-├── cli/                 # Command-line interface
-└── services/            # Supporting services
-```
-
-### **Testing Guidelines**
-
-- **Unit Tests**: Test individual components
-- **Integration Tests**: Test component interactions
-- **E2E Tests**: Test complete workflows
-- **Coverage**: Aim for >80% test coverage
+**Want to create an AI agent quickly?** Here's the streamlined process:
 
 ```bash
-# Test structure
-tests/
-├── unit/               # Unit tests
-├── integration/        # Integration tests
-├── e2e/               # End-to-end tests
-└── fixtures/          # Test data and fixtures
+# 1. Fork and clone
+git clone https://github.com/your-username/ai-sidekick-for-splunk.git
+cd ai-sidekick-for-splunk
+
+# 2. Set up development environment
+./scripts/lab/check-prerequisites.sh  # Checks prerequisites and installs if needed
+./scripts/lab/setup-env.sh           # Interactive setup with API keys
+./scripts/lab/start-lab-setup.sh     # Start the lab environment
+
+# 3. Create your agent (3-step process)
+./scripts/agent/create-agent.sh my_awesome_agent "Analyzes awesome data patterns"
+./scripts/agent/add-agent.sh my_awesome_agent
+./scripts/agent/integrate-agent.sh my_awesome_agent
+
+# 4. Test your agent
+./scripts/lab/restart-lab-setup.sh   # Restart to load your agent
+# Visit http://localhost:8087 to test your agent
+
+# 5. Add tests and documentation
+# Add unit tests for your agent
+# Update documentation with usage examples
+
+# 6. Submit PR
+git checkout -b feature/my-awesome-agent
+git add . && git commit -m "feat: add awesome data pattern analysis agent"
+git push origin feature/my-awesome-agent
 ```
 
-## 🤖 Adding New Agents
+**🎯 Result**: You'll have a fully functional, discoverable AI agent integrated with the orchestrator in minutes!
 
-### **Creating a New Agent**
+## 📋 Essential Information
 
-1. **Use the Generator**
-   ```bash
-   ai-sidekick-create-agent my_awesome_agent
-   ```
+### Prerequisites
+- **Python 3.11+** (required for Google ADK)
+- **Git** for version control
+- **At least one AI API key** (Google AI Studio recommended for beginners)
 
-2. **Implement the Agent**
-   ```python
-   # src/contrib/agents/my_awesome_agent/agent.py
-   from google.adk.agents import LlmAgent
-   
-   def create_my_awesome_agent() -> LlmAgent:
-       return LlmAgent(
-           name="my_awesome_agent",
-           instructions="You are an awesome agent that...",
-           # Add your implementation
-       )
-   ```
+### Getting AI API Keys
+**🥇 Google AI Studio (Recommended)**
+1. Visit [Google AI Studio](https://aistudio.google.com/)
+2. Sign in → "Get API Key" → "Create API Key"
+3. Add to your `.env`: `GOOGLE_API_KEY=your_key_here`
 
-3. **Add Tests**
-   ```python
-   # tests/unit/test_my_awesome_agent.py
-   def test_my_awesome_agent():
-       agent = create_my_awesome_agent()
-       assert agent.name == "my_awesome_agent"
-   ```
+**Other Options**: OpenAI, Anthropic Claude, or local LLMs (Ollama)
 
-4. **Update Documentation**
-   - Add agent description to README
-   - Create usage examples
-   - Document any special requirements
+### Agent Development Workflow
+1. **Generate Structure**: `./scripts/agent/create-agent.sh agent_name "description"`
+2. **Add Implementation**: `./scripts/agent/add-agent.sh agent_name`
+3. **Integrate**: `./scripts/agent/integrate-agent.sh agent_name`
 
-### **Agent Best Practices**
+### Testing Your Agent
+```bash
+# 1. Verify discovery
+uv run python main.py  # Look for "Discovered agent: your_agent"
 
-- **Clear Purpose**: Each agent should have a specific, well-defined purpose
-- **Good Instructions**: Provide clear, detailed instructions to the LLM
-- **Error Handling**: Handle errors gracefully and provide helpful messages
-- **Documentation**: Include docstrings and usage examples
-- **Testing**: Add comprehensive tests
+# 2. Test via web interface
+./scripts/lab/start-lab-setup.sh
+# Visit http://localhost:8087
 
-## 📊 Creating Workflow Templates
-
-### **Workflow Structure**
-
-```json
-{
-  "workflow_name": "My Custom Workflow",
-  "workflow_id": "custom.my_workflow",
-  "workflow_type": "analysis",
-  "workflow_category": "custom",
-  "source": "contrib",
-  "maintainer": "community",
-  "stability": "experimental",
-  "complexity_level": "beginner",
-  "estimated_duration": "2-5 minutes",
-  "version": "1.0.0",
-  "description": "Description of what this workflow does",
-  "workflow_instructions": {
-    "system_prompt": "You are a helpful assistant...",
-    "execution_style": "sequential"
-  },
-  "agent_dependencies": {
-    "splunk_mcp": {
-      "agent_id": "splunk_mcp",
-      "required": true,
-      "description": "Splunk MCP server for data operations"
-    }
-  },
-  "core_phases": {
-    "analysis": {
-      "name": "Analysis Phase",
-      "tasks": [
-        {
-          "task_id": "analyze_data",
-          "title": "Analyze Data",
-          "tool": "search",
-          "prompt": "Analyze the data and provide insights"
-        }
-      ]
-    }
-  }
-}
+# 3. Test with sample queries
+"analyze index=pas"
+"optimize this SPL query"
 ```
 
-### **Workflow Best Practices**
+## 📚 Detailed Documentation
 
-- **Modular Design**: Break complex workflows into logical phases
-- **Clear Naming**: Use descriptive names for phases and tasks
-- **Error Recovery**: Handle failures gracefully
-- **Documentation**: Include README.md with usage examples
-- **Validation**: Test workflows thoroughly before submitting
+For comprehensive guides, architecture details, and advanced topics, see our **[Documentation](docs/README.md)**:
 
-## 📚 Documentation
+- **[Getting Started Guide](docs/getting-started/README.md)** - Detailed setup and first agent
+- **[Agent Development Guide](docs/development/README.md)** - Advanced patterns and best practices
+- **[Architecture Overview](docs/architecture/README.md)** - System design and patterns
+- **[Examples](docs/examples/README.md)** - Working code samples
+- **[API Reference](docs/reference/api.md)** - Complete API documentation
 
-### **Types of Documentation**
+## 🎯 What to Contribute
 
-1. **API Documentation**: Docstrings in code
-2. **User Guides**: Step-by-step instructions
-3. **Developer Guides**: Technical implementation details
-4. **Examples**: Real-world usage scenarios
+### 🔥 High-Priority Needs
+- **Security & Compliance Agents** (threat hunting, compliance monitoring)
+- **Performance & Cost Optimization** (license optimization, search tuning)
+- **Data Quality & Governance** (validation, parsing optimization)
+- **Operational Intelligence** (monitoring, capacity planning)
 
-### **Documentation Standards**
+### 🌱 Good First Contributions
+- **Log Pattern Analyzer** - Identify common error patterns
+- **Field Analyzer** - Analyze field usage patterns
+- **Dashboard Helper** - Suggest dashboard panels
+- **Error Categorizer** - Categorize and count error types
 
-- **Clear Language**: Use simple, clear language
-- **Code Examples**: Include working code examples
-- **Screenshots**: Add screenshots for UI features
-- **Keep Updated**: Update docs when code changes
+## 🚀 Submitting Changes
 
-## 🔍 Review Process
+### Pull Request Process
+1. **Create feature branch**: `git checkout -b feature/descriptive-name`
+2. **Test thoroughly**: Ensure agent discovery and functionality work
+3. **Use conventional commits**: `feat:`, `fix:`, `docs:`, `perf:`
+4. **Update documentation**: Add usage examples and any new requirements
+5. **Create PR**: Use our [Pull Request Template](.github/pull_request_template.md) for consistency
 
-### **Pull Request Guidelines**
+### PR Checklist
+- [ ] Agent discovered successfully during startup
+- [ ] Agent responds correctly to test queries
+- [ ] Agent integrates properly with orchestrator
+- [ ] Web interface shows agent in list
+- [ ] **Tests added** for new functionality
+- [ ] **Documentation updated** with usage examples
+- [ ] Code follows project standards and passes linting
 
-1. **Clear Description**: Explain what your PR does and why
-2. **Link Issues**: Reference related issues or discussions
-3. **Test Coverage**: Include tests for new functionality
-4. **Documentation**: Update relevant documentation
-5. **Small Changes**: Keep PRs focused and reasonably sized
+## 🤝 Community Guidelines
 
-### **Review Criteria**
+We are committed to providing a welcoming and inclusive environment for all contributors. Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-- **Functionality**: Does it work as intended?
-- **Code Quality**: Is it well-written and maintainable?
-- **Tests**: Are there adequate tests?
-- **Documentation**: Is it properly documented?
-- **Performance**: Does it impact performance?
-- **Security**: Are there any security concerns?
+### Core Values
+- **Be respectful**: Treat everyone with kindness and respect
+- **Be constructive**: Provide helpful feedback and suggestions
+- **Be collaborative**: Work together towards common goals
+- **Be patient**: Remember that everyone is learning
+- **Be inclusive**: Welcome contributors from all backgrounds and experience levels
 
-## 🏆 Recognition
+## 💬 Getting Help
 
-We appreciate all contributions! Contributors will be:
+- **GitHub Issues**: Bug reports and feature requests
+- **GitHub Discussions**: General questions and community chat
+- **Documentation**: Check [docs/](docs/README.md) for comprehensive guides
+- **Examples**: Look at existing agents for patterns and inspiration
 
-- **Listed in Contributors**: Added to our contributors list
-- **Mentioned in Releases**: Credited in release notes
-- **Community Recognition**: Highlighted in community updates
+## 🐛 Reporting Issues
 
-## 📞 Getting Help
+1. **Search existing issues** first to avoid duplicates
+2. **Use our issue templates** for consistent reporting:
+   - [🐛 Bug Report](.github/ISSUE_TEMPLATE/bug_report.md) - Report a bug or problem
+   - [✨ Feature Request](.github/ISSUE_TEMPLATE/feature_request.md) - Suggest a new feature
+3. **Provide complete information** as requested in the templates
+4. **Security issues**: Please report security vulnerabilities privately to security@deslicer.com (see [Security Policy](SECURITY.md))
 
-- **GitHub Issues**: For bugs and feature requests
-- **GitHub Discussions**: For questions and general discussion
-- **Discord/Slack**: [Community chat] (if available)
-- **Email**: [maintainer email] (for sensitive issues)
+## 🏛️ Project Governance
 
-## 📄 License
-
-By contributing to AI Sidekick for Splunk, you agree that your contributions will be licensed under the Apache License 2.0.
+This project follows open-source governance principles. For details on decision-making processes, maintainer responsibilities, and community roles, see our [Project Governance Guide](GOVERNANCE.md).
 
 ---
 
-**Thank you for contributing to AI Sidekick for Splunk! 🎉**
+## 🎉 Ready to Contribute?
+
+### New Contributors
+Start with a **Log Pattern Analyzer** or **Field Analyzer** agent to learn the patterns and get familiar with the codebase.
+
+### Experienced Developers
+Jump into **Security** or **Performance** agents based on your expertise, or tackle **Advanced Challenges** if you have ML experience.
+
+### Domain Experts
+Bring your **industry knowledge** (healthcare, finance, e-commerce) and create **specialized agents** for your domain.
+
+---
+
+**Thank you for making AI Sidekick for Splunk better!** 🚀
+
+Your contributions help Splunk community to work more efficiently and make better data-driven decisions.
+
+**Questions?** Check our [Documentation](docs/README.md) or ask in [GitHub Discussions](https://github.com/deslicer/ai-sidekick-for-splunk/discussions)!

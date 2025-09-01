@@ -9,7 +9,7 @@ with bounded intelligence capabilities.
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from google.adk.agents import LlmAgent
 from google.adk.events import Event
@@ -38,15 +38,8 @@ class IndexAnalysisFlowAgent(BaseAgent):
         description="Production-ready index analysis using Guided Agent Flows framework with bounded intelligence and ResultSynthesizer integration",
         version="1.0.0",
         author="Saikrishna Gundeti",
-        tags=[
-            "index_analysis",
-            "guided_agent_flows",
-            "reasoning_flow_definitions",
-            "bounded_intelligence",
-            "production",
-            "modular",
-        ],
-        dependencies=["search_guru", "splunk_mcp", "result_synthesizer"],
+        tags=["index_analysis", "guided_agent_flows", "reasoning_flow_definitions", "bounded_intelligence", "production", "modular"],
+        dependencies=["search_guru", "splunk_mcp", "result_synthesizer"]
     )
 
     name = "IndexAnalysisFlow"
@@ -57,9 +50,9 @@ class IndexAnalysisFlowAgent(BaseAgent):
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None,
+        session_state: Optional[dict[str, Any]] = None,
         flow_definition_path: str | None = None,
-        orchestrator=None,
+        orchestrator=None
     ) -> None:
         """
         Initialize the IndexAnalysisFlowAgent.
@@ -72,23 +65,23 @@ class IndexAnalysisFlowAgent(BaseAgent):
             flow_definition_path: Path to flow JSON definition
             orchestrator: Main orchestrator for agent coordination
         """
-        logger.info(
-            "🔧 Initializing IndexAnalysisFlowAgent (POC)",
-            extra={
-                "event_type": "flow_agent_initialization",
-                "event_data": {"agent_name": "IndexAnalysisFlow", "version": "1.0.0-poc"},
-            },
-        )
+        logger.info("🔧 Initializing IndexAnalysisFlowAgent (POC)", extra={
+            "event_type": "flow_agent_initialization",
+            "event_data": {"agent_name": "IndexAnalysisFlow", "version": "1.0.0-poc"}
+        })
 
-        super().__init__(config or Config(), metadata or self.METADATA, tools or [], session_state)
+        super().__init__(
+            config or Config(),
+            metadata or self.METADATA,
+            tools or [],
+            session_state
+        )
 
         # Set default flow definition path
         if not flow_definition_path:
             current_dir = Path(__file__).parent
             # Use enhanced LLM loop flow for parallel testing
-            flow_definition_path = (
-                current_dir.parent.parent / "flows" / "index_analysis" / "index_analysis.json"
-            )
+            flow_definition_path = current_dir.parent.parent / "flows" / "index_analysis" / "index_analysis.json"
 
         self.flow_definition_path = Path(flow_definition_path)
         self.orchestrator = orchestrator
@@ -112,17 +105,16 @@ class IndexAnalysisFlowAgent(BaseAgent):
             self.flow_engine.agent_coordinator._agent_cache.clear()
             logger.info(f"✅ Orchestrator set for {self.name} - agent coordination enabled")
 
-        logger.info(
-            "✅ IndexAnalysisFlowAgent initialized successfully",
-            extra={
-                "event_type": "flow_agent_created",
-                "event_data": {
-                    "agent_name": self.name,
-                    "flow_definition": str(self.flow_definition_path),
-                    "flow_loaded": self.agent_flow is not None,
-                },
-            },
-        )
+        logger.info("✅ IndexAnalysisFlowAgent initialized successfully", extra={
+            "event_type": "flow_agent_created",
+            "event_data": {
+                "agent_name": self.name,
+                "flow_definition": str(self.flow_definition_path),
+                "flow_loaded": self.agent_flow is not None
+            }
+        })
+
+
 
     def _load_flow_definition(self) -> None:
         """Load and validate the agent flow definition."""
@@ -144,9 +136,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
             # Initialize flow engine with progress callback
             self.flow_engine = FlowEngine(self.config, self.orchestrator, self._progress_callback)
 
-            logger.info(
-                f"Flow definition loaded successfully: {self.agent_flow.workflow_name} v{self.agent_flow.version}"
-            )
+            logger.info(f"Flow definition loaded successfully: {self.agent_flow.workflow_name} v{self.agent_flow.version}")
 
         except Exception as e:
             logger.error(f"Failed to load flow definition: {e}")
@@ -171,23 +161,20 @@ class IndexAnalysisFlowAgent(BaseAgent):
             progress_message += f"\n{update.message}"
 
         # Log with structured data for potential streaming pickup
-        logger.info(
-            progress_message,
-            extra={
-                "event_type": "flow_progress_update",
-                "event_data": {
-                    "phase_name": update.phase_name,
-                    "task_id": update.task_id,
-                    "step_number": update.step_number,
-                    "status": update.status,
-                    "message": update.message,
-                    "data": update.data,
-                },
-            },
-        )
+        logger.info(progress_message, extra={
+            "event_type": "flow_progress_update",
+            "event_data": {
+                "phase_name": update.phase_name,
+                "task_id": update.task_id,
+                "step_number": update.step_number,
+                "status": update.status,
+                "message": update.message,
+                "data": update.data
+            }
+        })
 
         # Store progress updates for streaming (if we had access to the event stream)
-        if not hasattr(self, "_progress_updates"):
+        if not hasattr(self, '_progress_updates'):
             self._progress_updates = []
         self._progress_updates.append(update)
 
@@ -204,21 +191,23 @@ class IndexAnalysisFlowAgent(BaseAgent):
         if update.message:
             progress_text += f"\n{update.message}"
 
-        content = Content(role="model", parts=[Part(text=progress_text)])
+        content = Content(
+            role="model",
+            parts=[Part(text=progress_text)]
+        )
 
         # Create ADK Event
         return Event(
             author=self.name,
             content=content,
             partial=True,  # This is a streaming update, not final
-            turn_complete=False,
+            turn_complete=False
         )
 
     @property
     def instructions(self) -> str:
         """Get the agent instructions/prompt."""
         from .prompt import INDEX_ANALYSIS_FLOW_AGENT_INSTRUCTIONS
-
         return INDEX_ANALYSIS_FLOW_AGENT_INSTRUCTIONS
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> LlmAgent | None:
@@ -240,9 +229,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
             flow_tools = (tools or []).copy()
 
             # Create a tool function that calls our execute method
-            def execute_index_analysis_flow(
-                task: str, context: dict[str, Any] | None = None
-            ) -> dict[str, Any]:
+            def execute_index_analysis_flow(task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
                 """
                 Execute the comprehensive index analysis workflow.
 
@@ -255,7 +242,6 @@ class IndexAnalysisFlowAgent(BaseAgent):
                 """
                 # Create a synchronous wrapper for the async execute method
                 import asyncio
-
                 try:
                     # Try to get the current event loop
                     loop = asyncio.get_event_loop()
@@ -263,7 +249,6 @@ class IndexAnalysisFlowAgent(BaseAgent):
                         # If we're already in an async context, we need to handle this differently
                         # For now, we'll create a new event loop in a thread
                         import concurrent.futures
-
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             future = executor.submit(asyncio.run, self.execute(task, context))
                             return future.result()
@@ -312,19 +297,17 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 name=self.name,
                 description=self.description,
                 instruction=custom_instructions,
-                tools=flow_tools,
+                tools=flow_tools
             )
 
-            logger.debug(
-                f"Created IndexAnalysisFlow ADK agent with flow: {self.agent_flow.workflow_name}"
-            )
+            logger.debug(f"Created IndexAnalysisFlow ADK agent with flow: {self.agent_flow.workflow_name}")
             return agent
 
         except Exception as e:
             logger.error(f"Failed to create IndexAnalysisFlow ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute index analysis using the loaded agent flow.
 
@@ -338,9 +321,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
         try:
             logger.info(f"🚀 IndexAnalysisFlowAgent executing task: {task}")
             logger.debug(f"🔍 Agent orchestrator: {self.orchestrator}")
-            logger.debug(
-                f"🔍 FlowEngine orchestrator: {self.flow_engine.agent_coordinator.orchestrator if self.flow_engine else 'NO_FLOW_ENGINE'}"
-            )
+            logger.debug(f"🔍 FlowEngine orchestrator: {self.flow_engine.agent_coordinator.orchestrator if self.flow_engine else 'NO_FLOW_ENGINE'}")
 
             if not self.agent_flow or not self.flow_engine:
                 error_msg = "Flow definition not loaded"
@@ -350,7 +331,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 return {
                     "success": False,
                     "error": error_msg,
-                    "message": "Agent flow definition could not be loaded. Please check the flow configuration.",
+                    "message": "Agent flow definition could not be loaded. Please check the flow configuration."
                 }
 
             # Extract index name from task
@@ -361,7 +342,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 return {
                     "success": False,
                     "error": error_msg,
-                    "message": "Please specify an index to analyze (e.g., 'analyze index=pas')",
+                    "message": "Please specify an index to analyze (e.g., 'analyze index=pas')"
                 }
 
             # Prepare execution context
@@ -369,7 +350,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 "index_name": index_name,
                 "INDEX_NAME": index_name,  # Add uppercase version for placeholder resolution
                 "task": task,
-                **(context or {}),
+                **(context or {})
             }
             logger.debug(f"🔍 Execution context: {execution_context}")
 
@@ -387,7 +368,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 return {
                     "success": False,
                     "error": "Flow execution returned None",
-                    "message": "Flow execution failed - no result returned",
+                    "message": "Flow execution failed - no result returned"
                 }
 
             formatted_result = self._format_flow_results(flow_result)
@@ -399,16 +380,18 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             return {
                 "success": False,
                 "error": str(e),
-                "message": "Flow execution failed due to an unexpected error",
+                "message": "Flow execution failed due to an unexpected error"
             }
 
     def _extract_index_name(self, task: str) -> str | None:
         """Extract index name from user task."""
         # Look for index=name pattern
-        index_match = re.search(r"index[=\s]+([^\s]+)", task.lower())
+        index_match = re.search(r'index[=\s]+([^\s]+)', task.lower())
         if index_match:
             return index_match.group(1)
         return None
+
+
 
     def _format_flow_results(self, flow_result: FlowExecutionResult) -> dict[str, Any]:
         """Format flow execution results for user presentation."""
@@ -416,7 +399,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             return {
                 "success": False,
                 "error": flow_result.error_summary,
-                "message": "Flow execution failed",
+                "message": "Flow execution failed"
             }
 
         # Format comprehensive results
@@ -433,14 +416,14 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             "execution_summary": {
                 "total_execution_time": f"{flow_result.total_execution_time:.1f} seconds",
                 "phases_completed": len(flow_result.phase_results),
-                "overall_success": flow_result.success,
+                "overall_success": flow_result.success
             },
             "analysis_results": {},
             "key_insights": formatted_insights,
             "discovered_data": synthesized_output.get("discovered_data", {}),
             "recommendations": formatted_recommendations,
             "business_intelligence_summary": self._create_business_summary(synthesized_output),
-            "synthesized_output": synthesized_output,  # Include the complete synthesized output
+            "synthesized_output": synthesized_output  # Include the complete synthesized output
         }
 
         # Format phase results
@@ -449,16 +432,14 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                 "phase_name": phase_result.phase_name,
                 "success": phase_result.success,
                 "execution_time": f"{phase_result.execution_time:.1f}s",
-                "tasks": [],
+                "tasks": []
             }
 
             for task_result in phase_result.task_results:
                 task_data = {
                     "task_id": task_result.task_id,
                     "success": task_result.success,
-                    "execution_time": f"{task_result.execution_time:.1f}s"
-                    if task_result.execution_time
-                    else "N/A",
+                    "execution_time": f"{task_result.execution_time:.1f}s" if task_result.execution_time else "N/A"
                 }
 
                 if task_result.data:
@@ -487,19 +468,17 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             "version": self.agent_flow.version,
             "agent_coordination": f"Coordinated with {len(self.agent_flow.agent_dependencies)} dependent agents",
             "validation_performed": "All searches validated by search_guru",
-            "synthesis_method": "Built-in ADK parallel fan-out/gather synthesis pattern",
+            "synthesis_method": "Built-in ADK parallel fan-out/gather synthesis pattern"
         }
 
         return formatted_result
 
-    def _format_insights_for_readability(
-        self, synthesized_output: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _format_insights_for_readability(self, synthesized_output: dict[str, Any]) -> dict[str, Any]:
         """Format insights from synthesized output for better readability."""
         formatted_insights = {
             "summary": "🔍 Key insights extracted from the analysis:",
             "by_phase": {},
-            "total_insights": 0,
+            "total_insights": 0
         }
 
         phase_synthesis = synthesized_output.get("phase_synthesis", {})
@@ -518,9 +497,11 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                                 source = insight.get("source_task", "unknown")
 
                                 # Choose emoji based on confidence
-                                confidence_emoji = {"high": "🎯", "medium": "📊", "low": "💡"}.get(
-                                    confidence, "📋"
-                                )
+                                confidence_emoji = {
+                                    "high": "🎯",
+                                    "medium": "📊",
+                                    "low": "💡"
+                                }.get(confidence, "📋")
 
                                 # Choose emoji based on source/category
                                 source_emoji = {
@@ -529,16 +510,14 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                                     "data_quality": "🏗️",
                                     "business": "💼",
                                     "technical": "🔧",
-                                    "unknown": "📈",
-                                }.get(
-                                    source.lower() if isinstance(source, str) else "unknown", "📋"
-                                )
+                                    "unknown": "📈"
+                                }.get(source.lower() if isinstance(source, str) else "unknown", "📋")
 
                                 insight_text = insight.get("insight", "").strip()
                                 formatted_insight = {
                                     "insight": f"{confidence_emoji} {source_emoji} {insight_text}",
                                     "confidence": confidence,
-                                    "source": source,
+                                    "source": source
                                 }
                                 # Clean up the insight text
                                 if insight_text and len(insight_text) > 10:
@@ -548,25 +527,23 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                             formatted_insights["by_phase"][phase_name] = {
                                 "phase_description": phase_data.get("context", ""),
                                 "insights": formatted_phase_insights,
-                                "insight_count": len(formatted_phase_insights),
+                                "insight_count": len(formatted_phase_insights)
                             }
                             formatted_insights["total_insights"] += len(formatted_phase_insights)
 
         return formatted_insights
 
-    def _format_recommendations_for_readability(
-        self, synthesized_output: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _format_recommendations_for_readability(self, synthesized_output: dict[str, Any]) -> dict[str, Any]:
         """Format recommendations from synthesized output for better readability with emojis."""
         formatted_recommendations = {
             "summary": "💡 Actionable recommendations based on the analysis:",
             "by_priority": {
                 "high": {"title": "🚨 High Priority", "items": []},
                 "medium": {"title": "⚠️ Medium Priority", "items": []},
-                "low": {"title": "💭 Low Priority", "items": []},
+                "low": {"title": "💭 Low Priority", "items": []}
             },
             "by_category": {},
-            "total_recommendations": 0,
+            "total_recommendations": 0
         }
 
         phase_synthesis = synthesized_output.get("phase_synthesis", {})
@@ -583,9 +560,11 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                                 category = rec.get("category", "operational")
 
                                 # Choose emojis based on priority and category
-                                priority_emoji = {"high": "🚨", "medium": "⚠️", "low": "💭"}.get(
-                                    priority, "📋"
-                                )
+                                priority_emoji = {
+                                    "high": "🚨",
+                                    "medium": "⚠️",
+                                    "low": "💭"
+                                }.get(priority, "📋")
 
                                 category_emoji = {
                                     "security": "🔒",
@@ -594,7 +573,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                                     "data_quality": "🏗️",
                                     "business": "💼",
                                     "monitoring": "📊",
-                                    "optimization": "🎯",
+                                    "optimization": "🎯"
                                 }.get(category, "📋")
 
                                 rec_text = rec.get("recommendation", "").strip()
@@ -603,29 +582,23 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                                     "priority": priority,
                                     "category": category,
                                     "source_phase": phase_name,
-                                    "source_task": rec.get("source_task", "unknown"),
+                                    "source_task": rec.get("source_task", "unknown")
                                 }
 
                                 # Clean up the recommendation text
                                 if rec_text and len(rec_text) > 20:
                                     # Add to priority groups
                                     if priority in formatted_recommendations["by_priority"]:
-                                        formatted_recommendations["by_priority"][priority][
-                                            "items"
-                                        ].append(formatted_rec)
+                                        formatted_recommendations["by_priority"][priority]["items"].append(formatted_rec)
 
                                     # Add to category groups
                                     if category not in formatted_recommendations["by_category"]:
-                                        category_title = (
-                                            f"{category_emoji} {category.replace('_', ' ').title()}"
-                                        )
+                                        category_title = f"{category_emoji} {category.replace('_', ' ').title()}"
                                         formatted_recommendations["by_category"][category] = {
                                             "title": category_title,
-                                            "items": [],
+                                            "items": []
                                         }
-                                    formatted_recommendations["by_category"][category][
-                                        "items"
-                                    ].append(formatted_rec)
+                                    formatted_recommendations["by_category"][category]["items"].append(formatted_rec)
 
                                     formatted_recommendations["total_recommendations"] += 1
 
@@ -639,8 +612,14 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
         business_summary = {
             "executive_summary": f"📋 Executive Summary: {summary}",
             "key_findings": [],
-            "business_impact": {"title": "💼 Business Impact Assessment", "areas": {}},
-            "next_actions": {"title": "🚀 Recommended Next Actions", "items": []},
+            "business_impact": {
+                "title": "💼 Business Impact Assessment",
+                "areas": {}
+            },
+            "next_actions": {
+                "title": "🚀 Recommended Next Actions",
+                "items": []
+            }
         }
 
         # Extract key business findings from phase synthesis
@@ -653,24 +632,13 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
                     for insight in insights:
                         if isinstance(insight, dict):
                             insight_text = insight.get("insight", "")
-                            if any(
-                                keyword in insight_text.lower()
-                                for keyword in [
-                                    "error",
-                                    "performance",
-                                    "volume",
-                                    "pattern",
-                                    "anomaly",
-                                    "correlation",
-                                ]
-                            ):
-                                business_summary["key_findings"].append(
-                                    {
-                                        "finding": insight_text,
-                                        "phase": phase_name,
-                                        "confidence": insight.get("confidence", "medium"),
-                                    }
-                                )
+                            if any(keyword in insight_text.lower() for keyword in
+                                  ["error", "performance", "volume", "pattern", "anomaly", "correlation"]):
+                                business_summary["key_findings"].append({
+                                    "finding": insight_text,
+                                    "phase": phase_name,
+                                    "confidence": insight.get("confidence", "medium")
+                                })
 
         # Extract business impact indicators
         discovered_data = synthesized_output.get("discovered_data", {})
@@ -678,7 +646,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             business_summary["business_impact"] = {
                 "data_patterns_identified": len(discovered_data),
                 "analysis_coverage": "Multi-phase comprehensive analysis",
-                "reliability_indicators": list(discovered_data.keys()),
+                "reliability_indicators": list(discovered_data.keys())
             }
 
         return business_summary
@@ -686,7 +654,9 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
 
 # Factory function for agent discovery
 def create_index_analysis_flow_agent(
-    config: Config | None = None, orchestrator=None, **kwargs
+    config: Config | None = None,
+    orchestrator=None,
+    **kwargs
 ) -> IndexAnalysisFlowAgent:
     """
     Factory function to create IndexAnalysisFlowAgent instance.
@@ -699,7 +669,11 @@ def create_index_analysis_flow_agent(
     Returns:
         IndexAnalysisFlowAgent instance
     """
-    return IndexAnalysisFlowAgent(config=config, orchestrator=orchestrator, **kwargs)
+    return IndexAnalysisFlowAgent(
+        config=config,
+        orchestrator=orchestrator,
+        **kwargs
+    )
 
 
 # Agent instance for discovery

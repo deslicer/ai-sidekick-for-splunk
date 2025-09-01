@@ -9,7 +9,7 @@ with bounded intelligence capabilities.
 import logging
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from google.adk.agents import LlmAgent
 from google.adk.events import Event
@@ -57,7 +57,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: dict[str, Any] | None = None,
+        session_state: Optional[dict[str, Any]] = None,
         flow_definition_path: str | None = None,
         orchestrator=None,
     ) -> None:
@@ -241,7 +241,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
 
             # Create a tool function that calls our execute method
             def execute_index_analysis_flow(
-                task: str, context: dict[str, Any] | None = None
+                task: str, context: Optional[dict[str, Any]] = None
             ) -> dict[str, Any]:
                 """
                 Execute the comprehensive index analysis workflow.
@@ -324,7 +324,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             logger.error(f"Failed to create IndexAnalysisFlow ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute index analysis using the loaded agent flow.
 

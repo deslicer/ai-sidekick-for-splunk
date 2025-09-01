@@ -229,7 +229,9 @@ class IndexAnalysisFlowAgent(BaseAgent):
             flow_tools = (tools or []).copy()
 
             # Create a tool function that calls our execute method
-            def execute_index_analysis_flow(task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+            def execute_index_analysis_flow(
+                task: str, context: Optional[dict[str, Any]] = None
+            ) -> dict[str, Any]:
                 """
                 Execute the comprehensive index analysis workflow.
 

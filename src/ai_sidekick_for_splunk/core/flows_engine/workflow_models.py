@@ -30,6 +30,7 @@ class WorkflowCategory(str, Enum):
     SECURITY_AUDIT = "security_audit"
     PERFORMANCE_TUNING = "performance_tuning"
     INFRASTRUCTURE_MONITORING = "infrastructure_monitoring"
+    DATA_INGESTION = "data_ingestion"
 
 
 class WorkflowSource(str, Enum):

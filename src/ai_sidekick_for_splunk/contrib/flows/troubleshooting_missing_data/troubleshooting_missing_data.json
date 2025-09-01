@@ -1,0 +1,314 @@
+{
+  "workflow_id": "contrib.troubleshooting_missing_data",
+  "workflow_name": "Missing Data Troubleshooting",
+  "version": "1.0.0",
+  "description": "Systematic troubleshooting for missing data issues following Splunk's official 10-step workflow. Reference: [Missing Data Troubleshooting Guide](https://github.com/deslicer/mcp-for-splunk/blob/main/docs/guides/workflows/missing_data_troubleshooting.md)",
+  "workflow_type": "troubleshooting",
+  "workflow_category": "data_ingestion",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "intermediate",
+  "estimated_duration": "10-15 minutes",
+  "target_audience": [
+    "Splunk admins",
+    "Data engineers",
+    "Support teams"
+  ],
+  "splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "last_updated": "2025-09-01",
+  "documentation_url": "https://github.com/deslicer/mcp-for-splunk/blob/main/docs/guides/workflows/missing_data_troubleshooting.md",
+  "prerequisites": [
+    "Admin access",
+    "Search capabilities",
+    "Knowledge of Splunk architecture"
+  ],
+  "required_permissions": [
+    "search",
+    "rest_api_access",
+    "list_indexes"
+  ],
+  "data_requirements": {},
+  "business_value": "Systematically identifies and resolves missing data issues following Splunk best practices, reducing data loss incidents and improving monitoring reliability.",
+  "use_cases": [
+    "Data ingestion troubleshooting",
+    "Monitoring gaps identification",
+    "Compliance auditing",
+    "System health assessment"
+  ],
+  "success_metrics": [
+    "Identification of missing data root cause",
+    "Resolution of data flow issues",
+    "Improved data completeness"
+  ],
+  "workflow_instructions": {
+    "specialization": "Missing data troubleshooting following official Splunk workflow",
+    "focus_areas": [
+      "Data ingestion pipeline",
+      "Configuration validation",
+      "Access controls",
+      "Search optimization"
+    ],
+    "execution_style": "step_by_step_diagnostic",
+    "domain": "data_management"
+  },
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Splunk MCP server for executing diagnostic searches and gathering system information",
+      "required": true,
+      "capabilities": [
+        "search_execution",
+        "system_configuration",
+        "access_control_validation"
+      ],
+      "tools": [
+        "run_oneshot_search",
+        "run_splunk_search",
+        "get_system_info",
+        "list_indexes",
+        "me"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Synthesizes diagnostic results into actionable reports",
+      "required": true,
+      "capabilities": [
+        "result_analysis",
+        "recommendation_generation",
+        "report_formatting"
+      ]
+    }
+  },
+  "core_phases": {
+    "initial_verification": {
+      "name": "Initial Verification",
+      "description": "Verify basic setup including license, indexes, and permissions (Steps 1-3)",
+      "mandatory": true,
+      "parallel": true,
+      "tasks": [
+        {
+          "task_id": "splunk_license_edition_verification",
+          "title": "Splunk License & Edition Verification",
+          "goal": "Check Splunk license and edition status",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/server/info | fields splunk_version, product_type, license_state",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Check if running Splunk Free and verify license state",
+          "analysis_focus": [
+            "license_status",
+            "edition_type",
+            "limitations"
+          ]
+        },
+        {
+          "task_id": "index_verification",
+          "title": "Index Verification",
+          "goal": "Verify data was added to correct indexes",
+          "tool": "run_splunk_search",
+          "search_query": "| eventcount summarize=false index=* | dedup index | table index",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "List available indexes and check accessibility",
+          "analysis_focus": [
+            "index_availability",
+            "data_placement"
+          ]
+        },
+        {
+          "task_id": "permissions_access_control",
+          "title": "Permissions & Access Control",
+          "goal": "Verify user permissions allow data access",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/authentication/current-context | fields roles | eval roles=split(roles,\",\") | mvexpand roles | join roles [| rest /services/authorization/roles | rename title as roles | table roles, srchIndexesAllowed, srchIndexesDefault]",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Check role-based index access",
+          "analysis_focus": [
+            "access_rights",
+            "role_permissions"
+          ]
+        }
+      ]
+    },
+    "data_flow_checks": {
+      "name": "Data Flow Checks",
+      "description": "Check time ranges and forwarder connectivity (Steps 4-5)",
+      "mandatory": true,
+      "parallel": true,
+      "tasks": [
+        {
+          "task_id": "time_range_issues",
+          "title": "Time Range Issues",
+          "goal": "Check time-related problems",
+          "tool": "run_splunk_search",
+          "search_query": "index=* | eval lag=_indextime-_time | stats avg(lag) max(lag) by index",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Verify events in time range and check indexing delays",
+          "analysis_focus": [
+            "time_discrepancies",
+            "indexing_lag"
+          ]
+        },
+        {
+          "task_id": "forwarder_connectivity",
+          "title": "Forwarder Connectivity",
+          "goal": "Check forwarder connections",
+          "tool": "run_splunk_search",
+          "search_query": "index=_internal source=*metrics.log* group=tcpin_connections | stats count by sourceIp",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Verify forwarders are connecting and sending data",
+          "analysis_focus": [
+            "connection_status",
+            "data_throughput"
+          ]
+        }
+      ]
+    },
+    "configuration_validation": {
+      "name": "Configuration Validation",
+      "description": "Validate search head and license configurations (Steps 6-7)",
+      "mandatory": true,
+      "parallel": true,
+      "tasks": [
+        {
+          "task_id": "search_head_configuration",
+          "title": "Search Head Configuration",
+          "goal": "Verify search head setup",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/search/distributed/peers | table title, status, isHttps",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Check search head connections to indexers",
+          "analysis_focus": [
+            "distributed_config",
+            "peer_status"
+          ]
+        },
+        {
+          "task_id": "license_violations",
+          "title": "License Violations",
+          "goal": "Check for license violations",
+          "tool": "run_splunk_search",
+          "search_query": "index=_internal source=*license_usage.log* type=Usage | stats sum(b) by pool",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Verify license compliance",
+          "analysis_focus": [
+            "usage_violations",
+            "quota_status"
+          ]
+        }
+      ]
+    },
+    "search_operations": {
+      "name": "Search Operations",
+      "description": "Analyze search and extraction issues (Steps 8-10)",
+      "mandatory": true,
+      "parallel": true,
+      "tasks": [
+        {
+          "task_id": "scheduled_search_issues",
+          "title": "Scheduled Search Issues",
+          "goal": "Analyze scheduled search problems",
+          "tool": "run_splunk_search",
+          "search_query": "index=_internal source=*scheduler.log* | stats count by status",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Check scheduler performance",
+          "analysis_focus": [
+            "schedule_status",
+            "execution_issues"
+          ]
+        },
+        {
+          "task_id": "search_query_validation",
+          "title": "Search Query Validation",
+          "goal": "Verify search syntax and logic",
+          "tool": "run_splunk_search",
+          "search_query": "index=_audit action=search | search search!=\"*typeahead*\" | head 10",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Check for syntax errors",
+          "analysis_focus": [
+            "query_syntax",
+            "logic_errors"
+          ]
+        },
+        {
+          "task_id": "field_extraction_issues",
+          "title": "Field Extraction Issues",
+          "goal": "Check field extraction problems",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/data/props/extractions | table stanza, attribute, value",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "description": "Verify extraction configurations",
+          "analysis_focus": [
+            "extraction_config",
+            "permission_issues"
+          ]
+        }
+      ]
+    },
+    "final_synthesis": {
+      "name": "Final Synthesis",
+      "description": "Synthesize all diagnostic results",
+      "mandatory": true,
+      "parallel": false,
+      "tasks": [
+        {
+          "task_id": "generate_diagnostic_report",
+          "title": "Generate Diagnostic Report",
+          "goal": "Create comprehensive troubleshooting report",
+          "tool": "result_synthesizer",
+          "description": "Compile findings from all steps",
+          "prompt": "Synthesize results from all troubleshooting steps into a comprehensive report following Splunk's 10-step workflow. Include root cause analysis, recommendations, and resolution steps.",
+          "expected_output": "Structured diagnostic report with findings and recommendations"
+        }
+      ]
+    }
+  },
+  "execution_flow": {
+    "phase_order": [
+      "initial_verification",
+      "data_flow_checks",
+      "configuration_validation",
+      "search_operations",
+      "final_synthesis"
+    ],
+    "error_handling": {
+      "continue_on_task_failure": true,
+      "max_failed_tasks_per_phase": 2,
+      "retry_failed_tasks": true,
+      "max_retries": 1
+    }
+  }
+}

@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Application logs and runtime files
+logs/
+*.pid
+
+# Backup files
+*.backup
+*.bak
+*.orig
+*.rej

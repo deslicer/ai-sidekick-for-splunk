@@ -237,7 +237,7 @@ function Install-UvWithFallbacks {
     }
     
     # All methods failed
-    Write-Error "Automatic installation failed"
+    Write-Warning "Automatic installation failed"
     Write-Info "Manual installation required:"
     Write-Host "  1. Visit: https://docs.astral.sh/uv/getting-started/installation/"
     Write-Host "  2. Run: irm https://astral.sh/uv/install.ps1 | iex"
@@ -313,7 +313,7 @@ if (Test-Path "pyproject.toml") {
             Write-Warning "Virtual environment created but activation script not found"
         }
     } catch {
-        Write-Error "Failed to create virtual environment or install dependencies"
+        Write-Warning "Failed to create virtual environment or install dependencies"
         Write-Info "You may need to run 'uv sync' manually in the project directory"
     }
 } else {
@@ -338,7 +338,7 @@ if (Test-Command "git") {
         Write-Success "Git found"
     }
 } else {
-    Write-Error "Git: Not found"
+    Write-Warning "Git: Not found"
     
     # Show installation instructions
     Write-Info "Installation options:"

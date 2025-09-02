@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Prerequisites Checker for AI Sidekick for Splunk
-Cross-platform script to verify and install required dependencies
+AI Sidekick for Splunk Lab - Prerequisites Checker
+Verifies system requirements and installs missing dependencies
+Ensures UV package manager and Git are available for project setup
 """
 
 import argparse
@@ -36,7 +37,7 @@ class Colors:
 
 
 class PrerequisiteChecker:
-    """Cross-platform prerequisites checker for AI Sidekick for Splunk"""
+    """Prerequisites checker for AI Sidekick for Splunk Lab"""
 
     def __init__(self, verbose: bool = False, json_output: bool = False, check_only: bool = False):
         self.verbose = verbose
@@ -118,54 +119,81 @@ class PrerequisiteChecker:
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
             return False, "", "Command not found or timed out"
 
-    def check_python_version(self) -> bool:
-        """Check if Python 3.11+ is available"""
+    def setup_project_environment(self) -> bool:
+        """Setup project environment with UV"""
+        if self.check_only:
+            return True
+            
+        if not self.json_output:
+            self.print_info("Setting up project environment...")
+            
+        # Check if pyproject.toml exists
+        if not Path("pyproject.toml").exists():
+            if not self.json_output:
+                self.print_warning("No pyproject.toml found - skipping environment setup")
+                self.print_info("Make sure you're running this script from the project root directory")
+            return True
+            
+        if not self.json_output:
+            self.print_info("Creating virtual environment and installing dependencies...")
+            
         try:
-            # Check current Python version
-            current_version = sys.version_info
-            if current_version >= (3, 11):
-                version_str = f"{current_version.major}.{current_version.minor}.{current_version.micro}"
-                self.print_success(f"Python: {version_str} (current interpreter)")
-                if self.verbose:
-                    self.print_info(f"    Location: {sys.executable}")
-                self.results['python'] = {'status': 'ok', 'version': version_str, 'path': sys.executable}
+            # Run uv sync to create venv and install dependencies
+            success, stdout, stderr = self.run_command(['uv', 'sync'], timeout=120)
+            if success:
+                if not self.json_output:
+                    self.print_success("Virtual environment created and dependencies installed")
+                    if self.verbose:
+                        self.print_info("    Virtual environment location: .venv/")
+                        
+                # Verify the environment works
+                venv_python = self.get_venv_python()
+                if Path(venv_python).exists():
+                    if not self.json_output:
+                        self.print_success("Virtual environment ready")
+                else:
+                    if not self.json_output:
+                        self.print_warning("Virtual environment created but Python executable not found")
                 return True
-
-            # Check if python3.11+ is available in PATH
-            for python_cmd in ['python3.11', 'python3.12', 'python3.13', 'python3']:
-                if shutil.which(python_cmd):
-                    success, stdout, _ = self.run_command([python_cmd, '--version'])
-                    if success and 'Python 3.1' in stdout:
-                        version_parts = stdout.replace('Python ', '').split('.')
-                        if len(version_parts) >= 2 and int(version_parts[1]) >= 11:
-                            self.print_success(f"Python: {stdout}")
-                            if self.verbose:
-                                self.print_info(f"    Location: {shutil.which(python_cmd)}")
-                            self.results['python'] = {'status': 'ok', 'version': stdout, 'path': shutil.which(python_cmd)}
-                            return True
-
-            # Python 3.11+ not found
-            self.print_error("Python 3.11+: Not found")
-            self.missing_requirements.append("Python 3.11+")
-            self.results['python'] = {'status': 'missing', 'required': '3.11+'}
-            return False
-
+            else:
+                if not self.json_output:
+                    self.print_error("Failed to create virtual environment or install dependencies")
+                    self.print_info("You may need to run 'uv sync' manually in the project directory")
+                return False
         except Exception as e:
-            self.print_error(f"Python check failed: {e}")
-            self.results['python'] = {'status': 'error', 'error': str(e)}
+            if not self.json_output:
+                self.print_error(f"Error setting up project environment: {e}")
             return False
 
     def check_uv_package_manager(self) -> bool:
-        """Check if uv package manager is installed"""
+        """Check if uv package manager is installed and setup project environment"""
         if shutil.which('uv'):
             success, stdout, _ = self.run_command(['uv', '--version'])
             if success:
                 self.print_success(f"UV Package Manager: {stdout}")
                 if self.verbose:
                     self.print_info(f"    Location: {shutil.which('uv')}")
+                    
+                # Verify UV can manage Python versions
+                if self.verbose:
+                    self.print_info("    Verifying UV Python management capabilities...")
+                    
+                success_python, _, _ = self.run_command(['uv', 'python', 'list'])
+                if success_python:
+                    self.print_success("UV Python management available")
+                    if self.verbose:
+                        self.print_info("    Can automatically download required Python versions")
+                else:
+                    self.print_info("UV ready to download Python versions as needed")
+                    
                 self.results['uv'] = {'status': 'ok', 'version': stdout, 'path': shutil.which('uv')}
-                return True
-
+                
+                # Setup project environment
+                if not self.json_output:
+                    print()  # Add spacing
+                env_success = self.setup_project_environment()
+                return env_success
+            
         self.print_error("UV Package Manager: Not installed")
         self.missing_requirements.append("UV Package Manager")
         self.results['uv'] = {'status': 'missing'}
@@ -182,14 +210,53 @@ class PrerequisiteChecker:
                 self.results['git'] = {'status': 'ok', 'version': stdout, 'path': shutil.which('git')}
                 return True
 
-        self.print_error("Git: Not installed")
+        self.print_error("Git: Not found")
         self.missing_requirements.append("Git")
         self.results['git'] = {'status': 'missing'}
+        
+        # Show installation instructions
+        if not self.json_output:
+            if platform.system() == 'Darwin':  # macOS
+                self.print_info("Installation options:")
+                print("  1. brew install git")
+                print("  2. xcode-select --install") 
+                print("  3. https://git-scm.com")
+            elif platform.system() == 'Windows':
+                self.print_info("Installation options:")
+                print("  1. winget install Git.Git")
+                print("  2. choco install git")
+                print("  3. scoop install git")
+                print("  4. https://git-scm.com")
+            else:  # Linux
+                self.print_info("Install: Use your distribution's package manager")
+                print("  Examples: sudo apt install git, sudo dnf install git")
         return False
 
 
-
-
+    def check_optional_tools(self):
+        """Check for optional development tools"""
+        if not self.json_output:
+            self.print_header(f"{self._get_emoji('tools')} Optional Tools")
+            
+        # Node.js for MCP Inspector
+        if shutil.which('node'):
+            success, stdout, _ = self.run_command(['node', '--version'])
+            if success:
+                self.print_success(f"Node.js: {stdout}")
+            else:
+                self.print_success("Node.js found")
+        else:
+            self.print_info("Node.js: Not found (optional)")
+            
+        # Docker for containerization  
+        if shutil.which('docker'):
+            success, stdout, _ = self.run_command(['docker', '--version'])
+            if success:
+                self.print_success(f"Docker: {stdout}")
+            else:
+                self.print_success("Docker found")
+        else:
+            self.print_info("Docker: Not found (optional)")
 
     def get_system_info(self) -> Dict[str, str]:
         """Get comprehensive system information"""
@@ -276,78 +343,9 @@ class PrerequisiteChecker:
                 'curl -LsSf https://astral.sh/uv/install.sh | sh'
             ]
 
-    def check_uv_environment_conflicts(self) -> bool:
-        """Check for UV environment conflicts and automatically clean them up for lab environment"""
-        uv_env_path = os.getenv('UV_ENVIRONMENT_PATH')
 
-        if uv_env_path:
-            if not self.json_output:
-                self.print_warning(f"UV_ENVIRONMENT_PATH was set: {uv_env_path}")
-                self.print_info("    Automatically unsetting for clean lab environment...")
 
-            # Automatically unset for lab environment
-            del os.environ['UV_ENVIRONMENT_PATH']
 
-            if not self.json_output:
-                self.print_success("UV_ENVIRONMENT_PATH cleared successfully")
-
-            return True
-
-        if not self.json_output:
-            self.print_success("UV environment: Clean (no conflicts)")
-        return True
-
-    def deactivate_current_env(self) -> bool:
-        """Deactivate any currently active virtual environment"""
-        if not self.check_only:
-            # Check if we're in a virtual environment
-            if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
-                if not self.json_output:
-                    self.print_info("Deactivating current virtual environment...")
-
-                # Clear environment variables that indicate active venv
-                env_vars_to_clear = ['VIRTUAL_ENV', 'UV_ENVIRONMENT_PATH', 'CONDA_DEFAULT_ENV']
-                for var in env_vars_to_clear:
-                    if var in os.environ:
-                        if not self.json_output:
-                            self.print_info(f"    Clearing {var}")
-                        del os.environ[var]
-
-                # Reset Python path to system Python
-                if not self.json_output:
-                    self.print_success("Virtual environment deactivated")
-                return True
-            else:
-                if not self.json_output:
-                    self.print_info("No active virtual environment to deactivate")
-                return True
-        return True
-
-    def create_project_venv(self) -> bool:
-        """Create project-local virtual environment"""
-        if not self.check_only:
-            # First deactivate any current environment
-            self.deactivate_current_env()
-
-            if not self.json_output:
-                self.print_info(f"Creating virtual environment at {self.venv_path}")
-
-            try:
-                # Create virtual environment
-                success, stdout, stderr = self.run_command(['uv', 'venv', str(self.venv_path)], timeout=30)
-                if success:
-                    if not self.json_output:
-                        self.print_success("Virtual environment created successfully")
-                    return True
-                else:
-                    if not self.json_output:
-                        self.print_error(f"Failed to create virtual environment: {stderr}")
-                    return False
-            except Exception as e:
-                if not self.json_output:
-                    self.print_error(f"Error creating virtual environment: {e}")
-                return False
-        return True
 
     def get_venv_python(self) -> str:
         """Get the path to Python in the virtual environment"""
@@ -355,173 +353,6 @@ class PrerequisiteChecker:
             return str(self.venv_path / 'Scripts' / 'python.exe')
         else:
             return str(self.venv_path / 'bin' / 'python')
-
-    def get_venv_pip(self) -> str:
-        """Get the path to pip in the virtual environment"""
-        if platform.system() == 'Windows':
-            return str(self.venv_path / 'Scripts' / 'pip.exe')
-        else:
-            return str(self.venv_path / 'bin' / 'pip')
-
-    def install_dependencies(self) -> bool:
-        """Install required dependencies in the virtual environment"""
-        if self.check_only:
-            return True
-
-        if not self.venv_path.exists():
-            if not self.json_output:
-                self.print_error("Virtual environment not found. Creating it first...")
-            if not self.create_project_venv():
-                return False
-
-        if not self.json_output:
-            self.print_info("Installing dependencies in virtual environment...")
-
-        try:
-            # Install Google ADK
-            success, stdout, stderr = self.run_command([
-                'uv', 'pip', 'install', '--python', self.get_venv_python(),
-                'google-adk>=1.11.0'
-            ], timeout=120)
-
-            if success:
-                if not self.json_output:
-                    self.print_success("Google ADK installed successfully")
-            else:
-                if not self.json_output:
-                    self.print_error(f"Failed to install Google ADK: {stderr}")
-                return False
-
-            # Install project in editable mode
-            success, stdout, stderr = self.run_command([
-                'uv', 'pip', 'install', '--python', self.get_venv_python(),
-                '-e', '.'
-            ], timeout=60)
-
-            if success:
-                if not self.json_output:
-                    self.print_success("Project installed in editable mode")
-                return True
-            else:
-                if not self.json_output:
-                    self.print_error(f"Failed to install project: {stderr}")
-                return False
-
-        except Exception as e:
-            if not self.json_output:
-                self.print_error(f"Error installing dependencies: {e}")
-            return False
-
-
-
-    def generate_setup_commands(self) -> List[str]:
-        """Generate setup commands after prerequisites are met"""
-        commands = []
-
-        if platform.system() == 'Windows':
-            commands.extend([
-                '# Navigate to project root directory',
-                'cd /path/to/ai-sidekick-for-splunk',
-                '',
-                '# Create project-local virtual environment',
-                'uv venv .venv',
-                'uv pip install --upgrade pip',
-                '',
-                '# Install project dependencies',
-                'uv pip install google-adk>=1.11.0',
-                'uv pip install -e .',
-                '',
-                '# Activate the environment for future sessions',
-                '.venv\\Scripts\\activate',
-                '',
-                '# Set up environment variables using setup script',
-                'python scripts/lab/setup-env.sh',
-                '',
-                '# Test the setup',
-                'python -c "import google.adk; print(\'Google ADK installed successfully\')"'
-            ])
-        else:
-            commands.extend([
-                '# Navigate to project root directory',
-                'cd /path/to/ai-sidekick-for-splunk',
-                '',
-                '# Create project-local virtual environment',
-                'uv venv .venv',
-                'source .venv/bin/activate',
-                'uv pip install --upgrade pip',
-                '',
-                '# Install project dependencies',
-                'uv pip install google-adk>=1.11.0',
-                'uv pip install -e .',
-                '',
-                '# Set up environment variables using setup script',
-                './scripts/lab/setup-env.sh',
-                '',
-                '# Test the setup',
-                'python -c "import google.adk; print(\'Google ADK installed successfully\')"'
-            ])
-
-        return commands
-
-    def auto_setup(self) -> bool:
-        """Automatically set up the project environment"""
-        if self.check_only:
-            return True
-
-        if not self.json_output:
-            self.print_header(f"{self._get_emoji('rocket')} Automatic Setup")
-
-        setup_success = True
-
-        # Step 1: Create project virtual environment if it doesn't exist
-        if not self.venv_path.exists():
-            if not self.json_output:
-                self.print_info("Project virtual environment not found. Creating...")
-            if not self.create_project_venv():
-                setup_success = False
-        else:
-            if not self.json_output:
-                self.print_success("Project virtual environment already exists")
-
-        # Step 2: Install dependencies
-        if setup_success:
-            if not self.json_output:
-                self.print_info("Installing/updating dependencies...")
-            if not self.install_dependencies():
-                setup_success = False
-
-
-
-        if setup_success and not self.json_output:
-            self.print_success("Automatic setup completed successfully!")
-            self.print_info("")
-            self.print_info("🎉 Project environment is ready!")
-
-            # Print setup summary
-            self.print_header("Setup Summary")
-            python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
-            self.print_info(f"[SUCCESS] ✅ Python {python_version}")
-            self.print_info(f"[SUCCESS] ✅ uv package manager")
-            self.print_info(f"[SUCCESS] ✅ Git version control")
-            self.print_info(f"[SUCCESS] ✅ Virtual environment created at .venv/")
-            self.print_info(f"[SUCCESS] ✅ Google ADK installed")
-            self.print_info(f"[SUCCESS] ✅ Core dependencies installed")
-
-            self.print_info("")
-            self.print_header("🚀 Next Steps")
-
-            if platform.system() == 'Windows':
-                self.print_info("1. Activate the virtual environment:")
-                self.print_info("   .venv\\Scripts\\activate")
-            else:
-                self.print_info("1. Activate the virtual environment:")
-                self.print_info("   source .venv/bin/activate")
-
-            self.print_info("")
-            self.print_info("2. Start AI Sidekick - run:")
-            self.print_info("   uv run start-lab")
-
-        return setup_success
 
     def run_checks(self) -> bool:
         """Run all prerequisite checks"""
@@ -533,7 +364,6 @@ class PrerequisiteChecker:
         self.print_header(f"{self._get_emoji('tools')} Required Components")
 
         checks = [
-            ("Python 3.11+", self.check_python_version),
             ("UV Package Manager", self.check_uv_package_manager),
             ("Git", self.check_git),
         ]
@@ -547,7 +377,9 @@ class PrerequisiteChecker:
                 self.print_error(f"{name}: Check failed - {e}")
                 all_passed = False
 
-
+        # Optional tools check
+        if all_passed:
+            self.check_optional_tools()
 
         # System information
         if self.verbose:
@@ -555,11 +387,6 @@ class PrerequisiteChecker:
             system_info = self.get_system_info()
             for key, value in system_info.items():
                 self.print_info(f"{key.replace('_', ' ').title()}: {value}")
-
-        # Run automatic setup if basic requirements are met
-        if all_passed and not self.check_only:
-            setup_success = self.auto_setup()
-            all_passed = all_passed and setup_success
 
         return all_passed
 
@@ -579,11 +406,22 @@ class PrerequisiteChecker:
         self.print_header("📊 Summary")
 
         if all_passed:
-            self.print_success("All required prerequisites are installed! 🎉")
+            self.print_success("UV Package Manager available")
+            self.print_success("Git version control available")
+            self.print_success("System ready for setup")
             print()
-            print(f"{Colors.GREEN}{self._get_emoji('rocket')} Environment is ready!{Colors.RESET}")
+            self.print_header("🚀 Ready to Start")
+            print("1. Activate the virtual environment:")
+            if platform.system() == 'Windows':
+                print("   .venv\\Scripts\\activate")
+            else:
+                print("   source .venv/bin/activate")
+            print("2. Start AI Sidekick: uv run ai-sidekick --start")
+            print("3. Access web interface: http://localhost:8087")
+            print()
+            self.print_info("Virtual environment and dependencies are ready!")
         else:
-            self.print_error(f"Missing required prerequisites: {', '.join(self.missing_requirements)}")
+            self.print_error(f"Missing required tools: {', '.join(self.missing_requirements)}")
             print()
             self.print_header("📋 Installation Commands")
 
@@ -608,14 +446,18 @@ class PrerequisiteChecker:
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Check prerequisites for AI Sidekick for Splunk",
+        description="AI Sidekick for Splunk Lab - Prerequisites Checker",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python scripts/check-prerequisites.py            # Check and auto-setup
-    python scripts/check-prerequisites.py --verbose  # Verbose output with paths
+    python scripts/check-prerequisites.py            # Check and setup environment
+    python scripts/check-prerequisites.py --verbose  # Show detailed information
     python scripts/check-prerequisites.py --check-only # Only check, don't install
     python scripts/check-prerequisites.py --json     # JSON output for automation
+
+Requirements:
+    - UV package manager (handles Python and dependencies automatically)
+    - Git (for repository operations)
         """
     )
 

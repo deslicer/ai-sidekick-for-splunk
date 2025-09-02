@@ -72,11 +72,6 @@ cd ai-sidekick-for-splunk
 
 ### **2. Install Prerequisites**
 
-**Cross-Platform (Python):**
-```bash
-python scripts/check-prerequisites.py
-```
-
 **macOS/Linux:**
 ```bash
 ./scripts/lab/check-prerequisites.sh
@@ -87,29 +82,31 @@ python scripts/check-prerequisites.py
 .\scripts\lab\check-prerequisites.ps1
 ```
 
-This will:
-- ✅ Install Python 3.11+ and uv if needed
-- ✅ Create virtual environment using uv
-- ✅ Install all dependencies
-- ✅ Verify Git installation
+**Cross-Platform (Python):**
+```bash
+python scripts/check-prerequisites.py
+```
 
-### **3. Activate Environment & Setup**
+This will:
+- ✅ Install `uv` (fast Python package manager) - handles Python automatically
+- ✅ Create virtual environment and install dependencies using `uv sync`
+- ✅ Verify Git installation and install if needed
+- ✅ Complete environment setup in one step
+
+### **3. Start AI Sidekick**
+
+> **💡 Great news!** The prerequisite scripts have already created your virtual environment and installed all dependencies. You can start immediately!
 
 ```bash
-# Activate virtual environment
+# Activate virtual environment (if not already active)
 source .venv/bin/activate  # macOS/Linux
 # or
 .venv\Scripts\activate     # Windows
-
-# Sync dependencies
-uv sync
 
 # Configure environment (copy and edit .env.example)
 cp .env.example .env
 # Edit .env with your Google API key and Splunk settings
 ```
-
-### **4. Start AI Sidekick**
 
 ```bash
 # Start the system

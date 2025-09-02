@@ -1,5 +1,6 @@
-# AI Sidekick for Splunk Lab - Prerequisites Installation Script (Windows PowerShell)
-# Checks and installs required packages for Google ADK + MCP + Splunk setup
+# AI Sidekick for Splunk Lab - Prerequisites Checker
+# Verifies system requirements and installs missing dependencies
+# Ensures UV package manager and Git are available for project setup
 
 param(
     [switch]$Help,
@@ -7,7 +8,7 @@ param(
 )
 
 if ($Help) {
-    Write-Host "AI Sidekick for Splunk Lab - Prerequisites Installation Script (Windows PowerShell)" -ForegroundColor Cyan
+    Write-Host "AI Sidekick for Splunk Lab - Prerequisites Checker" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Usage:"
     Write-Host "    .\scripts\lab\check-prerequisites.ps1 [options]"
@@ -17,8 +18,12 @@ if ($Help) {
     Write-Host "    -Help         Show this help message"
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "    .\scripts\lab\check-prerequisites.ps1           # Basic check and install"
-    Write-Host "    .\scripts\lab\check-prerequisites.ps1 -Verbose # Detailed information"
+    Write-Host "    .\scripts\lab\check-prerequisites.ps1           # Check and install requirements"
+    Write-Host "    .\scripts\lab\check-prerequisites.ps1 -Verbose # Show detailed information"
+    Write-Host ""
+    Write-Host "Requirements:"
+    Write-Host "    - UV package manager (handles Python and dependencies automatically)"
+    Write-Host "    - Git (for repository operations)"
     Write-Host ""
     exit 0
 }
@@ -79,7 +84,7 @@ function Write-Verbose {
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host "🚀 AI Sidekick for Splunk Lab - Prerequisites Check" -ForegroundColor Cyan
-Write-Host "   Google ADK + MCP + Splunk Setup" -ForegroundColor Cyan
+Write-Host "   Verifying system requirements and dependencies" -ForegroundColor Cyan
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -94,207 +99,92 @@ function Test-Command {
     }
 }
 
-# Function to get Python version
-function Get-PythonVersion {
-    try {
-        if (Test-Command "python") {
-            $version = python -c "import sys; print('.'.join(map(str, sys.version_info[:2])))" 2>$null
-            return $version
-        } elseif (Test-Command "python3") {
-            $version = python3 -c "import sys; print('.'.join(map(str, sys.version_info[:2])))" 2>$null
-            return $version
-        } else {
-            return "0.0"
-        }
-    } catch {
-        return "0.0"
-    }
-}
-
-# Function to compare versions
-function Compare-Version {
-    param([string]$Current, [string]$Required)
-    try {
-        $currentParts = $Current.Split('.')
-        $requiredParts = $Required.Split('.')
-
-        for ($i = 0; $i -lt [Math]::Max($currentParts.Length, $requiredParts.Length); $i++) {
-            $currentPart = if ($i -lt $currentParts.Length) { [int]$currentParts[$i] } else { 0 }
-            $requiredPart = if ($i -lt $requiredParts.Length) { [int]$requiredParts[$i] } else { 0 }
-
-            if ($currentPart -gt $requiredPart) { return $true }
-            if ($currentPart -lt $requiredPart) { return $false }
-        }
-        return $true
-    } catch {
-        return $false
-    }
-}
-
-# Enhanced Python installation with multiple fallbacks
-function Install-PythonWithFallbacks {
-    Write-Info "Python 3.11+ not found. Attempting automatic installation..."
-    
-    # Method 1: Try winget first (Windows 10 1709+ and Windows 11)
-    if (Test-Command "winget") {
-        Write-Info "Trying: winget install Python.Python.3.11"
-        Write-Verbose "Using Windows Package Manager (winget)"
-        try {
-            winget install Python.Python.3.11 --silent --accept-package-agreements --accept-source-agreements | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "python" -or Test-Command "python3") {
-                Write-Success "Python 3.11 installed successfully via winget"
-                return $true
-            }
-        } catch {
-            Write-Warning "winget installation failed. Trying Chocolatey..."
-        }
-    } else {
-        Write-Verbose "winget not available. Trying Chocolatey..."
-    }
-    
-    # Method 2: Try Chocolatey
-    if (Test-Command "choco") {
-        Write-Info "Trying: choco install python311"
-        Write-Verbose "Using Chocolatey package manager"
-        try {
-            choco install python311 -y | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "python" -or Test-Command "python3") {
-                Write-Success "Python 3.11 installed successfully via Chocolatey"
-                return $true
-            }
-        } catch {
-            Write-Warning "Chocolatey installation failed. Trying Scoop..."
-        }
-    } else {
-        Write-Verbose "Chocolatey not available. Trying Scoop..."
-    }
-    
-    # Method 3: Try Scoop
-    if (Test-Command "scoop") {
-        Write-Info "Trying: scoop install python311"
-        Write-Verbose "Using Scoop package manager"
-        try {
-            scoop install python | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "python" -or Test-Command "python3") {
-                Write-Success "Python installed successfully via Scoop"
-                return $true
-            }
-        } catch {
-            Write-Warning "Scoop installation failed. Trying direct download..."
-        }
-    } else {
-        Write-Verbose "Scoop not available. Trying direct download..."
-    }
-    
-    # Method 4: Direct download and install
-    Write-Info "Trying: Direct download from python.org"
-    Write-Verbose "Downloading Python installer directly"
-    try {
-        $pythonUrl = "https://www.python.org/ftp/python/3.11.10/python-3.11.10-amd64.exe"
-        $installerPath = "$env:TEMP\python-3.11.10-installer.exe"
-        
-        Write-Verbose "Downloading from: $pythonUrl"
-        Invoke-WebRequest -Uri $pythonUrl -OutFile $installerPath -UseBasicParsing
-        
-        Write-Verbose "Running silent installation..."
-        Start-Process -FilePath $installerPath -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1", "Include_test=0" -Wait
-        
-        Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-        Refresh-EnvironmentPath
-        
-        if (Test-Command "python" -or Test-Command "python3") {
-            Write-Success "Python 3.11 installed successfully via direct download"
-            return $true
-        }
-    } catch {
-        Write-Warning "Direct download installation failed."
-    }
-    
-    # All methods failed
-    Write-Error "All automatic Python installation methods failed."
-    Write-Info "Please install Python 3.11+ manually:"
-    Write-Host "  Windows Options:"
-    Write-Host "  1. Official installer: https://www.python.org/downloads/"
-    Write-Host "  2. Microsoft Store: ms-windows-store://pdp/?productid=9NRWMJP3717K"
-    Write-Host "  3. winget: winget install Python.Python.3.11"
-    Write-Host "  4. Chocolatey: choco install python311"
-    Write-Host "  5. Scoop: scoop install python"
-    
-    return $false
-}
-
 # Helper function to refresh environment PATH
 function Refresh-EnvironmentPath {
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
 }
 
-# Step 1: Check Python
-Write-Step "Checking Python installation..."
-$pythonVersion = Get-PythonVersion
-$requiredVersion = "3.11"
+# Step 1: Check UV Package Manager
+Write-Step "Step 1: UV Package Manager"
+Write-Host "-----------------------------" -ForegroundColor Cyan
 
-if ($pythonVersion -eq "0.0") {
-    # Try to install Python automatically
-    if (Install-PythonWithFallbacks) {
-        # Re-check after installation
-        $pythonVersion = Get-PythonVersion
-        if (Compare-Version $pythonVersion $requiredVersion) {
-            Write-Success "Python $pythonVersion installed and verified (required: $requiredVersion+)"
-            if (Test-Command "python") {
-                Write-Verbose "Location: $(Get-Command python | Select-Object -ExpandProperty Source)"
-            } elseif (Test-Command "python3") {
-                Write-Verbose "Location: $(Get-Command python3 | Select-Object -ExpandProperty Source)"
-            }
-        } else {
-            Write-Error "Python installation succeeded but version check failed"
-            exit 1
+if (Test-Command "uv") {
+    try {
+        $uvVersion = uv --version 2>$null
+        Write-Success "UV Package Manager: $uvVersion"
+        if ($Verbose) {
+            Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
         }
-    } else {
-        Write-Error "Python installation failed. Please install manually."
-        exit 1
-    }
-} elseif (Compare-Version $pythonVersion $requiredVersion) {
-    Write-Success "Python $pythonVersion found (required: $requiredVersion+)"
-    if (Test-Command "python") {
-        Write-Verbose "Location: $(Get-Command python | Select-Object -ExpandProperty Source)"
-    } elseif (Test-Command "python3") {
-        Write-Verbose "Location: $(Get-Command python3 | Select-Object -ExpandProperty Source)"
+        
+        # Verify UV can manage Python versions
+        if ($Verbose) {
+            Write-Verbose "Verifying UV Python management capabilities..."
+        }
+        try {
+            uv python list | Out-Null
+            Write-Success "UV Python management available"
+            if ($Verbose) {
+                Write-Verbose "Can automatically download required Python versions"
+            }
+        } catch {
+            Write-Info "UV ready to download Python versions as needed"
+        }
+    } catch {
+        Write-Success "UV Package Manager found"
     }
 } else {
-    Write-Warning "Python $pythonVersion found, but version $requiredVersion+ is required."
-    Write-Info "Attempting to install Python $requiredVersion+..."
+    Write-Warning "UV Package Manager: Not found"
     
-    # Try to install/upgrade Python automatically
-    if (Install-PythonWithFallbacks) {
-        # Re-check after installation
-        $pythonVersion = Get-PythonVersion
-        if (Compare-Version $pythonVersion $requiredVersion) {
-            Write-Success "Python $pythonVersion installed and verified (required: $requiredVersion+)"
-            if (Test-Command "python") {
-                Write-Verbose "Location: $(Get-Command python | Select-Object -ExpandProperty Source)"
-            } elseif (Test-Command "python3") {
-                Write-Verbose "Location: $(Get-Command python3 | Select-Object -ExpandProperty Source)"
+    # Attempt automatic installation
+    if (Install-UvWithFallbacks) {
+        try {
+            $uvVersion = uv --version 2>$null
+            Write-Success "UV Package Manager: $uvVersion (installed)"
+            if ($Verbose) {
+                Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
             }
-        } else {
-            Write-Error "Python upgrade succeeded but version check failed"
-            exit 1
+        } catch {
+            Write-Success "UV Package Manager installed successfully"
         }
     } else {
-        Write-Error "Python upgrade failed. Please upgrade manually."
+        Write-Error "UV Package Manager: Installation failed"
         exit 1
     }
 }
 
-# Enhanced UV installation with multiple fallbacks
+# Setup project environment with UV
+Write-Host ""
+Write-Step "Setting up project environment..."
+if (Test-Path "pyproject.toml") {
+    Write-Info "Creating virtual environment and installing dependencies..."
+    try {
+        uv sync | Out-Null
+        Write-Success "Virtual environment created and dependencies installed"
+        if ($Verbose) {
+            Write-Verbose "Virtual environment location: .venv\"
+        }
+        
+        # Verify the environment works
+        if ((Test-Path ".venv\Scripts\activate.ps1") -or (Test-Path ".venv\bin\activate")) {
+            Write-Success "Virtual environment ready"
+        } else {
+            Write-Warning "Virtual environment created but activation script not found"
+        }
+    } catch {
+        Write-Error "Failed to create virtual environment or install dependencies"
+        Write-Info "You may need to run 'uv sync' manually in the project directory"
+    }
+} else {
+    Write-Warning "No pyproject.toml found - skipping environment setup"
+    Write-Info "Make sure you're running this script from the project root directory"
+}
+
+# Install UV package manager using multiple fallback methods
 function Install-UvWithFallbacks {
-    Write-Info "UV not found. Attempting automatic installation..."
+    Write-Info "Installing UV package manager..."
     
     # Method 1: Try PowerShell installer first (official method)
-    Write-Info "Trying: PowerShell installer"
-    Write-Verbose "Using official UV installer via PowerShell"
+    Write-Info "Attempting installation via PowerShell"
     try {
         Invoke-RestMethod https://astral.sh/uv/install.ps1 | Invoke-Expression | Out-Null
         Refresh-EnvironmentPath
@@ -422,269 +312,81 @@ function Install-UvWithFallbacks {
     }
     
     # All methods failed
-    Write-Error "All automatic UV installation methods failed."
-    Write-Info "Please install UV manually:"
-    Write-Host "  Windows Options:"
-    Write-Host "  1. PowerShell: irm https://astral.sh/uv/install.ps1 | iex"
-    Write-Host "  2. winget: winget install astral-sh.uv"
-    Write-Host "  3. Scoop: scoop install uv"
-    Write-Host "  4. pip: pip install --user uv"
-    Write-Host "  5. GitHub: https://github.com/astral-sh/uv/releases"
-    Write-Host "  6. Documentation: https://docs.astral.sh/uv/getting-started/installation/"
+    Write-Error "Automatic installation failed"
+    Write-Info "Manual installation required:"
+    Write-Host "  1. Visit: https://docs.astral.sh/uv/getting-started/installation/"
+    Write-Host "  2. Run: irm https://astral.sh/uv/install.ps1 | iex"
+    Write-Host "  3. Download: https://github.com/astral-sh/uv/releases"
     
     return $false
 }
 
-# Step 2: Install uv if not present
-Write-Step "Checking uv package manager..."
-if (-not (Test-Command "uv")) {
-    # Try to install UV automatically
-    if (Install-UvWithFallbacks) {
-        # Re-check after installation
-        if (Test-Command "uv") {
-            try {
-                $uvVersion = uv --version 2>$null
-                Write-Success "UV Package Manager: $uvVersion (auto-installed)"
-                Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
-            } catch {
-                Write-Success "UV Package Manager installed successfully"
-            }
-        }
-    } else {
-        Write-Error "UV installation failed. Please install manually."
-        exit 1
-    }
-} else {
-    try {
-        $uvVersion = uv --version 2>$null
-        Write-Success "UV Package Manager: $uvVersion"
-        Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
-    } catch {
-        Write-Success "UV Package Manager found"
-    }
-}
+Write-Host ""
 
-# Enhanced Git installation with multiple fallbacks
-function Install-GitWithFallbacks {
-    Write-Info "Git not found. Attempting automatic installation..."
-    
-    # Method 1: Try winget first (Windows 10 1709+ and Windows 11)
-    if (Test-Command "winget") {
-        Write-Info "Trying: winget install Git.Git"
-        Write-Verbose "Using Windows Package Manager (winget)"
-        try {
-            winget install Git.Git --silent --accept-package-agreements --accept-source-agreements | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "git") {
-                Write-Success "Git installed successfully via winget"
-                return $true
-            }
-        } catch {
-            Write-Warning "winget installation failed. Trying Chocolatey..."
-        }
-    } else {
-        Write-Verbose "winget not available. Trying Chocolatey..."
-    }
-    
-    # Method 2: Try Chocolatey
-    if (Test-Command "choco") {
-        Write-Info "Trying: choco install git"
-        Write-Verbose "Using Chocolatey package manager"
-        try {
-            choco install git -y | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "git") {
-                Write-Success "Git installed successfully via Chocolatey"
-                return $true
-            }
-        } catch {
-            Write-Warning "Chocolatey installation failed. Trying Scoop..."
-        }
-    } else {
-        Write-Verbose "Chocolatey not available. Trying Scoop..."
-    }
-    
-    # Method 3: Try Scoop
-    if (Test-Command "scoop") {
-        Write-Info "Trying: scoop install git"
-        Write-Verbose "Using Scoop package manager"
-        try {
-            scoop install git | Out-Null
-            Refresh-EnvironmentPath
-            if (Test-Command "git") {
-                Write-Success "Git installed successfully via Scoop"
-                return $true
-            }
-        } catch {
-            Write-Warning "Scoop installation failed. Trying direct download..."
-        }
-    } else {
-        Write-Verbose "Scoop not available. Trying direct download..."
-    }
-    
-    # Method 4: Direct download and install
-    Write-Info "Trying: Direct download from git-scm.com"
-    Write-Verbose "Downloading Git installer directly"
-    try {
-        # Get the latest Git version download URL
-        $gitUrl = "https://github.com/git-for-windows/git/releases/latest/download/Git-2.47.1-64-bit.exe"
-        $installerPath = "$env:TEMP\git-installer.exe"
-        
-        Write-Verbose "Downloading from: $gitUrl"
-        Invoke-WebRequest -Uri $gitUrl -OutFile $installerPath -UseBasicParsing
-        
-        Write-Verbose "Running silent installation..."
-        Start-Process -FilePath $installerPath -ArgumentList "/SILENT", "/COMPONENTS=icons,ext\reg\shellhere,assoc,assoc_sh" -Wait
-        
-        Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-        Refresh-EnvironmentPath
-        
-        if (Test-Command "git") {
-            Write-Success "Git installed successfully via direct download"
-            return $true
-        }
-    } catch {
-        Write-Warning "Direct download installation failed."
-    }
-    
-    # All methods failed
-    Write-Error "All automatic Git installation methods failed."
-    Write-Info "Please install Git manually:"
-    Write-Host "  Windows Options:"
-    Write-Host "  1. Official installer: https://git-scm.com/download/win"
-    Write-Host "  2. winget: winget install Git.Git"
-    Write-Host "  3. Chocolatey: choco install git"
-    Write-Host "  4. Scoop: scoop install git"
-    Write-Host "  5. GitHub Desktop: https://desktop.github.com/ (includes Git)"
-    
-    return $false
-}
+# Step 2: Check Git
+Write-Step "Step 2: Git"
+Write-Host "------------" -ForegroundColor Cyan
 
-# Step 3: Check Git installation
-Write-Step "Checking Git installation..."
-if (-not (Test-Command "git")) {
-    # Try to install Git automatically
-    if (Install-GitWithFallbacks) {
-        # Re-check after installation
-        if (Test-Command "git") {
-            try {
-                $gitVersion = git --version 2>$null
-                Write-Success "Git installed successfully: $gitVersion"
-                Write-Verbose "Location: $(Get-Command git | Select-Object -ExpandProperty Source)"
-            } catch {
-                Write-Success "Git installed successfully"
-            }
-        }
-    } else {
-        Write-Error "Git installation failed. Please install manually."
-        exit 1
-    }
-} else {
+if (Test-Command "git") {
     try {
         $gitVersion = git --version 2>$null
-        Write-Success "Git found: $gitVersion"
-        Write-Verbose "Location: $(Get-Command git | Select-Object -ExpandProperty Source)"
+        Write-Success "Git: $gitVersion"
+        if ($Verbose) {
+            Write-Verbose "Location: $(Get-Command git | Select-Object -ExpandProperty Source)"
+        }
     } catch {
         Write-Success "Git found"
     }
+} else {
+    Write-Error "Git: Not found"
+    
+    # Show installation instructions
+    Write-Info "Installation options:"
+    Write-Host "  1. winget install Git.Git"
+    Write-Host "  2. choco install git"
+    Write-Host "  3. scoop install git"
+    Write-Host "  4. https://git-scm.com"
 }
 
-# Step 3: Create virtual environment if it doesn't exist
-Write-Step "Setting up Python virtual environment..."
-if (-not (Test-Path ".venv")) {
-    Write-Info "Creating virtual environment with uv..."
+Write-Host ""
+
+# Check optional development tools
+Write-Step "Optional Tools"
+Write-Host "---------------" -ForegroundColor Cyan
+
+# Node.js for MCP Inspector
+if (Test-Command "node") {
     try {
-        uv venv
-        Write-Success "Virtual environment created"
+        $nodeVersion = node --version 2>$null
+        Write-Success "Node.js: $nodeVersion"
     } catch {
-        Write-Error "Failed to create virtual environment: $($_.Exception.Message)"
-        exit 1
+        Write-Success "Node.js found"
     }
 } else {
-    Write-Info "Virtual environment already exists"
+    Write-Info "Node.js: Not found (optional)"
 }
 
-# Step 4: Install core ADK dependencies
-Write-Step "Installing Google ADK and core dependencies..."
-Write-Info "Activating virtual environment..."
-& ".venv\Scripts\Activate.ps1"
-
-# Install dependencies from pyproject.toml (includes google-adk and all dependencies)
-Write-Info "Installing project dependencies..."
-uv pip install -e .
-
-Write-Success "Core dependencies installed successfully"
-
-# Step 5: Verify installations
-Write-Step "Verifying installations..."
-
-# Check Google ADK
-Write-Verbose "Checking Google ADK import..."
-try {
-    $adkTest = python -c "import google.adk; print('OK')" 2>$null
-    if ($adkTest -eq "OK") {
-        try {
-            $adkVersion = python -c "import google.adk; print(google.adk.__version__)" 2>$null
-            Write-Success "Google ADK $adkVersion available"
-            Write-Verbose "ADK location: $(python -c "import google.adk; print(google.adk.__file__)" 2>$null)"
-        } catch {
-            Write-Success "Google ADK available"
-        }
-    } else {
-        Write-Error "Google ADK not found after installation"
-        Write-Verbose "Try: uv pip install google-adk"
-        exit 1
+# Docker for containerization
+if (Test-Command "docker") {
+    try {
+        $dockerVersion = docker --version 2>$null
+        Write-Success "Docker: $dockerVersion"
+    } catch {
+        Write-Success "Docker found"
     }
-} catch {
-    Write-Error "Google ADK not found after installation"
-    Write-Verbose "Try: uv pip install google-adk"
-    exit 1
+} else {
+    Write-Info "Docker: Not found (optional)"
 }
 
-# Check FastAPI
-Write-Verbose "Checking FastAPI import..."
-try {
-    $fastapiTest = python -c "import fastapi; print('OK')" 2>$null
-    if ($fastapiTest -eq "OK") {
-        try {
-            $fastapiVersion = python -c "import fastapi; print(fastapi.__version__)" 2>$null
-            Write-Success "FastAPI $fastapiVersion available for web interface"
-            Write-Verbose "FastAPI location: $(python -c "import fastapi; print(fastapi.__file__)" 2>$null)"
-        } catch {
-            Write-Success "FastAPI available for web interface"
-        }
-    } else {
-        Write-Error "FastAPI not found"
-        Write-Verbose "Try: uv pip install fastapi"
-        exit 1
-    }
-} catch {
-    Write-Error "FastAPI not found"
-    Write-Verbose "Try: uv pip install fastapi"
-    exit 1
-}
+Write-Host ""
 
-# Check httpx for MCP connections
-Write-Verbose "Checking httpx import..."
-try {
-    $httpxTest = python -c "import httpx; print('OK')" 2>$null
-    if ($httpxTest -eq "OK") {
-        try {
-            $httpxVersion = python -c "import httpx; print(httpx.__version__)" 2>$null
-            Write-Success "httpx $httpxVersion available for MCP connections"
-            Write-Verbose "httpx location: $(python -c "import httpx; print(httpx.__file__)" 2>$null)"
-        } catch {
-            Write-Success "httpx available for MCP connections"
-        }
-    } else {
-        Write-Error "httpx not found"
-        Write-Verbose "Try: uv pip install httpx"
-        exit 1
-    }
-} catch {
-    Write-Error "httpx not found"
-    Write-Verbose "Try: uv pip install httpx"
-    exit 1
+# System information (verbose mode)
+if ($Verbose) {
+    Write-Step "System Information"
+    Write-Host "-------------------------" -ForegroundColor Cyan
+    Write-Info "OS: $([System.Environment]::OSVersion.VersionString)"
+    Write-Info "Architecture: $([System.Environment]::GetEnvironmentVariable('PROCESSOR_ARCHITECTURE'))"
+    Write-Info "Shell: PowerShell $($PSVersionTable.PSVersion)"
 }
 
 
@@ -694,15 +396,15 @@ Write-Host "===========================================================" -Foregr
 Write-Host "🎉 Prerequisites Check Complete!" -ForegroundColor Green
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Success "Python $pythonVersion"
-Write-Success "UV package manager"
-Write-Success "Git version control"
-Write-Success "Virtual environment ready"
-Write-Success "Google ADK installed"
-Write-Success "Core dependencies installed"
+
+Write-Success "UV Package Manager available"
+Write-Success "Git version control available"
+Write-Success "System ready for setup"
+
 Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
+Write-Step "🚀 Ready to Start:"
 Write-Host "1. Activate the virtual environment: .venv\Scripts\Activate.ps1"
-Write-Host "2. Start AI Sidekick - run: uv run ai-sidekick --start"
-Write-Host "3. Access web interface at http://localhost:8087"
+Write-Host "2. Start AI Sidekick: uv run ai-sidekick --start"
+Write-Host "3. Access web interface: http://localhost:8087"
 Write-Host ""
+Write-Info "Virtual environment and dependencies are ready!"

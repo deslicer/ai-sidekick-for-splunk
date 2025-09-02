@@ -4,8 +4,8 @@ This guide will help you set up AI Sidekick for Splunk for development or contri
 
 ## Prerequisites
 
-- Python 3.11 or higher
-- Git
+- Git (will be checked and installed if needed)
+- Internet connection for downloading dependencies
 - Google API key (Gemini) or OpenAI API key
 
 ## Quick Setup
@@ -19,14 +19,8 @@ cd ai-sidekick-for-splunk
 
 ### 2. Run Prerequisites Check
 
-**Cross-Platform (Python):**
-```bash
-python scripts/check-prerequisites.py
-```
-
 **macOS/Linux:**
 ```bash
-chmod +x scripts/lab/check-prerequisites.sh
 ./scripts/lab/check-prerequisites.sh
 ```
 
@@ -35,17 +29,23 @@ chmod +x scripts/lab/check-prerequisites.sh
 .\scripts\lab\check-prerequisites.ps1
 ```
 
+**Cross-Platform (Python):**
+```bash
+python scripts/check-prerequisites.py
+```
+
 This will automatically:
-- ✅ Check for Python 3.11+ and install if needed
-- ✅ Install `uv` (fast Python package manager)
-- ✅ Create virtual environment using uv
-- ✅ Install all dependencies including development tools
-- ✅ Verify Git installation
+- ✅ Install `uv` (fast Python package manager) - handles Python automatically
+- ✅ Create virtual environment and install dependencies using `uv sync`
+- ✅ Verify Git installation and install if needed
+- ✅ Complete environment setup in one step
 
 ### 3. Activate Environment
 
+> **💡 Great news!** The prerequisite scripts have already created your virtual environment and installed all dependencies. You can start immediately!
+
 ```bash
-# Activate virtual environment
+# Activate virtual environment (if not already active)
 # On macOS/Linux:
 source .venv/bin/activate
 
@@ -53,14 +53,7 @@ source .venv/bin/activate
 .venv\Scripts\activate
 ```
 
-### 4. Sync Dependencies
-
-```bash
-# Ensure all dependencies are up to date
-uv sync --dev
-```
-
-### 5. Set Up Environment Variables
+### 4. Set Up Environment Variables
 
 ```bash
 # Copy environment template
@@ -74,7 +67,7 @@ cp .env.example .env
 # SPLUNK_MCP_SERVER_URL=http://localhost:8003
 ```
 
-### 6. Verify Installation
+### 5. Verify Installation
 
 ```bash
 # Test CLI installation
@@ -84,7 +77,7 @@ uv run ai-sidekick --help
 uv run python -c "import ai_sidekick_for_splunk; print('✅ Package imported successfully')"
 ```
 
-### 7. Start AI Sidekick
+### 6. Start AI Sidekick
 
 ```bash
 # Start the AI Sidekick system
@@ -236,7 +229,9 @@ print([agent.name for agent in agents])
 ```bash
 # Delete and recreate virtual environment
 rm -rf .venv
-python scripts/check-prerequisites.py
+./scripts/lab/check-prerequisites.sh  # macOS/Linux
+# or
+.\scripts\lab\check-prerequisites.ps1  # Windows
 ```
 
 **Dependency Issues:**

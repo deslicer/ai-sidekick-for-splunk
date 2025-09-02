@@ -104,81 +104,6 @@ function Refresh-EnvironmentPath {
     $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
 }
 
-# Step 1: Check UV Package Manager
-Write-Step "Step 1: UV Package Manager"
-Write-Host "-----------------------------" -ForegroundColor Cyan
-
-if (Test-Command "uv") {
-    try {
-        $uvVersion = uv --version 2>$null
-        Write-Success "UV Package Manager: $uvVersion"
-        if ($Verbose) {
-            Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
-        }
-        
-        # Verify UV can manage Python versions
-        if ($Verbose) {
-            Write-Verbose "Verifying UV Python management capabilities..."
-        }
-        try {
-            uv python list | Out-Null
-            Write-Success "UV Python management available"
-            if ($Verbose) {
-                Write-Verbose "Can automatically download required Python versions"
-            }
-        } catch {
-            Write-Info "UV ready to download Python versions as needed"
-        }
-    } catch {
-        Write-Success "UV Package Manager found"
-    }
-} else {
-    Write-Warning "UV Package Manager: Not found"
-    
-    # Attempt automatic installation
-    if (Install-UvWithFallbacks) {
-        try {
-            $uvVersion = uv --version 2>$null
-            Write-Success "UV Package Manager: $uvVersion (installed)"
-            if ($Verbose) {
-                Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
-            }
-        } catch {
-            Write-Success "UV Package Manager installed successfully"
-        }
-    } else {
-        Write-Error "UV Package Manager: Installation failed"
-        exit 1
-    }
-}
-
-# Setup project environment with UV
-Write-Host ""
-Write-Step "Setting up project environment..."
-if (Test-Path "pyproject.toml") {
-    Write-Info "Creating virtual environment and installing dependencies..."
-    try {
-        uv sync | Out-Null
-        Write-Success "Virtual environment created and dependencies installed"
-        if ($Verbose) {
-            Write-Verbose "Virtual environment location: .venv\"
-        }
-        
-        # Verify the environment works
-        if ((Test-Path ".venv\Scripts\activate.ps1") -or (Test-Path ".venv\bin\activate")) {
-            Write-Success "Virtual environment ready"
-        } else {
-            Write-Warning "Virtual environment created but activation script not found"
-        }
-    } catch {
-        Write-Error "Failed to create virtual environment or install dependencies"
-        Write-Info "You may need to run 'uv sync' manually in the project directory"
-    }
-} else {
-    Write-Warning "No pyproject.toml found - skipping environment setup"
-    Write-Info "Make sure you're running this script from the project root directory"
-}
-
 # Install UV package manager using multiple fallback methods
 function Install-UvWithFallbacks {
     Write-Info "Installing UV package manager..."
@@ -319,6 +244,81 @@ function Install-UvWithFallbacks {
     Write-Host "  3. Download: https://github.com/astral-sh/uv/releases"
     
     return $false
+}
+
+# Step 1: Check UV Package Manager
+Write-Step "Step 1: UV Package Manager"
+Write-Host "-----------------------------" -ForegroundColor Cyan
+
+if (Test-Command "uv") {
+    try {
+        $uvVersion = uv --version 2>$null
+        Write-Success "UV Package Manager: $uvVersion"
+        if ($Verbose) {
+            Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
+        }
+        
+        # Verify UV can manage Python versions
+        if ($Verbose) {
+            Write-Verbose "Verifying UV Python management capabilities..."
+        }
+        try {
+            uv python list | Out-Null
+            Write-Success "UV Python management available"
+            if ($Verbose) {
+                Write-Verbose "Can automatically download required Python versions"
+            }
+        } catch {
+            Write-Info "UV ready to download Python versions as needed"
+        }
+    } catch {
+        Write-Success "UV Package Manager found"
+    }
+} else {
+    Write-Warning "UV Package Manager: Not found"
+    
+    # Attempt automatic installation
+    if (Install-UvWithFallbacks) {
+        try {
+            $uvVersion = uv --version 2>$null
+            Write-Success "UV Package Manager: $uvVersion (installed)"
+            if ($Verbose) {
+                Write-Verbose "Location: $(Get-Command uv | Select-Object -ExpandProperty Source)"
+            }
+        } catch {
+            Write-Success "UV Package Manager installed successfully"
+        }
+    } else {
+        Write-Error "UV Package Manager: Installation failed"
+        exit 1
+    }
+}
+
+# Setup project environment with UV
+Write-Host ""
+Write-Step "Setting up project environment..."
+if (Test-Path "pyproject.toml") {
+    Write-Info "Creating virtual environment and installing dependencies..."
+    try {
+        uv sync | Out-Null
+        Write-Success "Virtual environment created and dependencies installed"
+        if ($Verbose) {
+            Write-Verbose "Virtual environment location: .venv\"
+        }
+        
+        # Verify the environment works
+        if ((Test-Path ".venv\Scripts\activate.ps1") -or (Test-Path ".venv\bin\activate")) {
+            Write-Success "Virtual environment ready"
+        } else {
+            Write-Warning "Virtual environment created but activation script not found"
+        }
+    } catch {
+        Write-Error "Failed to create virtual environment or install dependencies"
+        Write-Info "You may need to run 'uv sync' manually in the project directory"
+    }
+} else {
+    Write-Warning "No pyproject.toml found - skipping environment setup"
+    Write-Info "Make sure you're running this script from the project root directory"
 }
 
 Write-Host ""

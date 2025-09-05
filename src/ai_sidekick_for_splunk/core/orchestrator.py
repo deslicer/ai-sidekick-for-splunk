@@ -309,9 +309,10 @@ class SplunkOrchestrator:
         Returns:
             Instructions string for the root agent
         """
-        from .orchestrator_prompt_lab import (
-            ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS,
+        from .orchestrator_prompt import (
+            ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS,
         )
+        
 
         return ORCHESTRATOR_INSTRUCTIONS
 
@@ -321,8 +322,8 @@ class SplunkOrchestrator:
         Returns:
             Instruction string for the main agent without tool references
         """
-        from .orchestrator_prompt_lab import (
-            ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS,
+        from .orchestrator_prompt import (
+            ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS,
         )
 
         return ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS

@@ -6,6 +6,7 @@ to provide real-time Splunk administration and search capabilities.
 """
 
 import logging
+import uuid
 from typing import Any
 
 from google.adk.agents import LlmAgent
@@ -97,16 +98,17 @@ class SplunkMCPAgent(BaseAgent):
         """
         try:
             # Session management headers
+            session_id = f"ai-sidekick-{uuid.uuid4()}"
             headers = {
                 "X-Splunk-Host": self.config.splunk.host,
                 "X-Splunk-Port": str(self.config.splunk.port),
                 "X-Splunk-Username": self.config.splunk.username,
                 "X-Splunk-Password": self.config.splunk.password,
                 "X-Splunk-Verify-SSL": str(self.config.splunk.verify_ssl).lower(),
-                "X-Session-ID": "ai-sidekick-session",
+                "X-Session-ID": session_id,
                 # Session management features
                 "X-Session-Persistent": "true",
-                "X-Session-Timeout": "3600",  # 1 hour
+                # "X-Session-Timeout": "3600",  # 1 hour
                 "X-Connection-Keep-Alive": "true",
                 "X-Auto-Reconnect": "true",
                 "X-Session-Validation": "enabled",
@@ -141,7 +143,7 @@ class SplunkMCPAgent(BaseAgent):
                 f"Enhanced MCP toolset created successfully for URL: {self.config.splunk.mcp_server_url}"
             )
             logger.debug(
-                "Session management features enabled: persistent sessions, auto-reconnect, validation"
+                f"Session management features enabled: persistent sessions, auto-reconnect, validation (session_id={session_id})"
             )
             return mcp_toolset
 

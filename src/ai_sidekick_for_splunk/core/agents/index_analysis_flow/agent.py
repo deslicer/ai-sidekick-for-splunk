@@ -50,7 +50,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: Optional[dict[str, Any]] = None,
+        session_state: dict[str, Any] | None = None,
         flow_definition_path: str | None = None,
         orchestrator=None
     ) -> None:
@@ -275,7 +275,7 @@ CRITICAL: When a user requests index analysis, you MUST:
 The execute_index_analysis_flow tool will:
 1. 📊 Execute a multi-phase analysis workflow
 2. ⚡ Stream progress updates as it works
-3. 🤝 Coordinate with specialist agents (search_guru_agent, splunk_mcp_agent, result_synthesizer_agent) using hybrid synthesis approach
+3. 🤝 Coordinate with specialist agents (search_guru_agent, SplunkShow, result_synthesizer_agent) using hybrid synthesis approach
 4. 📈 Provide real analysis results (not simulated data)
 5. 🎯 Automatically generate actionable JSON insights via result_synthesizer when meaningful data is found
 
@@ -309,7 +309,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             logger.error(f"Failed to create IndexAnalysisFlow ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute index analysis using the loaded agent flow.
 

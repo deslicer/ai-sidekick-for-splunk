@@ -36,6 +36,7 @@ class SplunkMCPAgent(BaseAgent):
         author="Core",
         tags=["splunk", "mcp", "administration", "search"],
         dependencies=[],
+        display_name="SplunkShow",  # User-friendly name for web interface
     )
 
     name = "splunk_mcp"
@@ -77,6 +78,7 @@ class SplunkMCPAgent(BaseAgent):
                 author="Core",
                 tags=["splunk", "mcp", "administration", "search"],
                 dependencies=[],
+                display_name="SplunkShow",  # User-friendly name for web interface
             )
 
         super().__init__(config, metadata, tools, session_state)
@@ -87,6 +89,38 @@ class SplunkMCPAgent(BaseAgent):
             logger.info("✅ MCP toolset created and stored for direct execution")
         else:
             logger.warning("⚠️ MCP toolset creation failed - direct execution not available")
+
+    def _initialize_llm_agent(self) -> None:
+        """Initialize the ADK LlmAgent instance with MCP toolset."""
+        try:
+            # Import at runtime to avoid import errors
+            from google.adk.agents import LlmAgent
+
+            # Create MCP toolset
+            mcp_toolset = self._create_mcp_toolset()
+            if not mcp_toolset:
+                logger.error("Cannot create ADK agent without MCP toolset")
+                raise RuntimeError("MCP toolset creation failed")
+
+            # Create agent with MCP toolset - wrap the toolset in a list
+            # ADK LlmAgent expects tools to be a list, so wrap the MCPToolset in a list
+            self._llm_agent = LlmAgent(
+                model=self.model_name,
+                name=self.display_name,  # Use display_name for user-facing name
+                description=self.metadata.description,
+                instruction=self.instructions,
+                tools=[mcp_toolset],  # Wrap MCPToolset in a list for ADK LlmAgent
+            )
+            self._is_initialized = True
+            logger.debug("Created Splunk MCP ADK agent with MCP toolset")
+        except ImportError as e:
+            logger.error(f"ADK LlmAgent not available for {self.metadata.name}: {e}")
+            raise RuntimeError(
+                f"ADK LlmAgent is required for agent {self.metadata.name} but not available"
+            ) from e
+        except Exception as e:
+            logger.error(f"Failed to initialize LlmAgent for {self.metadata.name}: {e}")
+            raise
 
     def _create_mcp_toolset(self) -> MCPToolset | None:
         """
@@ -168,13 +202,14 @@ class SplunkMCPAgent(BaseAgent):
                 logger.error("Cannot create ADK agent without MCP toolset")
                 return None
 
-            # Create agent with MCP toolset
+            # Create agent with MCP toolset - wrap the toolset in a list
+            # ADK LlmAgent expects tools to be a list, so wrap the MCPToolset in a list
             agent = LlmAgent(
                 model=self.config.model.primary_model,
                 name=self.name,
                 description=self.description,
                 instruction=SPLUNK_MCP_PROMPT,
-                tools=[mcp_toolset],
+                tools=[mcp_toolset],  # Wrap MCPToolset in a list for ADK LlmAgent
             )
 
             logger.debug("Created Splunk MCP ADK agent with MCP toolset")
@@ -187,7 +222,6 @@ class SplunkMCPAgent(BaseAgent):
     async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute a Splunk MCP task using the ADK LlmAgent with MCP toolset.
-        This method is called by micro agents created by the FlowEngine.
 
         Args:
             task: The task description (natural language or SPL query)
@@ -199,40 +233,30 @@ class SplunkMCPAgent(BaseAgent):
         try:
             logger.info(f"SplunkMCPAgent executing task: {task}")
 
+            # Add context parameters if provided
+            if context:
+                # Format context parameters for the request
+                context_params = []
+                for key, value in context.items():
+                    if key in ['earliest_time', 'latest_time'] and value:
+                        context_params.append(f"{key}={value}")
+                
+                if context_params:
+                    task = f"{task}\nParameters: {dict(context)}"
+
             # Use the ADK LlmAgent which automatically has access to all MCP tools
-            if hasattr(self, '_llm_agent') and self._llm_agent is not None:
-                logger.info("Using ADK LlmAgent with MCP toolset for execution")
-                result = await self.process_request(task, context)
-                return {
-                    "success": True,
-                    "task_type": "splunk_mcp",
-                    "response": result,
-                    "execution_method": "adk_agent_with_mcp_tools",
-                }
-            else:
-                # Create ADK agent on demand if not available
-                adk_agent = self.get_adk_agent()
-                if adk_agent:
-                    self._llm_agent = adk_agent
-                    logger.info("Created ADK LlmAgent on demand for MCP execution")
-                    result = await self.process_request(task, context)
-                    return {
-                        "success": True,
-                        "task_type": "splunk_mcp",
-                        "response": result,
-                        "execution_method": "adk_agent_with_mcp_tools",
-                    }
-                else:
-                    error_msg = "Failed to create ADK LlmAgent for SplunkMCP execution"
-                    logger.error(error_msg)
-                    return {
-                        "success": False,
-                        "error": error_msg,
-                        "message": "SplunkMCP agent requires ADK LlmAgent with MCP toolset integration",
-                    }
+            result = await self.process_request(task, context)
+            
+            logger.info("✅ SplunkMCP task executed successfully")
+            return {
+                "success": True,
+                "task_type": "splunk_mcp",
+                "response": result,
+                "execution_method": "adk_agent_with_mcp_tools",
+            }
 
         except Exception as e:
-            logger.error(f"SplunkMCPAgent execution failed: {e}")
+            logger.error(f"SplunkMCPAgent execution failed: {e}", exc_info=True)
             return {
                 "success": False,
                 "error": str(e),

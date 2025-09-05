@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-CLI command for creating FlowPilot workflow agents.
-This script creates workshop-ready workflow agents with proper directory structure.
-Uses Pydantic models for validation and automatic schema adaptation.
+CLI command for creating FlowPilot workflow agents using YAML templates.
+This script creates workflow agents with proper directory structure using the YAML template system.
 """
 
 import argparse
@@ -13,28 +12,18 @@ from pathlib import Path
 
 from ai_sidekick_for_splunk.core.utils.cross_platform import safe_print
 
-# Import Pydantic models for validation
+# Import template system for YAML template support
 try:
-    from ai_sidekick_for_splunk.core.flows_engine.workflow_models import (
-        AgentDependency,
-        ComplexityLevel,
-        DataRequirements,
-        WorkflowCategory,
-        WorkflowInstructions,
-        WorkflowPhase,
-        WorkflowSource,
-        WorkflowStability,
-        WorkflowTask,
-        WorkflowTemplate,
-        WorkflowType,
+    from ai_sidekick_for_splunk.cli.templates import (
+        load_template,
+        generate_workflow_from_template,
+        parse_template_string,
+        TemplateParseError,
     )
+    TEMPLATE_SYSTEM_AVAILABLE = True
 except ImportError as e:
-    safe_print(f"❌ Error importing Pydantic models: {e}", file=sys.stderr)
-    safe_print(
-        "Make sure you're running from the correct environment with all dependencies installed.",
-        file=sys.stderr,
-    )
-    sys.exit(1)
+    safe_print(f"⚠️  Template system not available: {e}", file=sys.stderr)
+    TEMPLATE_SYSTEM_AVAILABLE = False
 
 
 def get_base_path() -> Path:
@@ -52,233 +41,181 @@ def get_base_path() -> Path:
     return Path(__file__).parent.parent
 
 
-def create_workflow_template(name: str, output_dir: Path) -> WorkflowTemplate:
-    """Create a validated workflow template using Pydantic models."""
+def create_default_workflow(name: str, output_dir: Path) -> tuple[dict, str]:
+    """
+    Create a default workflow using a minimal YAML template.
+    
+    Args:
+        name: Name for the workflow agent
+        output_dir: Output directory for generated files
+        
+    Returns:
+        Tuple of (workflow_dict, readme_content)
+    """
+    if not TEMPLATE_SYSTEM_AVAILABLE:
+        raise RuntimeError("Template system not available")
+    
+    # Create a minimal default template
+    default_template_content = f"""# Default Workflow Template
+name: "{name}"
+title: "{name.replace('_', ' ').title()} Workflow"
+description: "A basic workflow template for {name}"
+category: "analysis"
+complexity: "beginner"
+version: "1.0.0"
+author: "community"
 
-    # Create tasks using Pydantic models
-    gather_version_task = WorkflowTask(
-        task_id="gather_splunk_version",
-        title="Gather Splunk Version",
-        description="Get Splunk version and basic system information",
-        tool="splunk_mcp",
-        goal="Get Splunk version and basic system information",
-        prompt="Please retrieve the Splunk version information and basic system details. This helps us understand what Splunk environment we're working with.",
-        expected_output="Splunk version, build information, and system configuration summary",
-    )
+# Business Context
+business_value: "Provides basic analysis capabilities"
+use_cases:
+  - "Basic data analysis"
+  - "System monitoring"
 
-    list_indexes_task = WorkflowTask(
-        task_id="list_available_indexes",
-        title="List Available Indexes",
-        description="List all available indexes to understand data landscape",
-        tool="splunk_mcp",
-        goal="List all available indexes to understand data landscape",
-        prompt="List all available Splunk indexes. This gives us an overview of what data sources are configured in this environment.",
-        expected_output="Complete list of indexes with basic metadata",
-    )
+# Simple workflow
+searches:
+  - name: "basic_check"
+    spl: 'search earliest=-24h | head 10 | table _time, index, sourcetype'
+    earliest: "-24h@h"
+    latest: "now"
+    description: "Basic data check"
+    expected_results: "Recent events sample"
 
-    check_data_task = WorkflowTask(
-        task_id="check_recent_data",
-        title="Check Recent Data",
-        description="Verify that recent data is being indexed",
-        tool="splunk_mcp",
-        goal="Verify that recent data is being indexed",
-        prompt="Search for events from the last 24 hours across all indexes to verify data is flowing. Use a simple search like: search earliest=-24h | head 10 | stats count. This confirms the system is actively receiving and indexing data.",
-        expected_output="Count of recent events and confirmation of data flow",
-    )
-
-    check_performance_task = WorkflowTask(
-        task_id="check_system_performance",
-        title="Check System Performance",
-        description="Basic performance indicators check",
-        tool="splunk_mcp",
-        goal="Basic performance indicators check",
-        prompt="Check basic system performance by running a simple search to measure response time. Search for: | rest /services/server/info | eval response_time=now() | table response_time. This gives us a baseline performance indicator.",
-        expected_output="Basic performance metrics and response time information",
-    )
-
-    generate_summary_task = WorkflowTask(
-        task_id="generate_health_summary",
-        title="Generate Health Summary",
-        description="Create a comprehensive but beginner-friendly health report",
-        tool="result_synthesizer",
-        goal="Create a comprehensive but beginner-friendly health report",
-        prompt="Based on the system information and health checks performed, create a clear and friendly summary report. Include: 1) System overview (version, indexes), 2) Health status (data flow, performance), 3) Any recommendations for workshop participants. Keep it educational and encouraging - this is for learning purposes!",
-        expected_output="Comprehensive health report with educational insights for workshop participants",
-    )
-
-    # Create phases using Pydantic models
-    system_info_phase = WorkflowPhase(
-        name="system_info",
-        description="Collect basic Splunk system information and configuration details",
-        mandatory=True,
-        tasks=[gather_version_task, list_indexes_task],
-    )
-
-    health_checks_phase = WorkflowPhase(
-        name="health_checks",
-        description="Perform fundamental health checks on the Splunk environment",
-        mandatory=True,
-        tasks=[check_data_task, check_performance_task],
-    )
-
-    summary_report_phase = WorkflowPhase(
-        name="summary_report",
-        description="Compile findings into a clear, actionable summary",
-        mandatory=True,
-        tasks=[generate_summary_task],
-    )
-
-    # Create agent dependencies using Pydantic models
-    splunk_mcp_dependency = AgentDependency(
-        agent_id="splunk_mcp",
-        required=True,
-        description="Splunk MCP server for executing searches and gathering system information",
-        capabilities=["search_execution", "index_listing", "system_info_retrieval"],
-    )
-
-    result_synthesizer_dependency = AgentDependency(
-        agent_id="result_synthesizer",
-        required=True,
-        description="Synthesizes results from multiple phases into comprehensive reports",
-        capabilities=["result_synthesis", "report_generation", "summary_creation"],
-    )
-
-    # Create workflow instructions using Pydantic models
-    workflow_instructions = WorkflowInstructions(
-        specialization="Workshop demonstration and educational health monitoring",
-        focus_areas=[
-            "System health assessment",
-            "Educational explanations",
-            "Workshop engagement",
-            "Basic troubleshooting",
-        ],
-        execution_style="step_by_step_with_explanations",
-        domain="splunk_system_health",
-    )
-
-    # Create data requirements using Pydantic models
-    data_requirements = DataRequirements(
-        minimum_data_volume="Any amount",
-        data_freshness="24 hours",
-        required_indexes=["Any available indexes"],
-        data_types=["System logs", "Application data"],
-    )
-
-    # Create the complete workflow template using Pydantic models
-    workflow_template = WorkflowTemplate(
-        workflow_id=f"contrib.{name}",
-        workflow_name=f"Dev{name.title()}_Workshop System Health Agent",
-        version="1.0.0",
-        description="A simple workshop demonstration agent that performs basic Splunk environment health checks and gathers system information. Perfect for learning the FlowPilot workflow system.",
-        workflow_type=WorkflowType.TROUBLESHOOTING,
-        workflow_category=WorkflowCategory.SYSTEM_HEALTH,
-        source=WorkflowSource.CONTRIB,
-        maintainer="community",
-        stability=WorkflowStability.EXPERIMENTAL,
-        complexity_level=ComplexityLevel.BEGINNER,
-        estimated_duration="2-3 minutes",
-        target_audience=["Workshop participants", "Splunk beginners", "FlowPilot learners"],
-        splunk_versions=["8.0+", "9.0+"],
-        last_updated=datetime.now().strftime("%Y-%m-%d"),
-        documentation_url="./README.md",
-        prerequisites=["Basic Splunk access", "MCP server running", "Workshop environment setup"],
-        required_permissions=["search", "rest_api_access"],
-        data_requirements=data_requirements,
-        business_value="Provides quick health assessment of Splunk environment for workshop participants to understand system status and learn workflow execution patterns.",
-        use_cases=[
-            "Workshop demonstrations",
-            "Learning FlowPilot system",
-            "Basic health monitoring",
-            "Educational purposes",
-        ],
-        success_metrics=[
-            "Successful system information retrieval",
-            "Health check completion",
-            "Educational value delivered",
-            "Workshop objectives met",
-        ],
-        workflow_instructions=workflow_instructions,
-        agent_dependencies={
-            "splunk_mcp": splunk_mcp_dependency,
-            "result_synthesizer": result_synthesizer_dependency,
-        },
-        core_phases={
-            "system_info": system_info_phase,
-            "health_checks": health_checks_phase,
-            "summary_report": summary_report_phase,
-        },
-    )
-
-    return workflow_template
-
-
-def create_readme(name: str, workflow_name: str) -> str:
-    """Create a README for the workflow."""
-    return f"""# {workflow_name}
-
-## Overview
-
-This is a workshop demonstration agent designed to help participants learn about the FlowPilot workflow system while performing basic Splunk environment health checks.
-
-## Purpose
-
-- **Educational**: Perfect for learning how FlowPilot workflows operate
-- **Interactive**: Demonstrates multi-phase workflow execution
-- **Practical**: Performs real health checks on Splunk environment
-
-## What It Does
-
-### Phase 1: System Information Gathering
-- Retrieves Splunk version and build information
-- Lists all available indexes in the environment
-- Provides overview of the data landscape
-
-### Phase 2: Basic Health Assessment  
-- Checks for recent data flow (last 24 hours)
-- Measures basic system performance indicators
-- Verifies system is actively indexing data
-
-### Phase 3: Health Summary Report
-- Compiles findings into a comprehensive report
-- Provides educational insights for workshop participants
-- Offers recommendations and next steps
-
-## Usage
-
-1. **Start AI Sidekick**: Ensure the AI Sidekick is running
-2. **Find the Agent**: Look for '{workflow_name}' in the agent list
-3. **Query**: Ask "Please perform a health check on this Splunk environment"
-4. **Watch**: Observe the multi-phase workflow execution
-
-## Learning Outcomes
-
-- Understanding of FlowPilot workflow orchestration
-- Real Splunk environment interaction patterns
-- Multi-agent coordination and result synthesis
-- Educational health monitoring techniques
-
-## Workshop Integration
-
-This agent is specifically designed for workshop demonstrations and provides:
-- Clear explanations of each step
-- Educational context for health checks
-- Beginner-friendly output and recommendations
-- Interactive learning experience
-
-Perfect for demonstrating the power and flexibility of the FlowPilot system!
+# Advanced Options
+parallel_execution: false
+streaming_support: true
+educational_mode: false
+estimated_duration: "2-3 minutes"
 """
+    
+    try:
+        # Parse the default template
+        safe_print(f"📄 Creating default workflow template for: {name}")
+        template = parse_template_string(default_template_content)
+        
+        # Generate workflow JSON and README
+        safe_print(f"🔄 Generating FlowPilot workflow from default template...")
+        workflow_json, readme_content = generate_workflow_from_template(template, output_dir, name)
+        
+        # Save the template file for reference
+        template_file_path = output_dir / f"{name}.yaml"
+        with open(template_file_path, 'w', encoding='utf-8') as f:
+            f.write(default_template_content)
+        safe_print(f"📋 Created template file: {template_file_path}")
+        
+        # Create .template_source file for tracking
+        source_file = output_dir / ".template_source"
+        with open(source_file, 'w', encoding='utf-8') as f:
+            f.write(f"source_template: default_generated\n")
+            f.write(f"generated_on: {datetime.now().isoformat()}\n")
+            f.write(f"template_version: {template.metadata.version}\n")
+            f.write(f"template_format: {template.metadata.template_format}\n")
+        
+        safe_print(f"✅ Generated default workflow: {template.metadata.title}")
+        return workflow_json, readme_content
+        
+    except Exception as e:
+        safe_print(f"❌ Failed to create default workflow: {e}", file=sys.stderr)
+        raise
+
+
+def create_from_template_file(name: str, template_file_path: str, output_dir: Path) -> tuple[dict, str]:
+    """
+    Create workflow from YAML template file.
+    
+    Args:
+        name: Name for the workflow agent
+        template_file_path: Path to YAML template file
+        output_dir: Output directory for generated files
+        
+    Returns:
+        Tuple of (workflow_dict, readme_content)
+    """
+    if not TEMPLATE_SYSTEM_AVAILABLE:
+        raise RuntimeError("Template system not available")
+    
+    template_path = Path(template_file_path)
+    if not template_path.exists():
+        raise FileNotFoundError(f"Template file not found: {template_file_path}")
+    
+    try:
+        # Load and parse the YAML template
+        safe_print(f"📄 Loading template from: {template_path}")
+        template = load_template(template_path)
+        
+        # Generate workflow JSON and README
+        safe_print(f"🔄 Generating FlowPilot workflow from template...")
+        workflow_json, readme_content = generate_workflow_from_template(template, output_dir, name)
+        
+        # Copy template file to output directory for reference (if not already there)
+        template_copy_path = output_dir / f"{name}.yaml"
+        import shutil
+        
+        # Check if source and destination are the same file
+        try:
+            if template_path.resolve() != template_copy_path.resolve():
+                shutil.copy2(template_path, template_copy_path)
+                safe_print(f"📋 Copied template to: {template_copy_path}")
+            else:
+                safe_print(f"📋 Template already in target location: {template_copy_path}")
+        except Exception as e:
+            # If copy fails, continue without copying (template might already exist)
+            safe_print(f"⚠️  Template copy skipped: {e}")
+        
+        # Create .template_source file for tracking
+        source_file = output_dir / ".template_source"
+        with open(source_file, 'w', encoding='utf-8') as f:
+            f.write(f"source_template: {template_path.absolute()}\n")
+            f.write(f"generated_on: {datetime.now().isoformat()}\n")
+            f.write(f"template_version: {template.metadata.version}\n")
+            f.write(f"template_format: {template.metadata.template_format}\n")
+        
+        safe_print(f"✅ Generated workflow from template: {template.metadata.title}")
+        return workflow_json, readme_content
+        
+    except TemplateParseError as e:
+        safe_print(f"❌ Template parsing failed: {e}", file=sys.stderr)
+        raise
+    except Exception as e:
+        safe_print(f"❌ Failed to process template file: {e}", file=sys.stderr)
+        raise
+
+
+def get_available_templates() -> list[str]:
+    """Get list of available built-in templates."""
+    try:
+        base_path = get_base_path()
+        templates_dir = base_path / "core" / "templates"
+        if templates_dir.exists():
+            template_files = list(templates_dir.glob("*.yaml"))
+            return [f.stem for f in template_files if f.name != "README.md"]
+        return []
+    except Exception:
+        return []
 
 
 def main():
     """Main CLI function for creating FlowPilot workflow agents."""
+    # Get available templates dynamically
+    available_templates = get_available_templates()
+    
     parser = argparse.ArgumentParser(
-        description="Create FlowPilot workflow agents for workshop demonstrations",
+        description="Create FlowPilot workflow agents using YAML templates",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
+        epilog=f"""
 Examples:
-  ai-sidekick-create-flow-agent dev1666
-  ai-sidekick-create-flow-agent workshop_demo
-  ai-sidekick-create-flow-agent health_monitor
+  # Basic workflow creation
+  ai-sidekick --create-flow-agent dev1666
+  ai-sidekick --create-flow-agent workshop_demo
+  
+  # Built-in templates with working SPL searches
+  ai-sidekick --create-flow-agent my_health_check --template simple_health_check
+  ai-sidekick --create-flow-agent my_security --template security_audit
+  
+  # Custom YAML template files
+  ai-sidekick --create-flow-agent my_security --template-file security_audit.yaml
+  ai-sidekick --create-flow-agent custom_analysis --template-file /path/to/my_template.yaml
+  
+  Available built-in templates: {', '.join(available_templates) if available_templates else 'None found'}
         """,
     )
 
@@ -290,7 +227,29 @@ Examples:
         "--output-dir", help="Output directory (default: contrib/flows/NAME)", default=None
     )
 
+    parser.add_argument(
+        "--template",
+        choices=available_templates if available_templates else None,
+        help=f"Use a built-in template with working SPL searches. Available: {', '.join(available_templates) if available_templates else 'None found'}",
+        default=None,
+    )
+
+    parser.add_argument(
+        "--template-file",
+        help="Path to a YAML template file for custom workflow creation",
+        default=None,
+    )
+
     args = parser.parse_args()
+
+    # Validate arguments
+    if args.template and args.template_file:
+        safe_print("❌ Error: Cannot specify both --template and --template-file", file=sys.stderr)
+        sys.exit(1)
+
+    if (args.template or args.template_file) and not TEMPLATE_SYSTEM_AVAILABLE:
+        safe_print("❌ Error: Template system not available. Cannot use templates", file=sys.stderr)
+        sys.exit(1)
 
     try:
         # Get base path
@@ -305,8 +264,21 @@ Examples:
         # Create directory
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create workflow template using Pydantic models
-        workflow_template = create_workflow_template(args.name, output_dir)
+        # Create workflow template using different methods
+        if args.template_file:
+            # Use YAML template file
+            workflow_template, readme_content = create_from_template_file(args.name, args.template_file, output_dir)
+        elif args.template:
+            # Use built-in YAML template
+            template_file_path = base_path / "core" / "templates" / f"{args.template}.yaml"
+            if not template_file_path.exists():
+                safe_print(f"❌ Error: Built-in template '{args.template}' not found at {template_file_path}", file=sys.stderr)
+                sys.exit(1)
+            
+            workflow_template, readme_content = create_from_template_file(args.name, str(template_file_path), output_dir)
+        else:
+            # Use default template - create a minimal YAML template
+            workflow_template, readme_content = create_default_workflow(args.name, output_dir)
 
         # Validate the template
         try:
@@ -316,22 +288,22 @@ Examples:
             print(f"❌ Template validation failed: {e}", file=sys.stderr)
             sys.exit(1)
 
-        # Convert Pydantic model to dict for JSON serialization
-        workflow_dict = workflow_template.model_dump(exclude_none=True)
-        workflow_file = output_dir / f"{args.name}.json"
+        # Handle different workflow creation paths
+        workflow_dict = workflow_template
+        workflow_name = workflow_dict.get("workflow_name", args.name)
 
+        # Save workflow JSON
+        workflow_file = output_dir / f"{args.name}.json"
         with open(workflow_file, "w", encoding="utf-8") as f:
             json.dump(workflow_dict, f, indent=2, ensure_ascii=False)
 
-        # Create README
-        readme_content = create_readme(args.name, workflow_template.workflow_name)
+        # Save README
         readme_file = output_dir / "README.md"
-
         with open(readme_file, "w", encoding="utf-8") as f:
             f.write(readme_content)
 
         # Success output
-        safe_print("🛠 Creating FlowPilot Workshop Agent")
+        safe_print("🛠 Creating FlowPilot Workflow Agent")
         safe_print("=" * 60)
         safe_print(f"📍 Base path: {base_path}")
         safe_print(f"🎯 Creating workflow in: {output_dir.relative_to(base_path)}/")
@@ -340,32 +312,38 @@ Examples:
         safe_print(f"✅ Created workflow: {args.name}.json")
         safe_print("✅ Created README: README.md")
         safe_print()
-        safe_print(f"🎉 SUCCESS! {workflow_template.workflow_name} Created!")
+        
+        if args.template_file:
+            template_info = f" (from template file: {Path(args.template_file).name})"
+        elif args.template:
+            template_info = f" (using '{args.template}' template)"
+        else:
+            template_info = ""
+        safe_print(f"🎉 SUCCESS! {workflow_name} Created{template_info}!")
         safe_print("=" * 60)
         safe_print()
         safe_print("📁 Files Created:")
-        safe_print(f"├── 📄 {workflow_file}")
-        safe_print(f"└── 📖 {readme_file}")
+        if args.template_file or args.template:
+            template_copy_file = output_dir / f"{args.name}.yaml"
+            safe_print(f"├── 📋 {template_copy_file}")
+            safe_print(f"├── 📄 {workflow_file}")
+            safe_print(f"└── 📖 {readme_file}")
+        else:
+            safe_print(f"├── 📋 {output_dir / f'{args.name}.yaml'}")
+            safe_print(f"├── 📄 {workflow_file}")
+            safe_print(f"└── 📖 {readme_file}")
         safe_print()
-        safe_print("🚀 Next Steps for Workshop Participants:")
+        safe_print("🚀 Next Steps:")
         safe_print("1️⃣  Restart ADK Web to discover the new agent")
-        safe_print(f"2️⃣  Look for '{workflow_template.workflow_name}' in the agent list")
-        safe_print("3️⃣  Query: 'Please perform a health check on this Splunk environment'")
-        safe_print("4️⃣  Watch the multi-phase workflow execution!")
+        safe_print(f"2️⃣  Look for '{workflow_name}' in the agent list")
+        safe_print("3️⃣  Test your workflow with a relevant query")
+        safe_print("4️⃣  Watch the workflow execution!")
         safe_print()
-        safe_print("🎯 What You'll See:")
-        safe_print("├── 🔍 System information gathering")
-        safe_print("├── 💓 Health checks execution")
-        safe_print("├── 📊 Performance assessment")
-        safe_print("└── 📋 Comprehensive summary report")
-        safe_print()
-        safe_print("🎓 Learning Outcomes:")
-        safe_print("├── ✅ Multi-agent workflow orchestration")
-        safe_print("├── ✅ Real Splunk environment interaction")
-        safe_print("├── ✅ Educational health monitoring")
-        safe_print("└── ✅ FlowPilot system capabilities")
-        safe_print()
-        safe_print("🎪 Ready for an amazing workshop demonstration!")
+        safe_print("🎯 Template System Benefits:")
+        safe_print("├── ✅ Real SPL searches (no placeholders)")
+        safe_print("├── ✅ Automatic JSON generation")
+        safe_print("├── ✅ Built-in validation")
+        safe_print("└── ✅ Easy customization via YAML")
 
     except Exception as e:
         safe_print(f"❌ Error creating workflow agent: {e}", file=sys.stderr)

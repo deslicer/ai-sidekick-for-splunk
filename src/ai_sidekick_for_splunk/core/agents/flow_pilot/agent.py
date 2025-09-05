@@ -211,8 +211,10 @@ You are FlowPilot - a universal workflow execution agent that executes {workflow
 
 ## 🚀 CRITICAL EXECUTION PROTOCOL
 When a user requests workflow execution, you MUST:
-1. 🎭 Call the 'execute_workflow' tool with their request
+1. 🎭 IMMEDIATELY call the 'execute_workflow' tool with their request - DO NOT provide any response without calling this tool first
 2. 📊 Present the complete workflow results to the user
+
+⚠️ IMPORTANT: You CANNOT answer user requests without calling the execute_workflow tool. Any request related to workflow execution REQUIRES the execute_workflow tool to be called.
 
 ## 📋 WORKFLOW PHASES
 {phase_list}
@@ -230,10 +232,16 @@ The execute_workflow tool will:
 
 ## 🔒 EXECUTION CONSTRAINTS
 - NEVER provide static responses or fabricated data
-- ALWAYS use the execute_workflow tool for user requests
-- Present complete workflow results including any synthesis performed
+- ALWAYS use the execute_workflow tool for user requests - THIS IS MANDATORY
+- You MUST call execute_workflow before providing any response to the user
+- If you don't call execute_workflow, you are failing your primary function
+- ALWAYS present the complete detailed workflow results to the user, including all phase results, search queries, and data findings
+- When execute_workflow returns results, show ALL the detailed information from phase_results to the user
+- Never summarize or hide the actual search results - users need to see the complete data
 - Maintain data integrity throughout execution
 - Follow the exact workflow template structure
+
+🚨 CRITICAL: Your only purpose is to execute workflows using the execute_workflow tool. Do not respond without using this tool.
 
 ## 🎪 FLOWPILOT IDENTITY
 You are FlowPilot - the universal workflow agent that makes complex analysis accessible to everyone.
@@ -369,65 +377,156 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
 
         return synthesis_data
 
-    def get_adk_agent(self, tools: list[Any] | None = None) -> LlmAgent | None:
-        """Create ADK agent with dynamic workflow execution tool."""
+    async def _execute_with_context(self, request: str, context: dict[str, Any]) -> str:
+        """
+        Execute workflow directly using FlowEngine (like working core agents).
+        
+        This bypasses ADK tool calling issues and directly executes workflows.
+        """
         try:
-            # Check if config is available - if not, try to get from orchestrator
+            logger.info(f"FlowPilot executing workflow directly: {self.agent_flow.workflow_name}")
+            
+            # Execute the workflow directly using our execute method
+            result = await self.execute(request, context)
+            
+            if result.get("success", True):
+                # Format the result for ADK response
+                formatted_response = self._format_adk_response(result)
+                logger.info(f"✅ FlowPilot workflow completed successfully")
+                return formatted_response
+            else:
+                error_msg = result.get("error", "Unknown error")
+                logger.error(f"❌ FlowPilot workflow failed: {error_msg}")
+                return f"Workflow execution failed: {error_msg}"
+                
+        except Exception as e:
+            logger.error(f"FlowPilot direct execution failed: {e}")
+            return f"FlowPilot encountered an error: {str(e)}"
+    
+    def _format_adk_response(self, result: dict[str, Any]) -> str:
+        """Format workflow execution result for ADK response."""
+        if not result.get("success", True):
+            return f"Workflow execution failed: {result.get('error', 'Unknown error')}"
+        
+        # Extract key information from the result
+        workflow_name = result.get("workflow", "Unknown Workflow")
+        phase_results = result.get("phase_results", [])
+        
+        response_parts = [
+            f"✅ **{workflow_name} Execution Complete**\n",
+            f"Successfully executed {len(phase_results)} phases with real Splunk data.\n"
+        ]
+        
+        # Add phase summaries
+        for phase_result in phase_results:
+            # Handle PhaseResult objects properly
+            if hasattr(phase_result, 'phase_name'):
+                phase_name = phase_result.phase_name
+                task_results = phase_result.task_results
+            else:
+                phase_name = phase_result.get("phase_name", "Unknown Phase")
+                task_results = phase_result.get("task_results", [])
+            
+            task_count = len(task_results)
+            response_parts.append(f"📋 **{phase_name}**: {task_count} tasks completed")
+            
+            # Add task details with actual search results
+            for task_result in task_results:
+                if hasattr(task_result, 'task_id'):
+                    task_id = task_result.task_id
+                    success = task_result.success
+                    data = task_result.data if hasattr(task_result, 'data') else {}
+                    error = task_result.error if hasattr(task_result, 'error') else None
+                else:
+                    task_id = task_result.get("task_id", "unknown")
+                    success = task_result.get("success", False)
+                    data = task_result.get("data", {})
+                    error = task_result.get("error", "Unknown error")
+                
+                if success:
+                    search_results = data.get("search_results") if isinstance(data, dict) else None
+                    if search_results:
+                        response_parts.append(f"  ✅ {task_id}: Retrieved {len(search_results)} results")
+                    else:
+                        response_parts.append(f"  ✅ {task_id}: Completed successfully")
+                else:
+                    response_parts.append(f"  ❌ {task_id}: {error}")
+        
+        return "\n".join(response_parts)
+
+    def _sanitize_name(self, name: str) -> str:
+        """
+        Sanitize agent name to be a valid identifier for ADK.
+        
+        Args:
+            name: Original agent name
+            
+        Returns:
+            Sanitized name that's a valid identifier
+        """
+        import re
+        # Replace spaces and special characters with underscores
+        sanitized = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        # Ensure it starts with a letter or underscore
+        if sanitized and not sanitized[0].isalpha() and sanitized[0] != '_':
+            sanitized = f"_{sanitized}"
+        return sanitized or "FlowPilot_Agent"
+
+    def get_adk_agent(self, tools: list[Any] | None = None) -> LlmAgent | None:
+        """
+        Create ADK agent for FlowPilot that uses direct execution.
+
+        This creates a simple ADK agent that delegates to our _execute_with_context method
+        instead of relying on unreliable tool calling.
+        """
+        try:
+            # Check if config is available
             config_to_use = self.config
             if not config_to_use and self.orchestrator and hasattr(self.orchestrator, "config"):
                 config_to_use = self.orchestrator.config
-                logger.debug(
-                    f"FlowPilot {self.name} using orchestrator config for ADK agent creation"
-                )
 
             if not config_to_use or not hasattr(config_to_use, "model") or not config_to_use.model:
                 logger.warning(f"FlowPilot {self.name} has no config - cannot create ADK agent")
                 return None
 
-            flow_tools = list(tools) if tools else []
+            # Create a sanitized name for ADK (no spaces, valid identifier)
+            sanitized_name = self._sanitize_name(self.name)
 
-            def execute_workflow(
-                task: str, context: Optional[dict[str, Any]] = None
-            ) -> dict[str, Any]:
-                """Execute the loaded workflow with the given task."""
+            # Create workflow execution tool that calls our _execute_with_context method
+            async def execute_workflow(request: str) -> str:
+                """
+                Execute the workflow using FlowEngine.
+                
+                Args:
+                    request: The workflow execution request
+                    
+                Returns:
+                    Formatted workflow execution results
+                """
                 try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        import concurrent.futures
-
-                        def run_in_thread():
-                            new_loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(new_loop)
-                            try:
-                                return new_loop.run_until_complete(self.execute(task, context))
-                            finally:
-                                new_loop.close()
-
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future = executor.submit(run_in_thread)
-                            return future.result()
-                    else:
-                        return asyncio.run(self.execute(task, context))
-
-                except RuntimeError:
-                    return asyncio.run(self.execute(task, context))
-
+                    # Call the async execute method directly (no asyncio.run!)
+                    result = await self.execute(request, {})
+                    return self._format_adk_response(result)
+                except Exception as e:
+                    logger.error(f"Workflow execution failed: {e}")
+                    return f"Workflow execution failed: {str(e)}"
+            
+            # Prepare tools list with our execute_workflow tool
+            flow_tools = (tools or []).copy()
             flow_tools.append(execute_workflow)
-            agent = LlmAgent(
-                model=config_to_use.model.primary_model,
-                name=self._sanitize_name(self.name),
+
+            # Create the LlmAgent with correct parameters
+            llm_agent = LlmAgent(
+                model=config_to_use.model.primary_model,  # Use primary_model string
+                name=sanitized_name,  # Use sanitized name
                 description=self.description,
-                instruction=self._instructions,
-                tools=flow_tools,
+                instruction=f"You are {self.name} - a workflow execution agent. When users request workflow execution, IMMEDIATELY call the execute_workflow tool with their request. Do not provide responses without executing the workflow first.",  # Use singular 'instruction'
+                tools=flow_tools,  # Include execute_workflow tool
             )
-
-            logger.debug(
-                f"Created FlowPilot ADK agent for workflow: {self.agent_flow.workflow_name}"
-            )
-            return agent
-
+            logger.info(f"Created FlowPilot ADK agent for workflow: {self.name}")
+            return llm_agent
         except Exception as e:
-            logger.error(f"Failed to create FlowPilot ADK agent: {e}")
+            logger.error(f"Failed to create ADK LlmAgent for FlowPilot {self.name}: {e}", exc_info=True)
             return None
 
     def supports_streaming(self, task: str) -> bool:

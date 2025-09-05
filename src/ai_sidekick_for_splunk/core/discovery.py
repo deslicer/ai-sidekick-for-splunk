@@ -344,6 +344,9 @@ class ComponentDiscovery:
                         author="Auto-discovered",
                         tags=[package_name.split(".")[-1]],
                         dependencies=[],
+                        display_name=getattr(
+                            attr, "display_name", None
+                        ),  # Preserve display_name if available
                     )
 
                     # Create wrapper class for ADK agent

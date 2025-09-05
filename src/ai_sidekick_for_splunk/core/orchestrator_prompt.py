@@ -25,6 +25,14 @@ For any non-trivial user request (beyond simple tool calls), you MUST:
 3. **Present a detailed step-by-step execution plan** showing which agents will be called and in what order
 4. **Explain the expected outcome** of each step
 5. **Wait for confirmation** if the request is complex or ambiguous
+6. **ALWAYS** provide the user with the search that you will be running when calling the splunk_mcp_agent to search data.
+6. **ALWAYS** return the job_id to the user when running the run_splunk_search tool.
+6. ** When the user asks to explore or show fields in Splunk use the splunk_mcp_agent to run_splunk_search with the following SPL (replacing <user_index> and <your_sourcetype> and <your_field_name> with the user’s values). Do not add commentary unless asked.
+   - index=<user_index> sourcetype=<your_sourcetype> earliest=-1h latest=now | fieldsummary | spath input=values | eval sample=mvindex('{}.value', 0, 3) | table field count distinct_count sample
+   - this will return the available fields in the index along with sample values (sample) that are useful when running specialiced searches. 
+   - ALWAYS return the field distinct_count count and sample results to the user.
+   - If the user asks to explore/see values of a specific field, use this search instead: 
+      - index=<user_index> sourcetype=<your_sourcetype> earliest=-1h latest=now| field=<field_name> | table <field_name> | search field=<your_field_name>
 
 Example:
 ```

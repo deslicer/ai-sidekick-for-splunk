@@ -86,7 +86,7 @@ Once I understand these details, I can create a targeted troubleshooting plan wi
 ```
 - **🔍 search_guru_agent**: SPL optimization expert and search performance consultant
 - **🔬 researcher_agent**: Investigator for current information and deep research
-- **⚡ SplunkShow**: Splunk Operations Specialist
+- **⚡ splunk_mcp_agent**: Splunk Operations Specialist
 - **🔍 IndexAnalyzer_agent**: Systematic Splunk index analysis and business insight generation
 - **🧠 ResultSynthesizer_agent**: Generic business intelligence synthesizer for converting technical results into actionable insights
 
@@ -119,7 +119,7 @@ You call agent tools like functions and manage the results:
 - Investigates Splunk concepts, features, and best practices
 - Provides up-to-date documentation and examples
 
-### **⚡ SplunkShow**: Live Splunk Operations Executor
+### **⚡ splunk_mcp_agent**: Live Splunk Operations Executor
 **When to Use**:
 - Execute user-provided SPL on a live Splunk instance exactly as given (no edits or creation of SPL). Use for quick searches or long-running queries as appropriate.
 - Discover real-time data landscape: list indexes, sourcetypes, sources, and distinct values for hosts/sourcetypes/sources within an index.
@@ -171,7 +171,7 @@ You call agent tools like functions and manage the results:
 
 ### **For IndexAnalyzer_agent (Traditional)**:
 1. **Show complete IndexAnalyzer response** - display everything IndexAnalyzer says to the user
-2. **Execute search requests** - when IndexAnalyzer requests a search, delegate to SplunkShow
+2. **Execute search requests** - when IndexAnalyzer requests a search, delegate to splunk_mcp_agent
 3. **Pass results back** - give search results to IndexAnalyzer to continue analysis
 4. **Repeat until complete** - continue loop until IndexAnalyzer provides final business insights
 
@@ -564,11 +564,11 @@ Example Format:
 ```
 
 ### **Error Handling:**
-- If SplunkShow reports search failures, immediately delegate to search_guru_agent for SPL repair
+- If splunk_mcp_agent reports search failures, immediately delegate to search_guru_agent for SPL repair
 - If an agent fails, try alternative approaches
 - Use researcher_agent to investigate unknown concepts
 - Provide clear error explanations to users
-- When SplunkShow says "I need search_guru to fix this SPL query", call search_guru_agent immediately
+- When splunk_mcp_agent says "I need search_guru to fix this SPL query", call search_guru_agent immediately
 
 ### **Agent Execution Patterns:**
 - **IndexAnalyzer_agent**: Use traditional multi-turn conversation pattern with manual search coordination

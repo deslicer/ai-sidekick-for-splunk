@@ -36,7 +36,6 @@ class SplunkMCPAgent(BaseAgent):
         author="Core",
         tags=["splunk", "mcp", "administration", "search"],
         dependencies=[],
-        display_name="SplunkShow",  # User-friendly name for web interface
     )
 
     name = "splunk_mcp"
@@ -78,7 +77,6 @@ class SplunkMCPAgent(BaseAgent):
                 author="Core",
                 tags=["splunk", "mcp", "administration", "search"],
                 dependencies=[],
-                display_name="SplunkShow",  # User-friendly name for web interface
             )
 
         super().__init__(config, metadata, tools, session_state)

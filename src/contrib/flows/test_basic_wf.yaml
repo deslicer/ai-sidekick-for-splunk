@@ -1,0 +1,29 @@
+# Default Workflow Template
+name: "test_basic_wf"
+title: "Test Basic Wf Workflow"
+description: "A basic workflow template for test_basic_wf"
+category: "analysis"
+complexity: "beginner"
+version: "1.0.0"
+author: "community"
+
+# Business Context
+business_value: "Provides basic analysis capabilities"
+use_cases:
+  - "Basic data analysis"
+  - "System monitoring"
+
+# Simple workflow
+searches:
+  - name: "basic_check"
+    spl: 'search earliest=-24h | head 10 | table _time, index, sourcetype'
+    earliest: "-24h@h"
+    latest: "now"
+    description: "Basic data check"
+    expected_results: "Recent events sample"
+
+# Advanced Options
+parallel_execution: false
+streaming_support: true
+educational_mode: false
+estimated_duration: "2-3 minutes"

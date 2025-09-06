@@ -275,7 +275,7 @@ CRITICAL: When a user requests index analysis, you MUST:
 The execute_index_analysis_flow tool will:
 1. 📊 Execute a multi-phase analysis workflow
 2. ⚡ Stream progress updates as it works
-3. 🤝 Coordinate with specialist agents (search_guru_agent, SplunkShow, result_synthesizer_agent) using hybrid synthesis approach
+3. 🤝 Coordinate with specialist agents (search_guru_agent, splunk_mcp_agent, result_synthesizer_agent) using hybrid synthesis approach
 4. 📈 Provide real analysis results (not simulated data)
 5. 🎯 Automatically generate actionable JSON insights via result_synthesizer when meaningful data is found
 

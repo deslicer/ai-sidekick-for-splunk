@@ -1,0 +1,343 @@
+{
+  "workflow_id": "contrib.dq_check_flow",
+  "workflow_name": "Data quality check",
+  "version": "1.0.0",
+  "description": "This workflow checks the data quality issues in splunk",
+  "workflow_type": "analysis",
+  "workflow_category": "data_analysis",
+  "source": "contrib",
+  "maintainer": "community",
+  "stability": "experimental",
+  "complexity_level": "beginner",
+  "estimated_duration": "5-10 minutes",
+  "agent": "FlowPilot_dqcheckflow",
+  "last_updated": "2025-09-04",
+  "documentation_url": "./README.md",
+  "splunk_versions": [
+    "8.0+",
+    "9.0+"
+  ],
+  "required_permissions": [
+    "search",
+    "_internal index",
+    "all indexes"
+  ],
+  "prerequisites": [
+    "splunk_mcp_server",
+    "basic_splunk_access"
+  ],
+  "business_value": "helps detect data quality issue during data onboarding process",
+  "use_cases": [
+    "detect data quality issues",
+    "Improve search and overall system performance"
+  ],
+  "success_metrics": [
+    "no line breaking, time stamp parsing or truncation errors",
+    "performant indexing pipelines queues"
+  ],
+  "target_audience": [
+    "admin"
+  ],
+  "data_requirements": {
+    "minimum_events": 100,
+    "required_sourcetypes": [],
+    "optional_fields": [
+      "host",
+      "source",
+      "index"
+    ],
+    "data_types": [
+      "Data Quality"
+    ]
+  },
+  "workflow_instructions": {
+    "specialization": "DATA QUALITY SPECIALIZATION",
+    "focus_areas": [
+      "Focus on data quality analysis",
+      "Execute searches systematically and thoroughly",
+      "Provide clear insights and actionable recommendations"
+    ],
+    "execution_style": "sequential",
+    "domain": "data_quality"
+  },
+  "agent_dependencies": {
+    "splunk_mcp": {
+      "agent_id": "splunk_mcp",
+      "description": "Splunk operations and search execution specialist",
+      "required": true,
+      "capabilities": [
+        "search_execution",
+        "system_information",
+        "rest_api_access"
+      ],
+      "integration_points": [
+        "search_workflow",
+        "data_retrieval"
+      ]
+    },
+    "result_synthesizer": {
+      "agent_id": "result_synthesizer",
+      "description": "Result analysis and synthesis specialist",
+      "required": true,
+      "capabilities": [
+        "result_analysis",
+        "insight_generation",
+        "report_synthesis"
+      ],
+      "integration_points": [
+        "result_processing",
+        "final_synthesis"
+      ]
+    }
+  },
+  "core_phases": {
+    "main_analysis": {
+      "name": "Main Analysis",
+      "description": "Data quality check - Primary analysis phase",
+      "mandatory": true,
+      "parallel": true,
+      "max_parallel": 5,
+      "tasks": [
+        {
+          "task_id": "dq_ingestion_latency",
+          "title": "Dq Ingestion Latency",
+          "description": "Median and p95 of index-time minus event time (seconds); large gaps suggest clock skew or delayed delivery.",
+          "goal": "Execute dq_ingestion_latency search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* _time=* \n| eval latency=_indextime - _time\n| where latency>=0 AND latency<86400\n| stats median(latency) as p50, perc95(latency) as p95 by sourcetype\n| sort - p95",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Per-sourcetype p50/p95 latency (s); investigate high p95 values",
+          "analysis_focus": [
+            "Median and p95 of index-time minus event time (seconds); large gaps suggest clock skew or delayed delivery."
+          ]
+        },
+        {
+          "task_id": "dq_timestamp_parse_warnings",
+          "title": "Dq Timestamp Parse Warnings",
+          "description": "Scans splunkd logs for DateParser/strptime warnings that indicate TIME_FORMAT/TIME_PREFIX issues.",
+          "goal": "Execute dq_timestamp_parse_warnings search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=_internal source=*splunkd.log* \n(\"DateParserVerbose\" OR \"could not use strptime\" OR \"Failed to parse timestamp\")\n| rex field=_raw max_match=1 \"(?i)sourcetype=(?<sourcetype>[^ ]+)\"\n| timechart span=15m count by sourcetype limit=15",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Time series of parse warnings by sourcetype; spikes = broken timestamping",
+          "analysis_focus": [
+            "Scans splunkd logs for DateParser/strptime warnings that indicate TIME_FORMAT/TIME_PREFIX issues."
+          ]
+        },
+        {
+          "task_id": "dq_line_breaking_risk",
+          "title": "Dq Line Breaking Risk",
+          "description": "Flags unusually large events that could indicate bad line breaking or TRUNCATE behavior.",
+          "goal": "Execute dq_line_breaking_risk search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* \n| eval ev_len=len(_raw)\n| where ev_len >= 10000\n| stats count as large_events, max(ev_len) as max_event_len by sourcetype\n| sort - large_events",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Per-sourcetype counts of very large events; review props.conf (LINE_BREAKER/SHOULD_LINEMERGE/TRUNCATE)",
+          "analysis_focus": [
+            "Flags unusually large events that could indicate bad line breaking or TRUNCATE behavior."
+          ]
+        },
+        {
+          "task_id": "dq_duplicate_events_hash",
+          "title": "Dq Duplicate Events Hash",
+          "description": "Detects potential duplicates by hashing _raw per sourcetype/source in window; tune window to avoid false positives.",
+          "goal": "Execute dq_duplicate_events_hash search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* \n| eval sig=md5(_raw)\n| stats count as cnt by sourcetype, source, sig\n| where cnt>1\n| stats sum(cnt) as duplicate_events, dc(sig) as duplicate_signatures by sourcetype, source\n| sort - duplicate_events",
+          "parameters": {
+            "earliest_time": "-6h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Duplicate counts/signatures by sourcetype/source",
+          "analysis_focus": [
+            "Detects potential duplicates by hashing _raw per sourcetype/source in window; tune window to avoid false positives."
+          ]
+        },
+        {
+          "task_id": "dq_missing_time_or_future_past",
+          "title": "Dq Missing Time Or Future Past",
+          "description": "Finds events with _time in the future/past beyond a threshold, a common sign of bad timestamp parsing or TZ.",
+          "goal": "Execute dq_missing_time_or_future_past search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* \n| eval now=now(), skew=_time-now\n| eval time_issue=case(skew>3600,\"future_gt_1h\", skew<-31536000,\"past_gt_1y\", true(),null())\n| where isnotnull(time_issue)\n| stats count by time_issue, sourcetype\n| sort - count",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Counts of future/past-skewed events by sourcetype",
+          "analysis_focus": [
+            "Finds events with _time in the future/past beyond a threshold, a common sign of bad timestamp parsing or TZ."
+          ]
+        },
+        {
+          "task_id": "dq_field_coverage_summary",
+          "title": "Dq Field Coverage Summary",
+          "description": "Summarizes field presence/null rates to spot broken extractions after ingestion changes.",
+          "goal": "Execute dq_field_coverage_summary search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* \n| head 5000\n| fieldsummary\n| eval null_pct=round(100*(isnull)/count,2)\n| table field, distinct_values, null_pct, maxlen, avglen\n| sort - null_pct",
+          "parameters": {
+            "earliest_time": "-2h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "At-a-glance field health (null %, distinctness, len); high null_pct on key fields = extraction issues",
+          "analysis_focus": [
+            "Summarizes field presence/null rates to spot broken extractions after ingestion changes."
+          ]
+        },
+        {
+          "task_id": "dq_source_host_coverage",
+          "title": "Dq Source Host Coverage",
+          "description": "Distinct hosts and sources per sourcetype; useful to catch missing senders or misrouted data.",
+          "goal": "Execute dq_source_host_coverage search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* \n| stats dc(host) as hosts, dc(source) as sources by sourcetype\n| sort - hosts",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Per-sourcetype counts of active hosts and sources",
+          "analysis_focus": [
+            "Distinct hosts and sources per sourcetype; useful to catch missing senders or misrouted data."
+          ]
+        },
+        {
+          "task_id": "dq_event_rate_stability",
+          "title": "Dq Event Rate Stability",
+          "description": "Compares last hour vs prior day same hour average to flag big drops/spikes in volume.",
+          "goal": "Execute dq_event_rate_stability search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "| tstats count WHERE index=* by _time, sourcetype span=1h\n| eval hour=strftime(_time,\"%H\")\n| eventstats avg(count) as prior_avg by sourcetype, hour\n| eval delta=count-prior_avg, pct=round(100*delta/prior_avg,2)\n| where abs(pct)>=50 AND prior_avg>0\n| table _time, sourcetype, count, prior_avg, pct\n| sort - _time",
+          "parameters": {
+            "earliest_time": "-25h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Sourcetypes with >=50% change vs typical same-hour baseline",
+          "analysis_focus": [
+            "Compares last hour vs prior day same hour average to flag big drops/spikes in volume."
+          ]
+        },
+        {
+          "task_id": "dq_nullqueue_suspect_queue_pressure",
+          "title": "Dq Nullqueue Suspect Queue Pressure",
+          "description": "Queue fill % as a proxy for parsing pressure that can lead to data loss or delays.",
+          "goal": "Execute dq_nullqueue_suspect_queue_pressure search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=_internal source=*metrics.log group=queue\n| stats avg(current_size_kb) as size_kb, avg(max_size_kb) as max_kb by name\n| eval fill_pct=round(100*size_kb/max_kb,2)\n| sort - fill_pct",
+          "parameters": {
+            "earliest_time": "-1h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Queue fill levels; sustained high % indicates bottlenecks",
+          "analysis_focus": [
+            "Queue fill % as a proxy for parsing pressure that can lead to data loss or delays."
+          ]
+        },
+        {
+          "task_id": "dq_index_storage_headroom",
+          "title": "Dq Index Storage Headroom",
+          "description": "Checks total index size vs configured max to spot near-capacity indexes (can cause data aging/truncation).",
+          "goal": "Execute dq_index_storage_headroom search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "| rest /services/data/indexes\n| eval current_size_gb=round(currentDBSizeMB/1024,2)\n| eval max_gb=case(isnotnull(maxTotalDataSizeMB), round(maxTotalDataSizeMB/1024,2), true(), null())\n| eval pct_of_max=if(isnotnull(max_gb) AND max_gb>0, round(100*current_size_gb/max_gb,2), null())\n| table title, totalEventCount, current_size_gb, max_gb, pct_of_max, frozenTimePeriodInSecs\n| sort - pct_of_max",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "Per-index size and % of configured max; investigate high pct_of_max",
+          "analysis_focus": [
+            "Checks total index size vs configured max to spot near-capacity indexes (can cause data aging/truncation)."
+          ]
+        },
+        {
+          "task_id": "dq_line_breaking_candidates_xml_json",
+          "title": "Dq Line Breaking Candidates Xml Json",
+          "description": "Heuristic: XML/JSON sources with very large lines often need explicit LINE_BREAKER/SHOULD_LINEMERGE configs.",
+          "goal": "Execute dq_line_breaking_candidates_xml_json search",
+          "agent": "splunk_mcp",
+          "tool": "run_splunk_search",
+          "search_query": "index=* (sourcetype=*xml* OR sourcetype=*json* OR source=\"*.xml\" OR source=\"*.json\")\n| eval ev_len=len(_raw)\n| where ev_len>=10000\n| stats count as large_events, max(ev_len) as max_event_len by sourcetype, source\n| sort - large_events",
+          "parameters": {
+            "earliest_time": "-24h@h",
+            "latest_time": "now"
+          },
+          "timeout_sec": 300,
+          "expected_output": "XML/JSON sources most likely to suffer from bad line breaking",
+          "analysis_focus": [
+            "Heuristic: XML/JSON sources with very large lines often need explicit LINE_BREAKER/SHOULD_LINEMERGE configs."
+          ]
+        }
+      ],
+      "success_criteria": [
+        "All searches completed successfully",
+        "Results available for analysis",
+        "No critical errors encountered"
+      ]
+    }
+  },
+  "execution_flow": {
+    "phase_order": [
+      "main_analysis"
+    ],
+    "error_handling": {
+      "continue_on_task_failure": true,
+      "max_failed_tasks_per_phase": 3,
+      "retry_failed_tasks": true,
+      "max_retries": 2
+    },
+    "performance_targets": {
+      "max_total_execution_time": 600,
+      "max_phase_execution_time": 300,
+      "parallel_execution_timeout": 180
+    },
+    "adaptive_behavior": {
+      "skip_slow_tasks": false,
+      "prioritize_critical_checks": true,
+      "dynamic_timeout_adjustment": true
+    }
+  },
+  "output_structure": {
+    "health_status": {
+      "overall_status": "string",
+      "component_status": "object",
+      "critical_alerts": "array",
+      "performance_metrics": "object",
+      "recommendations": "array"
+    },
+    "execution_metadata": {
+      "total_execution_time": "number",
+      "checks_completed": "number",
+      "checks_failed": "number",
+      "timestamp": "string"
+    }
+  }
+}

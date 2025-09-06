@@ -123,7 +123,6 @@ class SplunkMCPAgent(BaseAgent):
     def _create_mcp_toolset(self) -> MCPToolset | None:
         """
         Create MCP toolset with session management and connection parameters.
-        Includes workaround for MCP client async task group issues.
 
         Returns:
             MCPToolset instance or None if creation fails
@@ -146,7 +145,7 @@ class SplunkMCPAgent(BaseAgent):
                 "X-Session-Validation": "enabled",
             }
 
-            # Create MCP toolset with improved connection parameters to reduce task group issues
+            # Create MCP toolset with connection parameters
             # Temporarily suppress ADK authentication warnings for MCP tools
             import logging
 

@@ -30,13 +30,13 @@ def get_base_path() -> Path:
     """Get the base path for the AI Sidekick source directory."""
     # Find the src/ai_sidekick_for_splunk directory
     current_path = Path.cwd()
-
+    
     # Look for src/ai_sidekick_for_splunk in current directory or parent directories
     for path in [current_path] + list(current_path.parents):
         src_path = path / "src" / "ai_sidekick_for_splunk"
         if src_path.exists():
             return src_path
-
+    
     # If not found, assume we're running from the package directory
     return Path(__file__).parent.parent
 
@@ -71,17 +71,26 @@ use_cases:
   - "Basic data analysis"
   - "System monitoring"
 
-# Simple workflow
+# Simple workflow - REQUIRES MINIMUM 2 SEARCHES FOR PARALLEL EXECUTION
 searches:
   - name: "basic_check"
+    title: "Basic Data Check"
     spl: 'search earliest=-24h | head 10 | table _time, index, sourcetype'
     earliest: "-24h@h"
     latest: "now"
     description: "Basic data check"
     expected_results: "Recent events sample"
+  
+  - name: "system_info"
+    title: "System Information"
+    spl: '| rest /services/server/info | table version, os_name, numberOfCores'
+    earliest: "-1m"
+    latest: "now"
+    description: "System information check"
+    expected_results: "System details"
 
-# Advanced Options
-parallel_execution: false
+# Advanced Options - PARALLEL EXECUTION REQUIRED
+parallel_execution: true
 streaming_support: true
 educational_mode: false
 estimated_duration: "2-3 minutes"
@@ -226,22 +235,22 @@ Examples:
     parser.add_argument(
         "--output-dir", help="Output directory (default: contrib/flows/NAME)", default=None
     )
-
+    
     parser.add_argument(
         "--template",
         choices=available_templates if available_templates else None,
         help=f"Use a built-in template with working SPL searches. Available: {', '.join(available_templates) if available_templates else 'None found'}",
         default=None,
     )
-
+    
     parser.add_argument(
         "--template-file",
         help="Path to a YAML template file for custom workflow creation",
         default=None,
     )
-
+    
     args = parser.parse_args()
-
+    
     # Validate arguments
     if args.template and args.template_file:
         safe_print("❌ Error: Cannot specify both --template and --template-file", file=sys.stderr)
@@ -254,16 +263,16 @@ Examples:
     try:
         # Get base path
         base_path = get_base_path()
-
+        
         # Determine output directory
         if args.output_dir:
             output_dir = Path(args.output_dir)
         else:
             output_dir = base_path / "contrib" / "flows" / args.name
-
+        
         # Create directory
         output_dir.mkdir(parents=True, exist_ok=True)
-
+        
         # Create workflow template using different methods
         if args.template_file:
             # Use YAML template file
@@ -279,7 +288,7 @@ Examples:
         else:
             # Use default template - create a minimal YAML template
             workflow_template, readme_content = create_default_workflow(args.name, output_dir)
-
+        
         # Validate the template
         try:
             # The template is already validated since it's created using Pydantic models
@@ -287,7 +296,7 @@ Examples:
         except Exception as e:
             print(f"❌ Template validation failed: {e}", file=sys.stderr)
             sys.exit(1)
-
+        
         # Handle different workflow creation paths
         workflow_dict = workflow_template
         workflow_name = workflow_dict.get("workflow_name", args.name)
@@ -296,12 +305,12 @@ Examples:
         workflow_file = output_dir / f"{args.name}.json"
         with open(workflow_file, "w", encoding="utf-8") as f:
             json.dump(workflow_dict, f, indent=2, ensure_ascii=False)
-
+        
         # Save README
         readme_file = output_dir / "README.md"
         with open(readme_file, "w", encoding="utf-8") as f:
             f.write(readme_content)
-
+        
         # Success output
         safe_print("🛠 Creating FlowPilot Workflow Agent")
         safe_print("=" * 60)
@@ -344,7 +353,7 @@ Examples:
         safe_print("├── ✅ Automatic JSON generation")
         safe_print("├── ✅ Built-in validation")
         safe_print("└── ✅ Easy customization via YAML")
-
+        
     except Exception as e:
         safe_print(f"❌ Error creating workflow agent: {e}", file=sys.stderr)
         sys.exit(1)

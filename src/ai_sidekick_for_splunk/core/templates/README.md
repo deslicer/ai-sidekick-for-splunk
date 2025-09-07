@@ -2,6 +2,24 @@
 
 This directory contains built-in YAML templates for creating FlowPilot workflow agents. These templates provide a simple way to create complex workflows without writing JSON.
 
+## 🚨 **IMPORTANT REQUIREMENTS**
+
+**FlowPilot workflows have specific requirements for proper execution:**
+
+### **✅ Parallel Execution Required**
+- All FlowPilot workflows **MUST** use parallel execution.
+- Sequential execution is **NOT supported** yet.
+- Templates automatically enforce `parallel: true`
+
+### **✅ Minimum 2 Searches Required**
+- FlowPilot requires **minimum 2 searches** per workflow
+- Single-search workflows cannot create micro agents
+- Templates will **reject** workflows with < 2 searches
+
+### **✅ Automatic Agent Assignment**
+- All tasks automatically get `"agent": "splunk_mcp"`
+- Enables proper micro agent creation and MCP search execution
+
 ## Available Templates
 
 ### `simple_health_check.yaml`
@@ -44,11 +62,14 @@ use_cases:
   - "First use case"
   - "Second use case"
 
-# Simple workflow (single phase)
+# Simple workflow (single phase) - MINIMUM 2 SEARCHES REQUIRED
 searches:
-  - name: "my_search"
-    spl: 'index=_internal | stats count'
-    description: "What this search does"
+  - name: "first_search"
+    spl: 'index=_internal | stats count by component'
+    description: "First search description"
+  - name: "second_search"
+    spl: 'index=_internal | stats count by sourcetype'
+    description: "Second search description"
 
 # OR Complex workflow (multiple phases)
 phases:
@@ -74,5 +95,36 @@ Templates are automatically validated for:
 - Required fields
 - SPL syntax (basic checks)
 - Business logic consistency
+- **Parallel execution requirements**
+- **Minimum search count (2+)**
+
+## 🚨 **Common Validation Errors**
+
+### **Error: "FlowPilot requires minimum 2 searches"**
+```
+❌ FlowPilot requires minimum 2 searches for parallel execution.
+   Found: 1 search(es)
+   Required: 2+ searches
+
+💡 Recommendations:
+   - Add another search to your template
+   - Example: Add a complementary search like system info, license check, etc.
+   - Sequential execution is not supported in FlowPilot workflows
+```
+
+**Solution:** Add at least one more search to your template.
+
+### **Error: "Sequential execution not supported"**
+FlowPilot workflows automatically use parallel execution. If you see this error, ensure your template has 2+ searches.
+
+## 📋 **Validation Commands**
+
+```bash
+# Validate YAML template before use
+ai-sidekick --validate-template my_template.yaml
+
+# Validate generated JSON workflow
+ai-sidekick --validate-workflow my_workflow.json --verbose
+```
 
 See the [Template Documentation](../templates/simple_template_format.md) for complete format specification.

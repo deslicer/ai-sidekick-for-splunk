@@ -165,7 +165,7 @@ class TemplateBusinessContext(BaseModel):
 class TemplateAdvancedOptions(BaseModel):
     """Advanced options for template behavior."""
     
-    parallel_execution: bool = Field(default=False, description="Can phases run in parallel")
+    parallel_execution: bool = Field(default=True, description="Can phases run in parallel")
     streaming_support: bool = Field(default=True, description="Support streaming responses")
     educational_mode: bool = Field(default=False, description="Include educational explanations")
     estimated_duration: str = Field(default="5-10 minutes", description="Estimated execution time")

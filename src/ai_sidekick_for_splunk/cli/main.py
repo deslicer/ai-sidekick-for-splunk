@@ -49,11 +49,12 @@ Examples:
   ai-sidekick --create-flow-agent my_custom --template-file my_workflow.yaml
   ai-sidekick --create-flow-agent data_analysis --template-file /path/to/custom_template.yaml
   
-  # Template creation and validation (for contributors)
+  # Template creation and validation
   ai-sidekick --create-template                              # Interactive template creation
   ai-sidekick --create-template --from-example simple_health_check  # Copy and modify example
   ai-sidekick --create-template --template-dir contrib/flows/my_flow  # Create in specific directory
-  ai-sidekick --validate-template my_template.yaml           # Validate template before use
+  ai-sidekick --validate-template my_template.yaml           # Validate YAML template before use
+  ai-sidekick --validate-workflow my_workflow.json           # Validate JSON workflow structure
 
 Available built-in templates: {', '.join(available_templates) if available_templates else 'None found'}
 
@@ -78,6 +79,12 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
         "--validate-template",
         metavar="TEMPLATE_FILE",
         help="Validate a YAML template file for FlowPilot compatibility",
+    )
+
+    action_group.add_argument(
+        "--validate-workflow",
+        metavar="WORKFLOW_FILE",
+        help="Validate a workflow JSON file for structure and format compliance",
     )
 
     action_group.add_argument(
@@ -118,6 +125,19 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
         help="Output directory for template creation (used with --create-template)"
     )
 
+    # Optional arguments for validate-workflow
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed validation information (used with --validate-workflow)"
+    )
+    
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Only show final result (used with --validate-workflow)"
+    )
+
     args = parser.parse_args()
 
     try:
@@ -141,6 +161,28 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
 
             try:
                 validate_main()
+            finally:
+                # Restore original argv
+                sys.argv = original_argv
+
+        elif args.validate_workflow:
+            # Import and call workflow validator
+            from ai_sidekick_for_splunk.cli.validate_workflow import main as validate_workflow_main
+
+            # Modify sys.argv to pass the workflow file and options to the validator
+            original_argv = sys.argv.copy()
+            new_argv = ["validate_workflow", args.validate_workflow]
+            
+            # Pass through relevant arguments
+            if hasattr(args, 'verbose') and args.verbose:
+                new_argv.append("--verbose")
+            if hasattr(args, 'quiet') and args.quiet:
+                new_argv.append("--quiet")
+            
+            sys.argv = new_argv
+
+            try:
+                validate_workflow_main()
             finally:
                 # Restore original argv
                 sys.argv = original_argv

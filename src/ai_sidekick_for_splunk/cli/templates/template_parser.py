@@ -164,7 +164,7 @@ class TemplateParser:
         
         # Extract advanced options
         advanced_options = {
-            'parallel_execution': template_data.get('parallel_execution', False),
+            'parallel_execution': template_data.get('parallel_execution', True),
             'streaming_support': template_data.get('streaming_support', True),
             'educational_mode': template_data.get('educational_mode', False),
             'estimated_duration': template_data.get('estimated_duration', '5-10 minutes'),

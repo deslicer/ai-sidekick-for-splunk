@@ -356,7 +356,7 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
                 phase_title="Main Analysis",
                 phase_description=f"{template.metadata.title} - Primary analysis phase",
                 searches=template.searches,
-                parallel=template.advanced_options.parallel_execution
+                parallel=True  # Force parallel execution
             )
         
         elif template.phases:
@@ -367,7 +367,7 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
                     phase_title=phase_def.title,
                     phase_description=phase_def.description,
                     searches=phase_def.searches,
-                    parallel=phase_def.parallel or template.advanced_options.parallel_execution,
+                    parallel=True,  # Force parallel execution
                     depends_on=phase_def.depends_on
                 )
         
@@ -379,10 +379,22 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
         phase_title: str,
         phase_description: str,
         searches: List[SearchDefinition],
-        parallel: bool = False,
+        parallel: bool = True,  # Force parallel execution
         depends_on: Optional[List[str]] = None
     ) -> Dict[str, Any]:
         """Create a phase definition from searches."""
+        
+        # VALIDATION: Require minimum 2 searches for parallel execution
+        if len(searches) < 2:
+            raise ValueError(
+                f"❌ FlowPilot requires minimum 2 searches for parallel execution.\n"
+                f"   Found: {len(searches)} search(es)\n"
+                f"   Required: 2+ searches\n\n"
+                f"💡 Recommendations:\n"
+                f"   - Add another search to your template\n"
+                f"   - Example: Add a complementary search like system info, license check, etc.\n"
+                f"   - Sequential execution is not supported in FlowPilot workflows"
+            )
         
         # Convert searches to tasks format (required by FlowPilot)
         tasks = []
@@ -393,6 +405,7 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
                 "description": search.description,
                 "goal": f"Execute {search.name} search",
                 "tool": "run_splunk_search",
+                "agent": "splunk_mcp",
                 "search_query": search.spl,
                 "parameters": {
                     "earliest_time": search.earliest,
@@ -404,12 +417,13 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
             }
             tasks.append(task)
         
+        # Force parallel execution (sequential not supported)
         phase = {
             "name": phase_title,
             "description": phase_description,
             "mandatory": True,
-            "parallel": parallel,
-            "max_parallel": min(len(tasks), 6) if parallel else 1,
+            "parallel": True,  # Always parallel
+            "max_parallel": min(len(tasks), 6),  # Always > 1 due to validation above
             "tasks": tasks,
             "success_criteria": [
                 "All searches completed successfully",

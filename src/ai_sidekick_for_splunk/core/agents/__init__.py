@@ -33,26 +33,26 @@ print("📋 Dynamic FlowPilot agents will be initialized when orchestrator is av
 def initialize_dynamic_agents(orchestrator=None):
     """
     Initialize dynamic FlowPilot agents from discovered workflows.
-    
+
     This function should be called by the orchestrator after it's fully initialized
     to ensure all FlowPilot agents have proper access to dependent agents like SplunkMCP.
-    
+
     Args:
         orchestrator: The main orchestrator instance with agent registry
-        
+
     Returns:
         Dictionary of agent_name -> FlowPilot instance
     """
     global _dynamic_agents, _dynamic_attr_names, _agents_initialized
-    
+
     if _agents_initialized:
         print(f"📋 Dynamic agents already initialized ({len(_dynamic_agents)} agents)")
         return _dynamic_agents
-    
+
     try:
-        print(f"🔄 Initializing dynamic FlowPilot agents with orchestrator...")
+        print("🔄 Initializing dynamic FlowPilot agents with orchestrator...")
         _dynamic_agents = create_dynamic_flowpilot_agents(orchestrator)
-        
+
         # Add dynamic agents as module attributes for discovery
         _dynamic_attr_names = []
         for agent_name, agent_instance in _dynamic_agents.items():
@@ -60,15 +60,16 @@ def initialize_dynamic_agents(orchestrator=None):
             attr_name = f"dynamic_{agent_name.lower().replace(' ', '_').replace('-', '_')}"
             globals()[attr_name] = agent_instance
             _dynamic_attr_names.append(attr_name)
-        
+
         _agents_initialized = True
         print(f"✅ Initialized {len(_dynamic_agents)} dynamic FlowPilot agents with orchestrator")
         print(f"   Dynamic agent attributes: {_dynamic_attr_names}")
         return _dynamic_agents
-        
+
     except Exception as e:
         print(f"❌ Failed to initialize dynamic agents: {e}")
         import traceback
+
         traceback.print_exc()
         return {}
 

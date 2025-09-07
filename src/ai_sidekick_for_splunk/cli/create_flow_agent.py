@@ -15,11 +15,12 @@ from ai_sidekick_for_splunk.core.utils.cross_platform import safe_print
 # Import template system for YAML template support
 try:
     from ai_sidekick_for_splunk.cli.templates import (
-        load_template,
-        generate_workflow_from_template,
-        parse_template_string,
         TemplateParseError,
+        generate_workflow_from_template,
+        load_template,
+        parse_template_string,
     )
+
     TEMPLATE_SYSTEM_AVAILABLE = True
 except ImportError as e:
     safe_print(f"⚠️  Template system not available: {e}", file=sys.stderr)
@@ -30,13 +31,13 @@ def get_base_path() -> Path:
     """Get the base path for the AI Sidekick source directory."""
     # Find the src/ai_sidekick_for_splunk directory
     current_path = Path.cwd()
-    
+
     # Look for src/ai_sidekick_for_splunk in current directory or parent directories
     for path in [current_path] + list(current_path.parents):
         src_path = path / "src" / "ai_sidekick_for_splunk"
         if src_path.exists():
             return src_path
-    
+
     # If not found, assume we're running from the package directory
     return Path(__file__).parent.parent
 
@@ -44,21 +45,21 @@ def get_base_path() -> Path:
 def create_default_workflow(name: str, output_dir: Path) -> tuple[dict, str]:
     """
     Create a default workflow using a minimal YAML template.
-    
+
     Args:
         name: Name for the workflow agent
         output_dir: Output directory for generated files
-        
+
     Returns:
         Tuple of (workflow_dict, readme_content)
     """
     if not TEMPLATE_SYSTEM_AVAILABLE:
         raise RuntimeError("Template system not available")
-    
+
     # Create a minimal default template
     default_template_content = f"""# Default Workflow Template
 name: "{name}"
-title: "{name.replace('_', ' ').title()} Workflow"
+title: "{name.replace("_", " ").title()} Workflow"
 description: "A basic workflow template for {name}"
 category: "analysis"
 complexity: "beginner"
@@ -95,70 +96,72 @@ streaming_support: true
 educational_mode: false
 estimated_duration: "2-3 minutes"
 """
-    
+
     try:
         # Parse the default template
         safe_print(f"📄 Creating default workflow template for: {name}")
         template = parse_template_string(default_template_content)
-        
+
         # Generate workflow JSON and README
-        safe_print(f"🔄 Generating FlowPilot workflow from default template...")
+        safe_print("🔄 Generating FlowPilot workflow from default template...")
         workflow_json, readme_content = generate_workflow_from_template(template, output_dir, name)
-        
+
         # Save the template file for reference
         template_file_path = output_dir / f"{name}.yaml"
-        with open(template_file_path, 'w', encoding='utf-8') as f:
+        with open(template_file_path, "w", encoding="utf-8") as f:
             f.write(default_template_content)
         safe_print(f"📋 Created template file: {template_file_path}")
-        
+
         # Create .template_source file for tracking
         source_file = output_dir / ".template_source"
-        with open(source_file, 'w', encoding='utf-8') as f:
-            f.write(f"source_template: default_generated\n")
+        with open(source_file, "w", encoding="utf-8") as f:
+            f.write("source_template: default_generated\n")
             f.write(f"generated_on: {datetime.now().isoformat()}\n")
             f.write(f"template_version: {template.metadata.version}\n")
             f.write(f"template_format: {template.metadata.template_format}\n")
-        
+
         safe_print(f"✅ Generated default workflow: {template.metadata.title}")
         return workflow_json, readme_content
-        
+
     except Exception as e:
         safe_print(f"❌ Failed to create default workflow: {e}", file=sys.stderr)
         raise
 
 
-def create_from_template_file(name: str, template_file_path: str, output_dir: Path) -> tuple[dict, str]:
+def create_from_template_file(
+    name: str, template_file_path: str, output_dir: Path
+) -> tuple[dict, str]:
     """
     Create workflow from YAML template file.
-    
+
     Args:
         name: Name for the workflow agent
         template_file_path: Path to YAML template file
         output_dir: Output directory for generated files
-        
+
     Returns:
         Tuple of (workflow_dict, readme_content)
     """
     if not TEMPLATE_SYSTEM_AVAILABLE:
         raise RuntimeError("Template system not available")
-    
+
     template_path = Path(template_file_path)
     if not template_path.exists():
         raise FileNotFoundError(f"Template file not found: {template_file_path}")
-    
+
     try:
         # Load and parse the YAML template
         safe_print(f"📄 Loading template from: {template_path}")
         template = load_template(template_path)
-        
+
         # Generate workflow JSON and README
-        safe_print(f"🔄 Generating FlowPilot workflow from template...")
+        safe_print("🔄 Generating FlowPilot workflow from template...")
         workflow_json, readme_content = generate_workflow_from_template(template, output_dir, name)
-        
+
         # Copy template file to output directory for reference (if not already there)
         template_copy_path = output_dir / f"{name}.yaml"
         import shutil
-        
+
         # Check if source and destination are the same file
         try:
             if template_path.resolve() != template_copy_path.resolve():
@@ -169,18 +172,18 @@ def create_from_template_file(name: str, template_file_path: str, output_dir: Pa
         except Exception as e:
             # If copy fails, continue without copying (template might already exist)
             safe_print(f"⚠️  Template copy skipped: {e}")
-        
+
         # Create .template_source file for tracking
         source_file = output_dir / ".template_source"
-        with open(source_file, 'w', encoding='utf-8') as f:
+        with open(source_file, "w", encoding="utf-8") as f:
             f.write(f"source_template: {template_path.absolute()}\n")
             f.write(f"generated_on: {datetime.now().isoformat()}\n")
             f.write(f"template_version: {template.metadata.version}\n")
             f.write(f"template_format: {template.metadata.template_format}\n")
-        
+
         safe_print(f"✅ Generated workflow from template: {template.metadata.title}")
         return workflow_json, readme_content
-        
+
     except TemplateParseError as e:
         safe_print(f"❌ Template parsing failed: {e}", file=sys.stderr)
         raise
@@ -206,7 +209,7 @@ def main():
     """Main CLI function for creating FlowPilot workflow agents."""
     # Get available templates dynamically
     available_templates = get_available_templates()
-    
+
     parser = argparse.ArgumentParser(
         description="Create FlowPilot workflow agents using YAML templates",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -224,7 +227,7 @@ Examples:
   ai-sidekick --create-flow-agent my_security --template-file security_audit.yaml
   ai-sidekick --create-flow-agent custom_analysis --template-file /path/to/my_template.yaml
   
-  Available built-in templates: {', '.join(available_templates) if available_templates else 'None found'}
+  Available built-in templates: {", ".join(available_templates) if available_templates else "None found"}
         """,
     )
 
@@ -235,22 +238,22 @@ Examples:
     parser.add_argument(
         "--output-dir", help="Output directory (default: contrib/flows/NAME)", default=None
     )
-    
+
     parser.add_argument(
         "--template",
         choices=available_templates if available_templates else None,
         help=f"Use a built-in template with working SPL searches. Available: {', '.join(available_templates) if available_templates else 'None found'}",
         default=None,
     )
-    
+
     parser.add_argument(
         "--template-file",
         help="Path to a YAML template file for custom workflow creation",
         default=None,
     )
-    
+
     args = parser.parse_args()
-    
+
     # Validate arguments
     if args.template and args.template_file:
         safe_print("❌ Error: Cannot specify both --template and --template-file", file=sys.stderr)
@@ -263,32 +266,39 @@ Examples:
     try:
         # Get base path
         base_path = get_base_path()
-        
+
         # Determine output directory
         if args.output_dir:
             output_dir = Path(args.output_dir)
         else:
             output_dir = base_path / "contrib" / "flows" / args.name
-        
+
         # Create directory
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Create workflow template using different methods
         if args.template_file:
             # Use YAML template file
-            workflow_template, readme_content = create_from_template_file(args.name, args.template_file, output_dir)
+            workflow_template, readme_content = create_from_template_file(
+                args.name, args.template_file, output_dir
+            )
         elif args.template:
             # Use built-in YAML template
             template_file_path = base_path / "core" / "templates" / f"{args.template}.yaml"
             if not template_file_path.exists():
-                safe_print(f"❌ Error: Built-in template '{args.template}' not found at {template_file_path}", file=sys.stderr)
+                safe_print(
+                    f"❌ Error: Built-in template '{args.template}' not found at {template_file_path}",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
-            
-            workflow_template, readme_content = create_from_template_file(args.name, str(template_file_path), output_dir)
+
+            workflow_template, readme_content = create_from_template_file(
+                args.name, str(template_file_path), output_dir
+            )
         else:
             # Use default template - create a minimal YAML template
             workflow_template, readme_content = create_default_workflow(args.name, output_dir)
-        
+
         # Validate the template
         try:
             # The template is already validated since it's created using Pydantic models
@@ -296,7 +306,7 @@ Examples:
         except Exception as e:
             print(f"❌ Template validation failed: {e}", file=sys.stderr)
             sys.exit(1)
-        
+
         # Handle different workflow creation paths
         workflow_dict = workflow_template
         workflow_name = workflow_dict.get("workflow_name", args.name)
@@ -305,12 +315,12 @@ Examples:
         workflow_file = output_dir / f"{args.name}.json"
         with open(workflow_file, "w", encoding="utf-8") as f:
             json.dump(workflow_dict, f, indent=2, ensure_ascii=False)
-        
+
         # Save README
         readme_file = output_dir / "README.md"
         with open(readme_file, "w", encoding="utf-8") as f:
             f.write(readme_content)
-        
+
         # Success output
         safe_print("🛠 Creating FlowPilot Workflow Agent")
         safe_print("=" * 60)
@@ -321,7 +331,7 @@ Examples:
         safe_print(f"✅ Created workflow: {args.name}.json")
         safe_print("✅ Created README: README.md")
         safe_print()
-        
+
         if args.template_file:
             template_info = f" (from template file: {Path(args.template_file).name})"
         elif args.template:
@@ -353,7 +363,7 @@ Examples:
         safe_print("├── ✅ Automatic JSON generation")
         safe_print("├── ✅ Built-in validation")
         safe_print("└── ✅ Easy customization via YAML")
-        
+
     except Exception as e:
         safe_print(f"❌ Error creating workflow agent: {e}", file=sys.stderr)
         sys.exit(1)

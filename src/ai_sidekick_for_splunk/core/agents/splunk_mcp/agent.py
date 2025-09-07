@@ -235,15 +235,15 @@ class SplunkMCPAgent(BaseAgent):
                 # Format context parameters for the request
                 context_params = []
                 for key, value in context.items():
-                    if key in ['earliest_time', 'latest_time'] and value:
+                    if key in ["earliest_time", "latest_time"] and value:
                         context_params.append(f"{key}={value}")
-                
+
                 if context_params:
                     task = f"{task}\nParameters: {dict(context)}"
 
             # Use the ADK LlmAgent which automatically has access to all MCP tools
             result = await self.process_request(task, context)
-            
+
             logger.info("✅ SplunkMCP task executed successfully")
             return {
                 "success": True,

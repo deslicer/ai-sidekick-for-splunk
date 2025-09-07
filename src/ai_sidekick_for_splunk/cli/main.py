@@ -30,7 +30,7 @@ def main():
     """Main CLI function with subcommands."""
     # Get available templates dynamically
     available_templates = get_available_templates()
-    
+
     parser = argparse.ArgumentParser(
         prog="ai-sidekick",
         description="AI Sidekick for Splunk - Multi-agent workflow orchestration system",
@@ -56,7 +56,7 @@ Examples:
   ai-sidekick --validate-template my_template.yaml           # Validate YAML template before use
   ai-sidekick --validate-workflow my_workflow.json           # Validate JSON workflow structure
 
-Available built-in templates: {', '.join(available_templates) if available_templates else 'None found'}
+Available built-in templates: {", ".join(available_templates) if available_templates else "None found"}
 
 For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
         """,
@@ -111,31 +111,31 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
 
     # Optional arguments for create-template
     parser.add_argument(
-        "--output", "-o",
-        help="Output file for generated template (used with --create-template)"
+        "--output", "-o", help="Output file for generated template (used with --create-template)"
     )
-    
+
     parser.add_argument(
         "--from-example",
-        help="Start from an existing example template (used with --create-template)"
+        help="Start from an existing example template (used with --create-template)",
     )
-    
+
     parser.add_argument(
         "--template-dir",
-        help="Output directory for template creation (used with --create-template)"
+        help="Output directory for template creation (used with --create-template)",
     )
 
     # Optional arguments for validate-workflow
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
-        help="Show detailed validation information (used with --validate-workflow)"
+        help="Show detailed validation information (used with --validate-workflow)",
     )
-    
+
     parser.add_argument(
         "--quiet",
         action="store_true",
-        help="Only show final result (used with --validate-workflow)"
+        help="Only show final result (used with --validate-workflow)",
     )
 
     args = parser.parse_args()
@@ -172,13 +172,13 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
             # Modify sys.argv to pass the workflow file and options to the validator
             original_argv = sys.argv.copy()
             new_argv = ["validate_workflow", args.validate_workflow]
-            
+
             # Pass through relevant arguments
-            if hasattr(args, 'verbose') and args.verbose:
+            if hasattr(args, "verbose") and args.verbose:
                 new_argv.append("--verbose")
-            if hasattr(args, 'quiet') and args.quiet:
+            if hasattr(args, "quiet") and args.quiet:
                 new_argv.append("--quiet")
-            
+
             sys.argv = new_argv
 
             try:
@@ -194,15 +194,15 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
             # Modify sys.argv to pass any additional arguments
             original_argv = sys.argv.copy()
             new_argv = ["create_template"]
-            
+
             # Pass through relevant arguments
-            if hasattr(args, 'output') and args.output:
+            if hasattr(args, "output") and args.output:
                 new_argv.extend(["--output", args.output])
-            if hasattr(args, 'from_example') and args.from_example:
+            if hasattr(args, "from_example") and args.from_example:
                 new_argv.extend(["--from-example", args.from_example])
-            if hasattr(args, 'template_dir') and args.template_dir:
+            if hasattr(args, "template_dir") and args.template_dir:
                 new_argv.extend(["--output-dir", args.template_dir])
-            
+
             sys.argv = new_argv
 
             try:

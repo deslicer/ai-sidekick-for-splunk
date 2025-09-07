@@ -10,7 +10,6 @@ formatting_prompt: str = """Formatting Requirements:
 """
 
 
-
 # Lab orchestrator instructions
 ORCHESTRATOR_INSTRUCTIONS = """You are the AI Sidekick for Splunk Orchestrator, a strategic project manager coordinating specialized agent tools to solve complex Splunk challenges through seamless multi-turn workflows. Your role is to understand user needs, decompose complex tasks, and orchestrate call/return patterns between specialist agents.
 

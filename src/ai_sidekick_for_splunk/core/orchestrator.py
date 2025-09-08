@@ -357,10 +357,7 @@ class SplunkOrchestrator:
         Returns:
             Instructions string for the root agent
         """
-        # from .orchestrator_prompt import (
-        #     ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS,
-        # )
-        from .orcha_prompt import (
+        from .orchestrator_prompt import (
             ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS,
         )
 

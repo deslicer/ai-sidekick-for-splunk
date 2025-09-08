@@ -384,10 +384,10 @@ class ComponentDiscovery:
                     metadata_attr = getattr(attr, "METADATA", None)
                     if metadata_attr and isinstance(metadata_attr, AgentMetadata):
                         # Check if agent is disabled
-                        if getattr(metadata_attr, 'disabled', False):
+                        if getattr(metadata_attr, "disabled", False):
                             logger.info(f"Skipping disabled BaseAgent: {metadata_attr.name}")
                             continue
-                        
+
                         self.registry_manager.agent_registry.register(
                             name=metadata_attr.name, cls=attr, metadata=metadata_attr
                         )
@@ -432,10 +432,12 @@ class ComponentDiscovery:
                     # Use the instance's metadata
                     if hasattr(attr, "metadata") and isinstance(attr.metadata, AgentMetadata):
                         # Check if agent is disabled
-                        if getattr(attr.metadata, 'disabled', False):
-                            logger.info(f"Skipping disabled BaseAgent instance: {attr.metadata.name}")
+                        if getattr(attr.metadata, "disabled", False):
+                            logger.info(
+                                f"Skipping disabled BaseAgent instance: {attr.metadata.name}"
+                            )
                             continue
-                        
+
                         self.registry_manager.agent_registry.register(
                             name=attr.metadata.name,
                             cls=type(attr),

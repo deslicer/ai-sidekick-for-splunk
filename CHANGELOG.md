@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/deslicer/ai-sidekick-for-splunk/compare/v0.1.0...v0.2.0) (2025-09-08)
+
+
+### Features
+
+* add interactive environment validation for workshop setup ([#12](https://github.com/deslicer/ai-sidekick-for-splunk/issues/12)) ([a20b8b1](https://github.com/deslicer/ai-sidekick-for-splunk/commit/a20b8b1761695311356dbe7ff7e1903a96b91e47))
+
 ## 0.1.0 (2025-09-02)
 
 

@@ -74,7 +74,7 @@ class SearchGuru(BaseAgent):
     def instructions(self) -> str:
         """Get the comprehensive agent instructions/prompt."""
         # Import and return the updated prompt
-        from .prompt import SEARCH_GURU_INSTRUCTIONS
+        from .search_guru_prompt import SEARCH_GURU_INSTRUCTIONS
 
         return SEARCH_GURU_INSTRUCTIONS
 

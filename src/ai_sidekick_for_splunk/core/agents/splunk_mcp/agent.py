@@ -103,7 +103,7 @@ class SplunkMCPAgent(BaseAgent):
             # Create agent with MCP toolset - wrap the toolset in a list
             # ADK LlmAgent expects tools to be a list, so wrap the MCPToolset in a list
             self._llm_agent = LlmAgent(
-                model=self.model_name,
+                model=self.config.model.primary_model
                 name=self.display_name,  # Use display_name for user-facing name
                 description=self.metadata.description,
                 instruction=self.instructions,

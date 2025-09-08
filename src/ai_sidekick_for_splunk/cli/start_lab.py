@@ -139,11 +139,11 @@ def ensure_virtualenv(project_root: Path) -> None:
 
 def prompt_for_missing_env_values(env_path: Path, env_values: dict[str, str]) -> dict[str, str]:
     """Prompt user for missing required environment variables and update .env file.
-    
+
     Args:
         env_path: Path to .env file
         env_values: Current environment values
-        
+
     Returns:
         Updated environment values dict
     """
@@ -151,71 +151,72 @@ def prompt_for_missing_env_values(env_path: Path, env_values: dict[str, str]) ->
         "GOOGLE_API_KEY": {
             "prompt": "Enter your Google AI Studio API key",
             "placeholder": "your-google-ai-studio-api-key",
-            "description": "Required for AI agent functionality"
+            "description": "Required for AI agent functionality",
         },
         "SPLUNK_MCP_SERVER_URL": {
             "prompt": "Enter your Splunk MCP server URL (e.g., http://localhost:8003)",
             "placeholder": "",
-            "description": "URL to your Splunk MCP server instance"
+            "description": "URL to your Splunk MCP server instance",
         },
         "SPLUNK_HOST": {
             "prompt": "Enter your Splunk host (e.g., localhost:8089)",
             "placeholder": "",
-            "description": "Splunk management host and port"
+            "description": "Splunk management host and port",
         },
         "SPLUNK_USERNAME": {
             "prompt": "Enter your Splunk username",
             "placeholder": "",
-            "description": "Username for Splunk authentication"
+            "description": "Username for Splunk authentication",
         },
         "SPLUNK_PASSWORD": {
             "prompt": "Enter your Splunk password",
             "placeholder": "",
             "description": "Password for Splunk authentication (will be masked in display)",
-            "sensitive": True
-        }
+            "sensitive": True,
+        },
     }
-    
+
     missing_vars = []
     updated_values = env_values.copy()
-    
+
     # Check for missing or placeholder values
     for var_name, config in required_vars.items():
         current_value = env_values.get(var_name, "") or os.environ.get(var_name, "")
         if not current_value or current_value == config["placeholder"]:
             missing_vars.append(var_name)
-    
+
     if not missing_vars:
         return updated_values
-    
+
     print("\n🔧 **Environment Setup Required**")
     print("=" * 50)
     print("Some required environment variables are missing or not configured.")
     print("Please provide the following information for your Splunk workshop environment:\n")
-    
+
     # Prompt for each missing variable
     for var_name in missing_vars:
         config = required_vars[var_name]
         print(f"📋 {config['description']}")
-        
+
         if config.get("sensitive"):
             import getpass
+
             value = getpass.getpass(f"{config['prompt']}: ")
         else:
             value = input(f"{config['prompt']}: ").strip()
-        
+
         if value:
             updated_values[var_name] = value
         else:
             print(f"❌ {var_name} is required. Exiting.")
             sys.exit(1)
         print()
-    
+
     # Update .env file
     print("💾 Updating .env file with your configuration...")
     update_env_file(env_path, updated_values)
     print("✅ Environment configuration saved!\n")
-    
+
     return updated_values
 
 
@@ -223,7 +224,7 @@ def update_env_file(env_path: Path, new_values: dict[str, str]) -> None:
     """Update .env file with new values, preserving existing content and comments."""
     lines = []
     updated_keys = set()
-    
+
     # Read existing file if it exists
     if env_path.exists():
         for line in env_path.read_text().splitlines():
@@ -238,13 +239,13 @@ def update_env_file(env_path: Path, new_values: dict[str, str]) -> None:
                     lines.append(line)
             else:
                 lines.append(line)
-    
+
     # Add any new keys that weren't in the original file
     for key, value in new_values.items():
         if key not in updated_keys:
             # Enclose new values in single quotes
             lines.append(f"{key}='{value}'")
-    
+
     # Write updated content
     env_path.write_text("\n".join(lines) + "\n")
 
@@ -253,20 +254,22 @@ def display_connection_info(env_values: dict[str, str]) -> None:
     """Display current Splunk connection information with masked sensitive data."""
     print("\n🔗 **Current Splunk Connection Configuration**")
     print("=" * 50)
-    
+
     # Display connection info
     google_key = env_values.get("GOOGLE_API_KEY", "")
     mcp_url = env_values.get("SPLUNK_MCP_SERVER_URL", "")
     splunk_host = env_values.get("SPLUNK_HOST", "")
     splunk_user = env_values.get("SPLUNK_USERNAME", "")
     splunk_pass = env_values.get("SPLUNK_PASSWORD", "")
-    
-    print(f"📡 Google AI API Key: {'*' * (len(google_key) - 4) + google_key[-4:] if len(google_key) > 4 else '***'}")
+
+    print(
+        f"📡 Google AI API Key: {'*' * (len(google_key) - 4) + google_key[-4:] if len(google_key) > 4 else '***'}"
+    )
     print(f"🌐 Splunk MCP Server: {mcp_url}")
     print(f"🖥️  Splunk Host: {splunk_host}")
     print(f"👤 Splunk Username: {splunk_user}")
     print(f"🔐 Splunk Password: {'*' * len(splunk_pass) if splunk_pass else 'Not set'}")
-    
+
     print("\n💡 To update these settings, edit the .env file manually.")
     print("=" * 50)
 
@@ -348,16 +351,16 @@ def main() -> None:
     if not env_path.exists():
         print("[ERROR] .env file not found. Please run setup-env first.", file=sys.stderr)
         sys.exit(1)
-    
+
     # Read current environment values
     env_values = read_env_file(env_path)
-    
+
     # Prompt for missing values and update .env if needed
     env_values = prompt_for_missing_env_values(env_path, env_values)
-    
+
     # Display current connection configuration
     display_connection_info(env_values)
-    
+
     # Validate that all required values are now present
     validate_env_values(env_values)
 

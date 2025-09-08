@@ -216,3 +216,7 @@ logs/
 *.bak
 *.orig
 *.rej
+
+
+env file
+.env

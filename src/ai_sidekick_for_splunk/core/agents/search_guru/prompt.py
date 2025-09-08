@@ -94,7 +94,7 @@ Always generate SPL that directly addresses the user's intent, leveraging MCP se
    index=<user_index> sourcetype=<your_sourcetype> 
    | fieldsummary 
    | spath input=values 
-   | eval sample=mvindex('{}.value', 0, 3) 
+   | eval sample=mvindex(\'{}.value\', 0, 3) 
    | table field count distinct_count sample
    ```
    - MCP server applies default -24h time bounds automatically
@@ -164,7 +164,7 @@ You have the following tools available to call, use the following tools as your 
   ```spl
   index=<user_index> sourcetype=<your_sourcetype> 
   | fieldsummary | spath input=values 
-  | eval sample=mvindex('{}.value', 0, 3) 
+  | eval sample=mvindex(\'{}.value\', 0, 3) 
   | table field count distinct_count sample
   ```
   (MCP server will apply -24h to now defaults automatically)

@@ -326,8 +326,11 @@ class AgentRegistry(BaseRegistry):
         """
         result = {}
         for name, entry in self._entries.items():
+            # Use display_name if available, otherwise fall back to name
+            display_name = getattr(entry.metadata, "display_name", None) or entry.metadata.name
             result[name] = {
                 "name": entry.metadata.name,
+                "display_name": display_name,
                 "description": entry.metadata.description,
                 "version": entry.metadata.version,
                 "author": entry.metadata.author,

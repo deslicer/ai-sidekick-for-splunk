@@ -48,6 +48,9 @@ class SplunkOrchestrator:
         # Perform discovery on initialization
         self._discover_components()
 
+        # Initialize dynamic FlowPilot agents after discovery
+        self._initialize_dynamic_agents()
+
         # Create ADK agent after discovery to ensure all tools are available
         try:
             self.create_adk_agent()
@@ -73,6 +76,51 @@ class SplunkOrchestrator:
         logger.info(
             f"Discovery complete: {discovery_result['agents']} agents, {discovery_result['tools']} tools"
         )
+
+    def _initialize_dynamic_agents(self) -> None:
+        """Initialize dynamic FlowPilot agents with orchestrator reference."""
+        try:
+            from .agents import initialize_dynamic_agents
+
+            logger.info("🔄 Initializing dynamic FlowPilot agents with orchestrator reference...")
+            dynamic_agents = initialize_dynamic_agents(orchestrator=self)
+
+            # Register dynamic agents with the registry
+            for agent_name, agent_instance in dynamic_agents.items():
+                try:
+                    # Set orchestrator reference on the agent
+                    if hasattr(agent_instance, "set_orchestrator"):
+                        agent_instance.set_orchestrator(self)
+
+                    # Register dynamic agent with the registry for ADK discovery
+                    # Dynamic agents are created after discovery, so we need to register them manually
+                    self.registry_manager.agent_registry.register(
+                        name=agent_name,
+                        cls=agent_instance.__class__,
+                        metadata=agent_instance.metadata,
+                        overwrite=True,
+                    )
+
+                    # Set the instance directly on the registry entry
+                    entry = self.registry_manager.agent_registry.get(agent_name)
+                    if entry:
+                        entry.instance = agent_instance
+                        entry.is_loaded = True
+
+                    logger.debug(f"✅ Registered dynamic agent: {agent_name}")
+
+                except Exception as e:
+                    logger.error(f"❌ Failed to register dynamic agent {agent_name}: {e}")
+
+            logger.info(
+                f"✅ Initialized and registered {len(dynamic_agents)} dynamic FlowPilot agents"
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize dynamic agents: {e}")
+            import traceback
+
+            logger.error(traceback.format_exc())
 
     def create_adk_agent(self) -> Any:
         """Create the main ADK agent that can route to sub-agents.
@@ -309,8 +357,8 @@ class SplunkOrchestrator:
         Returns:
             Instructions string for the root agent
         """
-        from .orchestrator_prompt_lab import (
-            ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS,
+        from .orchestrator_prompt import (
+            ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS,
         )
 
         return ORCHESTRATOR_INSTRUCTIONS
@@ -321,8 +369,8 @@ class SplunkOrchestrator:
         Returns:
             Instruction string for the main agent without tool references
         """
-        from .orchestrator_prompt_lab import (
-            ORCHESTRATOR_INSTRUCTIONS_LAB as ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS,
+        from .orchestrator_prompt import (
+            ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS,
         )
 
         return ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS

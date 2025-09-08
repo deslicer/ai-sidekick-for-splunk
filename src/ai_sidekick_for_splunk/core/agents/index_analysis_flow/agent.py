@@ -47,6 +47,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
             "modular",
         ],
         dependencies=["search_guru", "splunk_mcp", "result_synthesizer"],
+        disabled=True,  # Disabled - reference implementation, use FlowPilot IndexAnalysis instead
     )
 
     name = "IndexAnalysisFlow"
@@ -57,7 +58,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: Optional[dict[str, Any]] = None,
+        session_state: dict[str, Any] | None = None,
         flow_definition_path: str | None = None,
         orchestrator=None,
     ) -> None:
@@ -324,7 +325,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             logger.error(f"Failed to create IndexAnalysisFlow ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Execute index analysis using the loaded agent flow.
 

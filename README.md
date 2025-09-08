@@ -41,6 +41,15 @@
 3. **🔍 Auto-Discovery**: Automatically finds and registers workflows from `core/` and `contrib/`
 4. **⚡ Workflow Engine**: Orchestrates multi-agent workflows with parallel execution
 
+### **Active Agents**
+
+- **🔍 SplunkMCP**: Core agent for Splunk search operations and data retrieval
+- **🎯 SearchGuru**: Advanced search query optimization and analysis
+- **📊 ResultSynthesizer**: Intelligent result aggregation and business insights
+- **⚡ FlowPilot**: Universal workflow execution engine for JSON-defined workflows
+
+> **Note**: Additional experimental agents can be enabled/disabled via the `disabled` flag in agent metadata for safe experimentation.
+
 ## ✨ **Key Features**
 
 ### **Template-Driven Workflows**
@@ -117,51 +126,94 @@ Open `http://localhost:8087` and start using your AI agents!
 
 ## 💡 **Usage Examples**
 
-### **System Health Check**
+### **🚀 Quick Start - Using Built-in Templates**
+
+Create workflow agents using curated, stable templates:
+
+```bash
+# Health monitoring workflow
+ai-sidekick --create-flow-agent health_monitor --template simple_health_check
+
+# Security analysis workflow  
+ai-sidekick --create-flow-agent security_check --template security_audit
+
+# Data quality assessment workflow
+ai-sidekick --create-flow-agent data_quality --template data_quality_check
+```
+
+### **🎯 Advanced - Using Custom Templates**
+
+Create workflows from your own YAML templates:
+
+```bash
+# Use your custom template file
+ai-sidekick --create-flow-agent my_workflow --template-file my_custom_template.yaml
+
+# Use template from specific path
+ai-sidekick --create-flow-agent analysis --template-file /path/to/custom_workflow.yaml
+```
+
+### **🚨 FlowPilot Requirements**
+
+**All FlowPilot workflows require:**
+- ✅ **Minimum 2 searches** (for micro agent creation)
+- ✅ **Parallel execution** (sequential not supported)  
+- ✅ **Automatic agent assignment** (`"agent": "splunk_mcp"`)
+
+**Templates automatically enforce these requirements and show helpful error messages if violated.**
+
+### **🛠️ Template Creation & Validation**
+
+Create and validate your own templates:
+
+```bash
+# Create a new template interactively
+ai-sidekick --create-template
+
+# Create template based on existing example
+ai-sidekick --create-template --from-example simple_health_check
+
+# Validate your YAML template before use
+ai-sidekick --validate-template my_template.yaml
+
+# Validate workflow JSON files (for advanced users)
+ai-sidekick --validate-workflow my_workflow.json --verbose
+```
+
+### **🔧 System Management**
+
+```bash
+# Start the AI Sidekick system
+ai-sidekick --start
+
+# Stop the system
+ai-sidekick --stop
+```
+
+### **📋 Workflow Examples in Action**
+
+Once your agents are created and the system is running, interact through the web interface:
+
+#### **System Health Check**
 ```
 User: "Run a comprehensive health check on my Splunk environment"
 
 FlowPilot Agent:
 ├── Phase 1: System Information Gathering
-├── Phase 2: Health Assessment
+├── Phase 2: Health Assessment  
 ├── Phase 3: Performance Analysis
 └── Phase 4: Summary Report (via Result Synthesizer)
 ```
 
-### **Index Analysis**
+#### **Data Quality Analysis**
 ```
-User: "Analyze the performance of my main index"
+User: "Check data quality issues in my environment"
 
 FlowPilot Agent:
-├── Gather index metadata
 ├── Analyze data ingestion patterns
-├── Check storage utilization
-└── Generate optimization recommendations
-```
-
-### **Custom Workflows**
-Add your own workflows by creating JSON templates:
-
-```json
-{
-  "workflow_name": "Security Audit",
-  "workflow_id": "security.audit",
-  "workflow_type": "security",
-  "source": "contrib",
-  "core_phases": {
-    "scan": {
-      "name": "Security Scan",
-      "tasks": [
-        {
-          "task_id": "check_failed_logins",
-          "title": "Check Failed Login Attempts",
-          "tool": "search",
-          "prompt": "Search for failed login attempts in the last 24 hours"
-        }
-      ]
-    }
-  }
-}
+├── Check for missing data sources
+├── Validate data consistency
+└── Generate quality improvement recommendations
 ```
 
 ## 🏗️ **Architecture Deep Dive**
@@ -214,15 +266,34 @@ agents = factory.create_all_flow_pilot_agents()
 ### **Creating Workflow Agents**
 
 ```bash
-# Create a new FlowPilot workflow agent
-uv run ai-sidekick --create-flow-agent my_custom_workflow
+# Create a new FlowPilot workflow agent (generic)
+ai-sidekick --create-flow-agent my_custom_workflow
+
+# Create using built-in template
+ai-sidekick --create-flow-agent health_check --template simple_health_check
+
+# Create from custom template file
+ai-sidekick --create-flow-agent my_workflow --template-file custom.yaml
 
 # Restart to discover new workflow
-uv run ai-sidekick --stop
-uv run ai-sidekick --start
+ai-sidekick --stop
+ai-sidekick --start
 
 # Test your workflow in ADK Web interface
 # Visit: http://localhost:8087
+```
+
+### **Template Development**
+
+```bash
+# Create new template interactively
+ai-sidekick --create-template
+
+# Validate template before use
+ai-sidekick --validate-template my_template.yaml
+
+# Validate workflow JSON (advanced)
+ai-sidekick --validate-workflow workflow.json --verbose
 ```
 
 ### **Testing & Quality**

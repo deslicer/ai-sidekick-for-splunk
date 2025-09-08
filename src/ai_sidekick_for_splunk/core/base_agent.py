@@ -26,6 +26,8 @@ class AgentMetadata:
     author: str = "Unknown"
     tags: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
+    display_name: str | None = None  # User-friendly name for web interface
+    disabled: bool = False  # If True, agent will be skipped during discovery
 
 
 class BaseAgent(ABC):
@@ -94,6 +96,16 @@ class BaseAgent(ABC):
         """
         return self.config.model.primary_model
 
+    @property
+    def display_name(self) -> str:
+        """
+        Get the display name for this agent.
+
+        Returns:
+            Display name (uses display_name from metadata if available, otherwise name)
+        """
+        return self.metadata.display_name or self.metadata.name
+
     def get_llm_agent(self) -> Any | None:
         """
         Get the underlying ADK LlmAgent instance.
@@ -113,7 +125,7 @@ class BaseAgent(ABC):
 
             self._llm_agent = LlmAgent(
                 model=self.model_name,
-                name=self.metadata.name,
+                name=self.display_name,  # Use display_name for user-facing name
                 description=self.metadata.description,
                 instruction=self.instructions,
                 tools=self.tools,

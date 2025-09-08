@@ -361,7 +361,6 @@ class SplunkOrchestrator:
             ORCHESTRATOR_INSTRUCTIONS as ORCHESTRATOR_INSTRUCTIONS,
         )
 
-
         return ORCHESTRATOR_INSTRUCTIONS
 
     def _get_main_agent_instructions_no_tools(self) -> str:

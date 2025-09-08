@@ -13,7 +13,7 @@ Key Features:
 - Developer-first experience with scripted workflows
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "AI Sidekick for Splunk Team"
 
 # Core exports for framework consumers

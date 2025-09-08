@@ -30,6 +30,7 @@ class IndexAnalyzerAgent(BaseAgent):
         author="Workshop Participant",
         tags=["index_analyzer", "agent", "base"],
         dependencies=["splunk_mcp", "result_synthesizer"],
+        disabled=True,  # Disabled - replaced by FlowPilot IndexAnalysis
     )
 
     name = "IndexAnalyzer"

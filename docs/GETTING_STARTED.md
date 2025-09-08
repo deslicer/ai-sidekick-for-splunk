@@ -107,17 +107,99 @@ uv run ai-sidekick --stop
 # Or use Ctrl+C if running in foreground
 ```
 
-### Creating a New Workflow Agent
+### Agent Management
+
+AI Sidekick includes several built-in agents for different tasks:
+
+#### **Active Agents**
+- **SplunkMCP**: Core agent for Splunk search operations
+- **SearchGuru**: Advanced search query optimization and analysis
+- **ResultSynthesizer**: Intelligent result aggregation and insights
+- **FlowPilot**: Universal workflow execution engine for JSON-defined workflows
+
+#### **Experimental Agent Control**
+
+For developers and contributors, agents can be disabled/enabled for experimentation without breaking the system:
+
+```python
+# In agent metadata (e.g., src/ai_sidekick_for_splunk/contrib/agents/my_agent/agent.py)
+METADATA = AgentMetadata(
+    name="MyExperimentalAgent",
+    description="My experimental agent",
+    disabled=True,  # Set to False to enable
+)
+```
+
+**Benefits:**
+- **Safe Experimentation**: Disable agents without deleting code
+- **Easy Re-enable**: Change `disabled=False` and restart
+- **No File Moves**: Code stays in logical locations
+- **Clean System**: Disabled agents are skipped during discovery
+
+### Creating Workflow Agents
+
+#### **Using Built-in Templates (Recommended)**
 
 ```bash
-# Create a new FlowPilot workflow agent
-uv run ai-sidekick --create-flow-agent my_new_workflow
+# Create workflow from curated templates
+ai-sidekick --create-flow-agent health_check --template simple_health_check
+ai-sidekick --create-flow-agent security_audit --template security_audit
+ai-sidekick --create-flow-agent data_quality --template data_quality_check
+```
 
+#### **Using Custom Templates**
+
+```bash
+# Create workflow from your YAML template
+ai-sidekick --create-flow-agent my_workflow --template-file custom_template.yaml
+```
+
+#### **Generic Workflow (Advanced)**
+
+```bash
+# Create a generic workflow (requires manual JSON editing)
+ai-sidekick --create-flow-agent my_new_workflow
+```
+
+#### **Restart to Discover New Workflows**
+
+```bash
 # Restart to discover the new workflow
-uv run ai-sidekick --stop
-uv run ai-sidekick --start
+ai-sidekick --stop
+ai-sidekick --start
 
 # Test in ADK Web interface at http://localhost:8087
+```
+
+### Template Development
+
+#### **Creating Templates**
+
+```bash
+# Create a new template interactively
+ai-sidekick --create-template
+
+# Create template based on existing example
+ai-sidekick --create-template --from-example simple_health_check
+
+# Create template in specific directory
+ai-sidekick --create-template --template-dir contrib/flows/my_flow
+```
+
+#### **Validating Templates and Workflows**
+
+```bash
+# Validate YAML template before use
+ai-sidekick --validate-template my_template.yaml
+
+# Validate workflow JSON file (advanced users)
+ai-sidekick --validate-workflow my_workflow.json
+
+# Validate with detailed information
+ai-sidekick --validate-workflow my_workflow.json --verbose
+
+# Validate with minimal output
+ai-sidekick --validate-workflow my_workflow.json --quiet
 ```
 
 ### Code Quality Tools
@@ -164,13 +246,42 @@ FlowPilot workflows are defined by JSON templates with:
 
 ### Creating Workflow Templates
 
+#### **From Built-in Templates (Recommended)**
+
 ```bash
-# Generate a new workflow template
-uv run ai-sidekick --create-flow-agent security_analysis
+# Use curated, stable templates
+ai-sidekick --create-flow-agent security_analysis --template security_audit
+ai-sidekick --create-flow-agent health_monitor --template simple_health_check
+ai-sidekick --create-flow-agent data_check --template data_quality_check
+```
+
+#### **From Custom Templates**
+
+```bash
+# Create your own YAML template first
+ai-sidekick --create-template
+
+# Then use it to create workflow
+ai-sidekick --create-flow-agent my_workflow --template-file my_template.yaml
+```
+
+#### **Generic Template (Advanced)**
+
+```bash
+# Generate a generic workflow template (requires manual editing)
+ai-sidekick --create-flow-agent security_analysis
 
 # This creates:
 # - contrib/flows/security_analysis/security_analysis.json
 # - contrib/flows/security_analysis/README.md
+```
+
+#### **Validation**
+
+```bash
+# Validate your templates and workflows
+ai-sidekick --validate-template my_template.yaml
+ai-sidekick --validate-workflow security_analysis.json --verbose
 ```
 
 ### Workflow Discovery

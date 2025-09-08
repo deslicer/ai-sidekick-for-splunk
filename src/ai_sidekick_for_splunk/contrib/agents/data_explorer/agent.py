@@ -32,6 +32,7 @@ class DataExplorerAgent(BaseAgent):
         author="Saikrishna Gundeti",
         tags=["data-exploration", "business-intelligence", "splunk-analysis"],
         dependencies=["SplunkMCP"],
+        disabled=True,  # Disabled - experimental agent
     )
 
     name = "DataExplorer"

@@ -1,0 +1,185 @@
+# Simple Health Check Template
+# A beginner-friendly template for basic Splunk environment health monitoring
+
+# Basic Information
+name: "simple_health_check"
+title: "Simple Health Check Flow"
+description: "Basic health check of Splunk environment with essential system metrics"
+category: "monitoring"
+complexity: "beginner"
+version: "1.0.0"
+author: "community"
+
+# Requirements
+splunk_versions: ["8.0+", "9.0+"]
+required_permissions: ["search", "rest_api_access"]
+
+# Business Context
+business_value: "Quick assessment of Splunk system health and data flow status"
+use_cases:
+  - "Daily health monitoring"
+  - "Workshop demonstrations"
+  - "Basic system validation"
+  - "Learning FlowPilot capabilities"
+
+success_metrics:
+  - "System status verified"
+  - "Data flow confirmed"
+  - "Performance baseline established"
+
+target_audience:
+  - "Splunk beginners"
+  - "Workshop participants"
+  - "System administrators"
+
+# Simple workflow - using searches (not phases) for simplicity
+searches:
+  - name: "data_flow_check"
+    title: "Data Flow (24h Summary)"
+    description: "Quick view of events ingested per index in the last 24 hours and a diversity count of active indexes and sourcetypes."
+    spl: |
+      | tstats count WHERE index=* by index, sourcetype
+      | stats sum(count) as events, dc(index) as index_count, dc(sourcetype) as sourcetype_count
+    earliest: "-24h@h"
+    latest: "now"
+    expected_results: "Total events plus distinct index/sourcetype counts over 24h"
+
+  - name: "ingestion_heatmap"
+    title: "Ingestion Heatmap (Top Indexes)"
+    description: "Timechart of event volume for the busiest indexes to spot drops or spikes."
+    spl: |
+      | tstats count WHERE index=* by _time, index
+      | sort - count
+      | head 10000
+      | timechart span=1h sum(count) as events by index limit=10
+    earliest: "-24h@h"
+    latest: "now"
+    expected_results: "Hourly events by top indexes (last 24h)"
+
+  - name: "system_info"
+    title: "System Info (Version & Build)"
+    description: "Basic Splunk server information: version, build, host, OS, cores, and memory."
+    spl: |
+      | rest /services/server/info
+      | table version, build, serverName, os_name, numberOfCores, physicalMemoryMB
+    expected_results: "One row per server with version/build and hardware details"
+
+  - name: "license_usage_snapshot"
+    title: "License Usage Snapshot"
+    description: "Current license consumption vs quota using RolloverSummary records."
+    spl: |
+      index=_internal source=*license_usage.log type=RolloverSummary
+      | stats latest(b) as used_bytes latest(quota) as quota_bytes by pool
+      | eval usage_gb=round(used_bytes/1024/1024/1024,2),
+             quota_gb=round(quota_bytes/1024/1024/1024,2),
+             usage_pct=round(100*used_bytes/quota_bytes,2)
+      | table pool, usage_gb, quota_gb, usage_pct, used_bytes, quota_bytes
+      | sort - usage_pct
+    earliest: "-24h@h"
+    latest: "now"
+    expected_results: "License usage percent by pool and raw byte counters"
+
+  - name: "index_storage_status"
+    title: "Index Storage Status"
+    description: "Storage utilization per index based on home/cold expanded sizes."
+    spl: |
+      | rest /services/data/indexes
+      | eval current_size_gb = round(currentDBSizeMB/1024, 2)
+      | table title, splunk_server totalEventCount, current_size_gb, maxTotalDataSizeMB, frozenTimePeriodInSecs *
+      | sort - current_size_gb
+    expected_results: "Per-index size (GB) and event counts"
+
+  - name: "forwarder_connectivity"
+    title: "Forwarder Connectivity"
+    description: "Recent UF connectivity and throughput based on tcp input metrics."
+    spl: |
+      index=_internal source=*metrics.log group=tcpin_connections
+      | stats latest(kb) as latest_kb, latest(tcp_avg_thruput) as avg_thruput by hostname
+      | eval status=if(latest_kb>0,"connected","disconnected"),
+             thruput_mbps=round(avg_thruput/1024,2)
+      | sort - latest_kb
+      | table hostname, status, latest_kb, thruput_mbps
+    earliest: "-10m@m"
+    latest: "now"
+    expected_results: "Host-level connected/disconnected status and recent throughput"
+
+  - name: "skipped_searches"
+    title: "Scheduler Skipped Searches"
+    description: "Counts of skipped scheduled searches by app to detect scheduler pressure."
+    spl: |
+      index=_internal source=*scheduler.log status=skipped
+      | timechart span=5m count as skipped by app
+    earliest: "-1h@h"
+    latest: "now"
+    expected_results: "Time series of skipped searches grouped by app"
+
+  - name: "search_performance"
+    title: "Search Performance (Slow Searches)"
+    description: "Identify users impacted by slow searches (>5s) in the last hour."
+    spl: |
+      index=_audit action=search info=completed
+      | where total_run_time > 5
+      | stats count as slow_searches, avg(total_run_time) as avg_runtime,
+              max(total_run_time) as max_runtime by user
+      | eval performance_status=case(avg_runtime>30,"poor",
+                                     avg_runtime>10,"degraded",
+                                     true(),"good")
+      | sort - slow_searches
+    earliest: "-1h@h"
+    latest: "now"
+    expected_results: "Slow search counts and runtimes per user"
+
+  - name: "cpu_mem_snapshot"
+    title: "CPU & Memory Snapshot"
+    description: "Lightweight CPU and memory snapshot per host using platform introspection."
+    spl: |
+      index=_introspection sourcetype=splunk_resource_usage
+      | stats latest(data.cpu_system_pct) as cpu_sys,
+              latest(data.cpu_user_pct) as cpu_usr,
+              latest(data.mem_used) as mem_used,
+              latest(data.mem) as mem_total by host
+      | eval cpu_pct=round(cpu_sys+cpu_usr,2),
+             mem_pct=round(100*mem_used/mem_total,2)
+      | table host, cpu_pct, mem_pct
+      | sort - cpu_pct
+    earliest: "-15m@m"
+    latest: "now"
+    expected_results: "Per-host CPU% and Mem% snapshot"
+
+  - name: "indexer_peer_status"
+    title: "Indexer Peer Status"
+    description: "Status and searchability of indexer peers (Monitoring Console peer view)."
+    spl: |
+      | rest /services/server/status/peers
+      | rename peerName as splunk_server
+      | table splunk_server, status, isSearchable, site, label
+    expected_results: "One row per indexer peer with Up/Down and isSearchable flags"
+
+  - name: "dispatch_latency"
+    title: "Search Runtime Trend"
+    description: "Time series of average and max search total_run_time (proxy for dispatch/runtime health)."
+    spl: |
+      index=_audit action=search info=completed
+      | bin _time span=1m
+      | stats avg(total_run_time) as avg_runtime, max(total_run_time) as max_runtime by _time
+    earliest: "-1h@h"
+    latest: "now"
+    expected_results: "Time series of avg and max runtime (seconds)"
+
+  - name: "recent_errors"
+    title: "Recent Errors by Component"
+    description: "Top components emitting ERROR logs recently (triage view)."
+    spl: |
+      index=_internal log_level=ERROR
+      | stats count by component
+      | sort - count
+      | head 10
+    earliest: "-1h@h"
+    latest: "now"
+    expected_results: "Top 10 components by ERROR count in the last hour"
+
+# Advanced Options
+parallel_execution: true   # Simple searches can run in parallel
+streaming_support: true
+educational_mode: true     # Include explanations for learning
+estimated_duration: "3-5 minutes"

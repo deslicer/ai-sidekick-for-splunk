@@ -1,0 +1,111 @@
+# Security Audit Template
+# This template performs a comprehensive security analysis of a Splunk environment
+
+# Basic Information
+name: "security_audit"
+title: "Security Audit Flow"
+description: "Comprehensive security analysis of Splunk environment including authentication, access control, and system changes"
+category: "security"
+complexity: "intermediate"
+version: "1.0.0"
+author: "community"
+
+# Requirements
+splunk_versions: ["8.0+", "9.0+"]
+required_permissions: ["search", "rest_api_access"]
+required_indexes: ["_audit", "_internal"]
+
+# Business Context
+business_value: "Identify security vulnerabilities, compliance issues, and unauthorized access patterns"
+use_cases:
+  - "Security compliance auditing"
+  - "Threat detection and analysis"
+  - "Access control validation"
+  - "Incident response investigation"
+
+success_metrics:
+  - "Security issues identified and documented"
+  - "Compliance gaps highlighted"
+  - "Remediation recommendations provided"
+
+target_audience:
+  - "Security analysts"
+  - "Compliance officers"
+  - "System administrators"
+
+# Workflow Definition - Using phases for complex analysis
+phases:
+  - name: "authentication_analysis"
+    title: "Authentication Analysis"
+    description: "Analyze authentication patterns, failures, and suspicious activities"
+    searches:
+      - name: "failed_logins"
+        spl: 'index=_audit action=login_attempt success=false | stats count by user, src_ip | sort -count | head 20'
+        earliest: "-24h@h"
+        latest: "now"
+        description: "Identify failed login attempts in the last 24 hours"
+        expected_results: "List of users and IPs with failed login attempts"
+      
+      - name: "successful_logins"
+        spl: 'index=_audit action=login_attempt success=true | stats count by user | sort -count | head 20'
+        earliest: "-7d@d"
+        latest: "now"
+        description: "Track successful login frequency over the past week"
+        expected_results: "User login frequency analysis"
+      
+      - name: "unusual_login_times"
+        spl: 'index=_audit action=login_attempt success=true | eval hour=strftime(_time, "%H") | where hour<6 OR hour>22 | stats count by user, hour | sort -count'
+        earliest: "-7d@d"
+        latest: "now"
+        description: "Detect logins outside normal business hours"
+        expected_results: "Off-hours login activity"
+
+  - name: "access_control_review"
+    title: "Access Control Review"
+    description: "Review user permissions, role assignments, and privilege escalations"
+    searches:
+      - name: "user_roles"
+        spl: '| rest /services/authentication/users | table title, roles | rename title as username'
+        description: "List all users and their assigned roles"
+        expected_results: "User-to-role mapping"
+      
+      - name: "role_capabilities"
+        spl: '| rest /services/authorization/roles | table title, capabilities | rename title as role'
+        description: "List all roles and their capabilities"
+        expected_results: "Role capabilities matrix"
+      
+      - name: "admin_users"
+        spl: '| rest /services/authentication/users | search roles="*admin*" | table title, roles, email'
+        description: "Identify users with administrative privileges"
+        expected_results: "List of administrative users"
+
+  - name: "system_changes"
+    title: "System Changes Analysis"
+    description: "Track configuration changes, object modifications, and system alterations"
+    searches:
+      - name: "config_changes"
+        spl: 'index=_audit (action=edit_* OR action=create_* OR action=delete_*) | stats count by action, object, user | sort -count | head 30'
+        earliest: "-7d@d"
+        latest: "now"
+        description: "Track configuration and object changes"
+        expected_results: "Summary of system modifications"
+      
+      - name: "user_management_changes"
+        spl: 'index=_audit (action=create_user OR action=edit_user OR action=delete_user) | table _time, action, object, user | sort -_time'
+        earliest: "-30d@d"
+        latest: "now"
+        description: "Monitor user account management activities"
+        expected_results: "User management audit trail"
+      
+      - name: "search_activity"
+        spl: 'index=_audit action=search user!=splunk-system-user | stats count, dc(search) as unique_searches by user | sort -count | head 20'
+        earliest: "-24h@h"
+        latest: "now"
+        description: "Analyze user search activity patterns"
+        expected_results: "User search behavior analysis"
+
+# Advanced Options
+parallel_execution: false  # Security analysis should be sequential for proper correlation
+streaming_support: true
+educational_mode: true
+estimated_duration: "10-15 minutes"

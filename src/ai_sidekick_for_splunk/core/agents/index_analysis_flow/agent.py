@@ -38,8 +38,16 @@ class IndexAnalysisFlowAgent(BaseAgent):
         description="Production-ready index analysis using Guided Agent Flows framework with bounded intelligence and ResultSynthesizer integration",
         version="1.0.0",
         author="Saikrishna Gundeti",
-        tags=["index_analysis", "guided_agent_flows", "reasoning_flow_definitions", "bounded_intelligence", "production", "modular"],
-        dependencies=["search_guru", "splunk_mcp", "result_synthesizer"]
+        tags=[
+            "index_analysis",
+            "guided_agent_flows",
+            "reasoning_flow_definitions",
+            "bounded_intelligence",
+            "production",
+            "modular",
+        ],
+        dependencies=["search_guru", "splunk_mcp", "result_synthesizer"],
+        disabled=True,  # Disabled - reference implementation, use FlowPilot IndexAnalysis instead
     )
 
     name = "IndexAnalysisFlow"

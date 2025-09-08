@@ -8,14 +8,16 @@ across the entire AI Sidekick for Splunk system, including workflow execution ag
 from .flow_pilot import FlowPilot, create_dynamic_flowpilot_agents, get_all_dynamic_agents
 from .index_analysis_flow import IndexAnalysisFlowAgent
 from .result_synthesizer import ResultSynthesizerAgent
+from .search_guru import SearchGuru, create_search_guru_agent
 from .splunk_mcp import SplunkMCPAgent
 
 # Agent instances for auto-discovery
 result_synthesizer_agent = ResultSynthesizerAgent()
+search_guru_agent = create_search_guru_agent()
 splunk_mcp_agent = SplunkMCPAgent()
 
 # Specialized agents (not replaced by dynamic system)
-index_analysis_flow_agent = IndexAnalysisFlowAgent()
+# index_analysis_flow_agent = IndexAnalysisFlowAgent()  # Disabled - use FlowPilot IndexAnalysis instead
 
 # Dynamic FlowPilot agents from discovered workflows
 # Note: These will be created dynamically during module import
@@ -83,8 +85,9 @@ def get_all_agents():
     """
     agents = {
         "result_synthesizer_agent": result_synthesizer_agent,
+        "search_guru_agent": search_guru_agent,
         "splunk_mcp_agent": splunk_mcp_agent,
-        "index_analysis_flow_agent": index_analysis_flow_agent,
+        # "index_analysis_flow_agent": index_analysis_flow_agent,  # Disabled - use FlowPilot IndexAnalysis instead
     }
 
     # Add dynamic FlowPilot agents (automatically discovered workflows)
@@ -97,11 +100,14 @@ def get_all_agents():
 __all__ = [
     "ResultSynthesizerAgent",
     "result_synthesizer_agent",
+    "SearchGuru",
+    "search_guru_agent",
+    "create_search_guru_agent",
     "SplunkMCPAgent",
     "splunk_mcp_agent",
     "FlowPilot",
     "IndexAnalysisFlowAgent",
-    "index_analysis_flow_agent",
+    # "index_analysis_flow_agent",  # Disabled - use FlowPilot IndexAnalysis instead
     "initialize_dynamic_agents",
     "get_all_agents",
     "create_dynamic_flowpilot_agents",

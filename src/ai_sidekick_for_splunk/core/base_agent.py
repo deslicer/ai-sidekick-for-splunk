@@ -27,6 +27,7 @@ class AgentMetadata:
     tags: list[str] = field(default_factory=list)
     dependencies: list[str] = field(default_factory=list)
     display_name: str | None = None  # User-friendly name for web interface
+    disabled: bool = False  # If True, agent will be skipped during discovery
 
 
 class BaseAgent(ABC):

@@ -47,6 +47,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
             "modular",
         ],
         dependencies=["search_guru", "splunk_mcp", "result_synthesizer"],
+        disabled=True,  # Disabled - reference implementation, use FlowPilot IndexAnalysis instead
     )
 
     name = "IndexAnalysisFlow"

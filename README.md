@@ -41,6 +41,15 @@
 3. **🔍 Auto-Discovery**: Automatically finds and registers workflows from `core/` and `contrib/`
 4. **⚡ Workflow Engine**: Orchestrates multi-agent workflows with parallel execution
 
+### **Active Agents**
+
+- **🔍 SplunkMCP**: Core agent for Splunk search operations and data retrieval
+- **🎯 SearchGuru**: Advanced search query optimization and analysis
+- **📊 ResultSynthesizer**: Intelligent result aggregation and business insights
+- **⚡ FlowPilot**: Universal workflow execution engine for JSON-defined workflows
+
+> **Note**: Additional experimental agents can be enabled/disabled via the `disabled` flag in agent metadata for safe experimentation.
+
 ## ✨ **Key Features**
 
 ### **Template-Driven Workflows**

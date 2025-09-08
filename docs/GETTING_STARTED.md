@@ -107,6 +107,35 @@ uv run ai-sidekick --stop
 # Or use Ctrl+C if running in foreground
 ```
 
+### Agent Management
+
+AI Sidekick includes several built-in agents for different tasks:
+
+#### **Active Agents**
+- **SplunkMCP**: Core agent for Splunk search operations
+- **SearchGuru**: Advanced search query optimization and analysis
+- **ResultSynthesizer**: Intelligent result aggregation and insights
+- **FlowPilot**: Universal workflow execution engine for JSON-defined workflows
+
+#### **Experimental Agent Control**
+
+For developers and contributors, agents can be disabled/enabled for experimentation without breaking the system:
+
+```python
+# In agent metadata (e.g., src/ai_sidekick_for_splunk/contrib/agents/my_agent/agent.py)
+METADATA = AgentMetadata(
+    name="MyExperimentalAgent",
+    description="My experimental agent",
+    disabled=True,  # Set to False to enable
+)
+```
+
+**Benefits:**
+- **Safe Experimentation**: Disable agents without deleting code
+- **Easy Re-enable**: Change `disabled=False` and restart
+- **No File Moves**: Code stays in logical locations
+- **Clean System**: Disabled agents are skipped during discovery
+
 ### Creating Workflow Agents
 
 #### **Using Built-in Templates (Recommended)**

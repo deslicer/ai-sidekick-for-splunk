@@ -12,7 +12,7 @@ git clone https://github.com/your-username/ai-sidekick-for-splunk.git
 cd ai-sidekick-for-splunk
 
 # 2. Set up development environment
-./scripts/lab/check-prerequisites.sh  # Checks prerequisites and installs if needed
+./scripts/smart-install.sh  # Checks prerequisites and installs if needed
 ./scripts/lab/setup-env.sh           # Interactive setup with API keys
 ./scripts/lab/start-lab-setup.sh     # Start the lab environment
 

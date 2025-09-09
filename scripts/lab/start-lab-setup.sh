@@ -69,7 +69,7 @@ find_available_port() {
 # Step 1: Activate virtual environment
 log_info "Activating virtual environment..."
 if [ ! -d ".venv" ]; then
-    log_error "Virtual environment not found. Please run ./scripts/check-prerequisites.sh first"
+    log_error "Virtual environment not found. Please run ./scripts/smart-install.sh first"
     exit 1
 fi
 

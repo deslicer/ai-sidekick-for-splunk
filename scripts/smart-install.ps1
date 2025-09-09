@@ -1,4 +1,4 @@
-# AI Sidekick for Splunk Lab - Prerequisites Checker
+# AI Sidekick for Splunk - Installation Script
 # Verifies system requirements and installs missing dependencies
 # Ensures UV package manager and Git are available for project setup
 
@@ -8,18 +8,18 @@ param(
 )
 
 if ($Help) {
-    Write-Host "AI Sidekick for Splunk Lab - Prerequisites Checker" -ForegroundColor Cyan
+    Write-Host "AI Sidekick for Splunk - Installation Script" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Usage:"
-    Write-Host "    .\scripts\lab\check-prerequisites.ps1 [options]"
+    Write-Host "    .\scripts\smart-install.ps1 [options]"
     Write-Host ""
     Write-Host "Options:"
     Write-Host "    -Verbose      Show detailed version information and installation paths"
     Write-Host "    -Help         Show this help message"
     Write-Host ""
     Write-Host "Examples:"
-    Write-Host "    .\scripts\lab\check-prerequisites.ps1           # Check and install requirements"
-    Write-Host "    .\scripts\lab\check-prerequisites.ps1 -Verbose # Show detailed information"
+    Write-Host "    .\scripts\smart-install.ps1           # Check and install requirements"
+    Write-Host "    .\scripts\smart-install.ps1 -Verbose # Show detailed information"
     Write-Host ""
     Write-Host "Requirements:"
     Write-Host "    - UV package manager (handles Python and dependencies automatically)"
@@ -83,7 +83,7 @@ function Write-Verbose {
 # Welcome message
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan
-Write-Host "🚀 AI Sidekick for Splunk Lab - Prerequisites Check" -ForegroundColor Cyan
+Write-Host "🚀 AI Sidekick for Splunk - Installation" -ForegroundColor Cyan
 Write-Host "   Verifying system requirements and dependencies" -ForegroundColor Cyan
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host ""
@@ -393,7 +393,7 @@ if ($Verbose) {
 
 Write-Host ""
 Write-Host "===========================================================" -ForegroundColor Cyan
-Write-Host "🎉 Prerequisites Check Complete!" -ForegroundColor Green
+Write-Host "🎉 Installation Complete!" -ForegroundColor Green
 Write-Host "===========================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -402,9 +402,7 @@ Write-Success "Git version control available"
 Write-Success "System ready for setup"
 
 Write-Host ""
-Write-Step "🚀 Ready to Start:"
-Write-Host "1. Activate the virtual environment: .venv\Scripts\Activate.ps1"
-Write-Host "2. Start AI Sidekick: uv run ai-sidekick --start"
-Write-Host "3. Access web interface: http://localhost:8087"
+Write-Step "🚀 Next Steps:"
+Write-Host "Continue with the lab guide to start your AI Sidekick"
 Write-Host ""
-Write-Info "Virtual environment and dependencies are ready!"
+Write-Info "Installation complete! Your environment is ready."

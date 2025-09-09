@@ -7,7 +7,7 @@ to provide real-time Splunk administration and search capabilities.
 
 import logging
 import uuid
-from typing import Any
+from typing import Any, Optional
 
 from google.adk.agents import LlmAgent
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
@@ -216,7 +216,7 @@ class SplunkMCPAgent(BaseAgent):
             logger.error(f"Failed to create Splunk MCP ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute a Splunk MCP task using the ADK LlmAgent with MCP toolset.
 

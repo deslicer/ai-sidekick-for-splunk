@@ -5,7 +5,7 @@ Index analyzer agent
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from google.adk.agents import LlmAgent
 
@@ -103,7 +103,7 @@ class IndexAnalyzerAgent(BaseAgent):
             logger.error(f"❌ Failed to create {self.name} LlmAgent: {e}")
             return None
 
-    def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute comprehensive index analysis workflow.
 
@@ -298,7 +298,7 @@ class IndexAnalyzerAgent(BaseAgent):
         # and comprehensive final output
         return False
 
-    def validate_input(self, task: str, context: dict[str, Any] | None = None) -> bool:
+    def validate_input(self, task: str, context: Optional[dict[str, Any]] = None) -> bool:
         """
         Validate input parameters for the task.
 

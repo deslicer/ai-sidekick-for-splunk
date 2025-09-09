@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .template_models import SearchDefinition, SimpleTemplate
 
@@ -354,7 +354,7 @@ To modify this workflow, edit the `{template.metadata.name}.yaml` template file 
         phase_description: str,
         searches: list[SearchDefinition],
         parallel: bool = True,  # Force parallel execution
-        depends_on: Optional[list[str]] = None,
+        depends_on: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a phase definition from searches."""
 

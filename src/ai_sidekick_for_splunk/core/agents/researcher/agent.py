@@ -6,7 +6,7 @@ to access real-time information from the internet.
 """
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from google.adk.agents import Agent
 
@@ -108,7 +108,7 @@ class ResearcherAgent(BaseAgent):
 
         agent = Agent(
             model=self.config.model.primary_model,
-            name=self.name,
+            name="Researcher",
             description=self.description,
             instruction=RESEARCHER_PROMPT,
             tools=[google_search_grounding],
@@ -175,7 +175,7 @@ gathering via its direct access to current sources. Your role is to analyze and 
 insights based on provided information and your expertise.
 """
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute a research task.
 

@@ -58,7 +58,7 @@ class IndexAnalysisFlowAgent(BaseAgent):
         config: Config | None = None,
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
-        session_state: Optional[dict[str, Any]] = None,
+        session_state: dict[str, Any] | None = None,
         flow_definition_path: str | None = None,
         orchestrator=None,
     ) -> None:

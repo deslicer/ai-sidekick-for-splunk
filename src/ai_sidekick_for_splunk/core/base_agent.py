@@ -9,7 +9,7 @@ contract for agent implementations.
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from .config import Config
 
@@ -141,7 +141,7 @@ class BaseAgent(ABC):
             logger.error(f"Failed to initialize LlmAgent for {self.metadata.name}: {e}")
             raise
 
-    async def process_request(self, request: str, context: dict[str, Any] | None = None) -> str:
+    async def process_request(self, request: str, context: Optional[dict[str, Any]] = None) -> str:
         """
         Process a request using the agent.
 

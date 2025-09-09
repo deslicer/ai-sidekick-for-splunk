@@ -12,9 +12,7 @@ import platform
 import shutil
 import subprocess
 import sys
-import urllib.request
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 class Colors:
@@ -105,7 +103,7 @@ class PrerequisiteChecker:
             print(f"\n{Colors.CYAN}{Colors.BOLD}{message}{Colors.RESET}")
             print(f"{Colors.CYAN}{'=' * len(message.replace(self._get_emoji('search'), '').replace(self._get_emoji('tools'), '').replace(self._get_emoji('system'), '').strip())}{Colors.RESET}")
 
-    def run_command(self, command: List[str], timeout: int = 10) -> Tuple[bool, str, str]:
+    def run_command(self, command: list[str], timeout: int = 10) -> tuple[bool, str, str]:
         """Run command and return success, stdout, stderr"""
         try:
             result = subprocess.run(
@@ -258,7 +256,7 @@ class PrerequisiteChecker:
         else:
             self.print_info("Docker: Not found (optional)")
 
-    def get_system_info(self) -> Dict[str, str]:
+    def get_system_info(self) -> dict[str, str]:
         """Get comprehensive system information"""
         info = {
             'os': platform.system(),
@@ -286,7 +284,7 @@ class PrerequisiteChecker:
 
         return info
 
-    def detect_package_manager(self) -> Tuple[str, List[str]]:
+    def detect_package_manager(self) -> tuple[str, list[str]]:
         """Detect available package manager and return install commands"""
         system = platform.system()
 

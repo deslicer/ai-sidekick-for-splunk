@@ -141,14 +141,14 @@ def clean_splunk_host(host: str) -> str:
     """Clean Splunk host by removing protocol and trailing slash."""
     if not host:
         return host
-    
+
     # Remove protocol (http:// or https://)
-    if host.startswith(('http://', 'https://')):
-        host = host.split('://', 1)[1]
-    
+    if host.startswith(("http://", "https://")):
+        host = host.split("://", 1)[1]
+
     # Remove trailing slash
-    host = host.rstrip('/')
-    
+    host = host.rstrip("/")
+
     return host
 
 

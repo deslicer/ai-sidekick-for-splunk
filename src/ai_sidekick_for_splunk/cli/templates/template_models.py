@@ -193,9 +193,7 @@ class SimpleTemplate(BaseModel):
     business_context: TemplateBusinessContext = Field(..., description="Business context")
 
     # Workflow definition - either simple searches or complex phases
-    searches: list[SearchDefinition] | None = Field(
-        default=None, description="Simple search list"
-    )
+    searches: list[SearchDefinition] | None = Field(default=None, description="Simple search list")
     phases: list[PhaseDefinition] | None = Field(
         default=None, description="Complex phase definition"
     )

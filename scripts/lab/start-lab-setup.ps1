@@ -68,7 +68,7 @@ function Find-AvailablePort {
 # Step 1: Activate virtual environment
 Write-Info "Activating virtual environment..."
 if (-not (Test-Path ".venv")) {
-    Write-Error "Virtual environment not found. Please run .\scripts\check-prerequisites.ps1 first"
+    Write-Error "Virtual environment not found. Please run .\scripts\smart-install.ps1 first"
     exit 1
 }
 

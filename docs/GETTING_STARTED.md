@@ -21,17 +21,17 @@ cd ai-sidekick-for-splunk
 
 **macOS/Linux:**
 ```bash
-./scripts/lab/check-prerequisites.sh
+./scripts/smart-install.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-.\scripts\lab\check-prerequisites.ps1
+.\scripts\smart-install.ps1
 ```
 
 **Cross-Platform (Python):**
 ```bash
-python scripts/check-prerequisites.py
+python scripts/smart-install.py
 ```
 
 This will automatically:
@@ -340,9 +340,9 @@ print([agent.name for agent in agents])
 ```bash
 # Delete and recreate virtual environment
 rm -rf .venv
-./scripts/lab/check-prerequisites.sh  # macOS/Linux
+./scripts/smart-install.sh  # macOS/Linux
 # or
-.\scripts\lab\check-prerequisites.ps1  # Windows
+.\scripts\smart-install.ps1  # Windows
 ```
 
 **Dependency Issues:**

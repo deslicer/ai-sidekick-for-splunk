@@ -67,6 +67,7 @@ ignore = [
     "N818",  # Exception name should end with Error (HTTPException is for FastAPI compatibility)
     "E402",  # Module level import not at top (needed for test files with sys.path modifications)
     "N805",  # First argument should be named self (Pydantic validators correctly use cls)
+    "UP007", # Use X | Y for type annotations (ADK doesn't support this syntax yet)
 ]
 
 [tool.black]

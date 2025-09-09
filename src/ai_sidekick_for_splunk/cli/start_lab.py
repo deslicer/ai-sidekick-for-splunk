@@ -131,10 +131,25 @@ def ensure_virtualenv(project_root: Path) -> None:
     """Verify that a local virtual environment exists (parity with bash script)."""
     if not (project_root / ".venv").exists():
         print(
-            "[ERROR] Virtual environment not found. Please run ./scripts/check-prerequisites.sh first",
+            "[ERROR] Virtual environment not found. Please run ./scripts/smart-install.sh first",
             file=sys.stderr,
         )
         sys.exit(1)
+
+
+def clean_splunk_host(host: str) -> str:
+    """Clean Splunk host by removing protocol and trailing slash."""
+    if not host:
+        return host
+    
+    # Remove protocol (http:// or https://)
+    if host.startswith(('http://', 'https://')):
+        host = host.split('://', 1)[1]
+    
+    # Remove trailing slash
+    host = host.rstrip('/')
+    
+    return host
 
 
 def prompt_for_missing_env_values(env_path: Path, env_values: dict[str, str]) -> dict[str, str]:
@@ -159,9 +174,9 @@ def prompt_for_missing_env_values(env_path: Path, env_values: dict[str, str]) ->
             "description": "URL to your Splunk MCP server instance",
         },
         "SPLUNK_HOST": {
-            "prompt": "Enter your Splunk host (e.g., localhost:8089)",
+            "prompt": "Enter your Splunk host (e.g., localhost)",
             "placeholder": "",
-            "description": "Splunk management host and port",
+            "description": "Splunk hostname",
         },
         "SPLUNK_USERNAME": {
             "prompt": "Enter your Splunk username",
@@ -206,6 +221,9 @@ def prompt_for_missing_env_values(env_path: Path, env_values: dict[str, str]) ->
             value = input(f"{config['prompt']}: ").strip()
 
         if value:
+            # Clean Splunk host if needed
+            if var_name == "SPLUNK_HOST":
+                value = clean_splunk_host(value)
             updated_values[var_name] = value
         else:
             print(f"❌ {var_name} is required. Exiting.")

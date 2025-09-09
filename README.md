@@ -83,17 +83,17 @@ cd ai-sidekick-for-splunk
 
 **macOS/Linux:**
 ```bash
-./scripts/lab/check-prerequisites.sh
+./scripts/smart-install.sh
 ```
 
 **Windows:**
 ```powershell
-.\scripts\lab\check-prerequisites.ps1
+.\scripts\smart-install.ps1
 ```
 
 **Cross-Platform (Python):**
 ```bash
-python scripts/check-prerequisites.py
+python scripts/smart-install.py
 ```
 
 This will:

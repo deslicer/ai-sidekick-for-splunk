@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/deslicer/ai-sidekick-for-splunk/compare/v0.2.0...v0.3.0) (2025-09-09)
+
+
+### Features
+
+* Smart Installation Scripts and Enhanced Splunk Host Handling ([#15](https://github.com/deslicer/ai-sidekick-for-splunk/issues/15)) ([a67fc3a](https://github.com/deslicer/ai-sidekick-for-splunk/commit/a67fc3a365ff3ef1ae81bbdf1db2d2ab780706a7))
+
 ## [0.2.0](https://github.com/deslicer/ai-sidekick-for-splunk/compare/v0.1.0...v0.2.0) (2025-09-08)
 
 

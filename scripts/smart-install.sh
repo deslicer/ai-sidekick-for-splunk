@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AI Sidekick for Splunk Lab - Prerequisites Checker
+# AI Sidekick for Splunk - Installation Script
 # Verifies system requirements and installs missing dependencies
 # Ensures UV package manager and Git are available for project setup
 
@@ -32,18 +32,18 @@ done
 # Show help if requested
 if [[ "$HELP" == "true" ]]; then
     cat << 'EOF'
-AI Sidekick for Splunk Lab - Prerequisites Checker
+AI Sidekick for Splunk - Installation Script
 
 Usage:
-    ./scripts/lab/check-prerequisites.sh [options]
+    ./scripts/smart-install.sh [options]
 
 Options:
     --verbose, -v     Show detailed version information and installation paths
     --help, -h        Show this help message
 
 Examples:
-    ./scripts/lab/check-prerequisites.sh           # Check and install requirements
-    ./scripts/lab/check-prerequisites.sh --verbose # Show detailed information
+    ./scripts/smart-install.sh           # Check and install requirements
+    ./scripts/smart-install.sh --verbose # Show detailed information
 
 Requirements:
     - UV package manager (handles Python and dependencies automatically)
@@ -115,7 +115,7 @@ missing_requirements=()
 # Welcome message
 echo ""
 echo "==========================================================="
-echo "🚀 AI Sidekick for Splunk Lab - Prerequisites Check"
+echo "🚀 AI Sidekick for Splunk - Installation"
 echo "   Verifying system requirements and dependencies"
 echo "==========================================================="
 echo ""
@@ -357,7 +357,7 @@ fi
 
 # Final summary
 echo "================================================================"
-log_step "${EMOJI_PARTY} Prerequisites Check Complete!"
+log_step "${EMOJI_PARTY} Installation Complete!"
 echo "================================================================"
 echo ""
 
@@ -368,12 +368,10 @@ if [[ ${#missing_requirements[@]} -eq 0 ]]; then
     log_success "System ready for setup"
     
     echo ""
-    log_step "🚀 Ready to Start:"
-    echo "1. Activate the virtual environment: source .venv/bin/activate"
-    echo "2. Start AI Sidekick: uv run ai-sidekick --start"
-    echo "3. Access web interface: http://localhost:8087"
+    log_step "🚀 Next Steps:"
+    echo "Continue with the lab guide to start your AI Sidekick"
     echo ""
-    log_info "Virtual environment and dependencies are ready!"
+    log_info "Installation complete! Your environment is ready."
 else
     log_error "Missing required tools: $(IFS=', '; echo "${missing_requirements[*]}")"
     echo ""

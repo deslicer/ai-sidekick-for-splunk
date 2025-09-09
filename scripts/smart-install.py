@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AI Sidekick for Splunk Lab - Prerequisites Checker
+AI Sidekick for Splunk - Installation Script
 Verifies system requirements and installs missing dependencies
 Ensures UV package manager and Git are available for project setup
 """
@@ -35,7 +35,7 @@ class Colors:
 
 
 class PrerequisiteChecker:
-    """Prerequisites checker for AI Sidekick for Splunk Lab"""
+    """Installation script for AI Sidekick for Splunk"""
 
     def __init__(self, verbose: bool = False, json_output: bool = False, check_only: bool = False):
         self.verbose = verbose
@@ -438,20 +438,20 @@ class PrerequisiteChecker:
             print()
             self.print_header("🔄 After Installation")
             print(f"{Colors.CYAN}Run this script again to verify installation:{Colors.RESET}")
-            print(f"{Colors.WHITE}python scripts/check-prerequisites.py{Colors.RESET}")
+            print(f"{Colors.WHITE}python scripts/smart-install.py{Colors.RESET}")
 
 
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="AI Sidekick for Splunk Lab - Prerequisites Checker",
+        description="AI Sidekick for Splunk - Installation Script",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-    python scripts/check-prerequisites.py            # Check and setup environment
-    python scripts/check-prerequisites.py --verbose  # Show detailed information
-    python scripts/check-prerequisites.py --check-only # Only check, don't install
-    python scripts/check-prerequisites.py --json     # JSON output for automation
+    python scripts/smart-install.py            # Check and setup environment
+    python scripts/smart-install.py --verbose  # Show detailed information
+    python scripts/smart-install.py --check-only # Only check, don't install
+    python scripts/smart-install.py --json     # JSON output for automation
 
 Requirements:
     - UV package manager (handles Python and dependencies automatically)

@@ -63,7 +63,7 @@ jobs:
       run: uv sync --dev
 
     - name: Run safety check
-      run: uv run pip-audit || echo "Security scan completed"
+      run: uv tool run pip-audit || echo "Security scan completed"
 
   build-test:
     runs-on: ubuntu-latest

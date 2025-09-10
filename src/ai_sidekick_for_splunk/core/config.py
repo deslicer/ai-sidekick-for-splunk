@@ -21,11 +21,9 @@ class ModelConfig:
     # Default to Gemini models for Google ADK compatibility
     # Note: Using 2.0-flash for better multi-tool support (Google Search + sub-agents)
     # See: https://ai.google.dev/gemini-api/docs/function-calling for supported models
-    primary_model: str = field(
-        default_factory=lambda: os.getenv("SPLUNK_AI_MODEL", "gemini-2.0-flash")
-    )
+    primary_model: str = field(default_factory=lambda: os.getenv("BASE_MODEL", "gemini-2.5"))
     fallback_model: str = field(
-        default_factory=lambda: os.getenv("SPLUNK_AI_FALLBACK_MODEL", "gemini-2.0-flash")
+        default_factory=lambda: os.getenv("TUTOR_MODEL", "gemini-2.0-flash")
     )
     temperature: float = field(
         default_factory=lambda: float(os.getenv("SPLUNK_AI_TEMPERATURE", "0.7"))

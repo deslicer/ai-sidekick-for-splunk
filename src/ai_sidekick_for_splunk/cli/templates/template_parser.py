@@ -8,7 +8,7 @@ structured data that can be converted to complex FlowPilot JSON workflows.
 import hashlib
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from pydantic import ValidationError
@@ -237,7 +237,7 @@ class TemplateParser:
             logger.warning(f"Failed to calculate hash for {template_path}: {e}")
             return ""
 
-    def validate_template_syntax(self, template_path: Path) -> tuple[bool, Optional[str]]:
+    def validate_template_syntax(self, template_path: Path) -> tuple[bool, str | None]:
         """
         Validate template syntax without full parsing.
 
@@ -271,7 +271,7 @@ def load_template(template_path: Path) -> SimpleTemplate:
     return parser.load_template_from_file(template_path)
 
 
-def validate_template(template_path: Path) -> tuple[bool, Optional[str]]:
+def validate_template(template_path: Path) -> tuple[bool, str | None]:
     """
     Validate a template file.
 

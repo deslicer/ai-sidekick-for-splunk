@@ -325,7 +325,7 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
             logger.error(f"Failed to create IndexAnalysisFlow ADK agent: {e}")
             return None
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute index analysis using the loaded agent flow.
 

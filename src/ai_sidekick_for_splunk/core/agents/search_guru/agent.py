@@ -7,6 +7,7 @@ and comprehensive index data analysis with insights generation.
 
 import logging
 import re
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -30,11 +31,11 @@ class SearchGuru(BaseAgent):
     # Class metadata for discovery system
     METADATA = AgentMetadata(
         name="search_guru",
-        description="SPL Expert & Performance Consultant for search optimization and strategy",
+        description="SPL Expert & Performance Consultant with direct MCP tool access for search optimization and documentation",
         version="4.0.0",
         author="Saikrishna Gundeti",
-        tags=["search", "spl", "optimization", "performance", ""],
-        dependencies=["SplunkMCP"],
+        tags=["search", "spl", "optimization", "performance", "mcp", "direct_tools"],
+        dependencies=["mcp_server"],
     )
 
     def __init__(
@@ -55,16 +56,88 @@ class SearchGuru(BaseAgent):
         if metadata is None:
             metadata = AgentMetadata(
                 name="search_guru",
-                description="Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights",
-                version="3.0.0",
+                description="Comprehensive Splunk search specialist with direct MCP tool access for SPL generation, optimization, and insights",
+                version="4.0.0",
                 author="Saikrishna Gundeti",
-                tags=["search", "spl", "optimization", "insights", "analysis"],
-                dependencies=["splunk_mcp"],
+                tags=["search", "spl", "optimization", "insights", "analysis", "mcp", "direct_tools"],
+                dependencies=["mcp_server"],
             )
 
         super().__init__(config, metadata, tools, session_state)
         self.name = "search_guru"
         self.description = "Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights"
+
+    def _create_mcp_toolset_for_spl_reference(self):
+        """
+        Create MCPToolset specifically for SPL documentation tools.
+        
+        Uses the same MCP server configuration as splunk_mcp but filters to only
+        allow get_spl_reference and related documentation tools.
+        
+        Returns:
+            MCPToolset instance with documentation tools only, or None if creation fails
+        """
+        try:
+            from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+            from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+            
+            # Session management headers (same as splunk_mcp)
+            session_id = f"search-guru-{uuid.uuid4()}"
+            headers = {
+                "X-Splunk-Host": self.config.splunk.host,
+                "X-Splunk-Port": str(self.config.splunk.port),
+                "X-Splunk-Username": self.config.splunk.username,
+                "X-Splunk-Password": self.config.splunk.password,
+                "X-Splunk-Verify-SSL": str(self.config.splunk.verify_ssl).lower(),
+                "X-Session-ID": session_id,
+                "X-Session-Persistent": "true",
+                "X-Connection-Keep-Alive": "true",
+                "X-Auto-Reconnect": "true",
+                "X-Session-Validation": "enabled",
+            }
+
+            # Temporarily suppress ADK authentication warnings for MCP tools
+            adk_auth_logger = logging.getLogger(
+                "google_adk.google.adk.tools.base_authenticated_tool"
+            )
+            original_level = adk_auth_logger.level
+            adk_auth_logger.setLevel(logging.ERROR)
+
+            try:
+                # Create MCPToolset with tool filtering for documentation tools only
+                mcp_toolset = MCPToolset(
+                    connection_params=StreamableHTTPConnectionParams(
+                        url=self.config.splunk.mcp_server_url,
+                        headers=headers,
+                        timeout=15.0,
+                        sse_read_timeout=60.0,
+                        terminate_on_close=True,
+                        max_retries=2,
+                        retry_delay=1.0,
+                    ),
+                    # Whitelist only SPL documentation tools for search_guru
+                    tool_filter=[
+                        "get_spl_reference",
+                        "get_splunk_documentation", 
+                        "get_splunk_cheat_sheet",
+                        "list_spl_commands",
+                        "get_troubleshooting_guide",
+                        "get_admin_guide",
+                        "list_troubleshooting_topics",
+                        "list_admin_topics",
+                    ]
+                )
+            finally:
+                # Restore original logging level
+                adk_auth_logger.setLevel(original_level)
+
+            logger.info(f"SearchGuru MCP toolset created for documentation tools at: {self.config.splunk.mcp_server_url}")
+            logger.debug("Whitelisted tools: get_spl_reference, get_splunk_documentation, get_splunk_cheat_sheet, etc.")
+            return mcp_toolset
+
+        except Exception as e:
+            logger.error(f"Failed to create SearchGuru MCP toolset: {e}")
+            return None
 
     def get_metadata(self) -> AgentMetadata:
         """Get agent metadata for registration."""
@@ -117,25 +190,29 @@ class SearchGuru(BaseAgent):
     async def _handle_spl_generation(
         self, task: str, context: dict[str, Any] | None
     ) -> dict[str, Any]:
-        """Handle SPL generation tasks with MCP tool references."""
+        """Handle SPL generation tasks with direct MCP tool access."""
         return {
             "success": True,
             "task_type": "spl_generation",
-            "approach": "Use MCP tools for documentation-backed SPL generation",
-            "mcp_tools_recommended": {
+            "approach": "Direct MCP tool access for documentation-backed SPL generation",
+            "mcp_tools_available": {
                 "get_spl_reference": "Get official SPL command syntax and examples",
                 "get_splunk_documentation": "Access current best practices and patterns",
                 "get_splunk_cheat_sheet": "Quick reference for common SPL patterns",
                 "list_spl_commands": "Discover available commands for specific use cases",
             },
-            "transfer_suggestion": """
-For complex SPL generation, transfer to @splunk_mcp:
+            "direct_access_notice": """
+✅ SearchGuru now has DIRECT access to MCP documentation tools!
 
-@splunk_mcp: I need help generating SPL for [specific use case]. Please use:
-- get_spl_reference for syntax validation
-- get_splunk_documentation for best practices
-- Return optimized SPL with explanations
+I can call get_spl_reference('mvindex') directly to retrieve official
+Splunk documentation and provide you with accurate SPL examples.
 """,
+            "capabilities": [
+                "✅ Direct get_spl_reference tool access",
+                "✅ Real-time SPL syntax validation", 
+                "✅ Official Splunk documentation lookup",
+                "✅ Best practices from Splunk knowledge base",
+            ],
             "best_practices": [
                 "Start with specific index and sourcetype filters",
                 "Use time range filtering for performance",
@@ -232,53 +309,68 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
     async def _handle_general_task(
         self, task: str, context: dict[str, Any] | None
     ) -> dict[str, Any]:
-        """Handle general search-related tasks."""
+        """Handle general search-related tasks with direct MCP tool access."""
         return {
             "success": True,
             "task_type": "general",
-            "message": "Comprehensive search assistance available with ADK native transfers",
+            "message": "Comprehensive search assistance with DIRECT MCP tool access and ADK transfers",
             "capabilities": [
-                "SPL Generation with MCP documentation support",
+                "✅ SPL Generation with DIRECT MCP documentation access",
+                "✅ Real-time get_spl_reference tool calls",
                 "SPL Optimization with performance analysis",
                 "Search Execution via @splunk_mcp transfers",
                 "Result Analysis with business context",
                 "Index Data Insights automated workflow",
             ],
-            "mcp_integration": {
+            "direct_mcp_tools": {
                 "documentation_tools": [
-                    "get_spl_reference",
-                    "get_splunk_documentation",
-                    "get_splunk_cheat_sheet",
+                    "get_spl_reference - Direct access to official SPL syntax",
+                    "get_splunk_documentation - Real-time Splunk docs lookup",
+                    "get_splunk_cheat_sheet - Quick SPL reference access",
                 ],
                 "troubleshooting_tools": ["get_troubleshooting_guide", "get_admin_guide"],
-                "execution_tools": ["run_one_shot", "run_splunk_search"],
                 "discovery_tools": [
                     "list_spl_commands",
-                    "list_troubleshooting_topics",
+                    "list_troubleshooting_topics", 
                     "list_admin_topics",
                 ],
             },
-            "transfer_pattern": "Use @splunk_mcp for all Splunk environment operations",
+            "hybrid_approach": {
+                "direct_access": "Documentation tools (get_spl_reference, etc.) via MCP",
+                "orchestrator_transfers": "Search execution and complex analysis via @splunk_mcp",
+            },
+            "upgrade_notice": "🎉 SearchGuru now has direct MCP tool access! No need to transfer to @splunk_mcp for basic SPL documentation.",
         }
 
     def get_capabilities(self) -> list[str]:
-        """Get comprehensive agent capabilities."""
+        """Get comprehensive agent capabilities with direct MCP tool access."""
         return [
             "spl_generation",
-            "spl_optimization",
+            "spl_optimization", 
             "search_execution_transfer",
             "result_analysis",
             "index_data_insights",
             "performance_tuning",
             "documentation_integration",
             "adk_native_transfers",
+            # Direct MCP tool access
+            "direct_mcp_tool_access",
+            "get_spl_reference_direct",
+            "get_splunk_documentation_direct",
+            "get_splunk_cheat_sheet_direct",
+            "list_spl_commands_direct",
+            "list_troubleshooting_topics_direct",
+            "list_admin_topics_direct",
+            "get_troubleshooting_guide_direct",
+            "get_admin_guide_direct",
         ]
 
     def get_adk_agent(self, tools: list[Any] | None = None) -> Any:
         """
-        Get ADK-compatible agent for sub-agent delegation.
+        Get ADK-compatible agent with MCP tools for SPL documentation.
 
-        This version uses ADK's native transfer mechanism instead of custom delegation.
+        This version includes MCPToolset with whitelisted documentation tools,
+        enabling direct access to get_spl_reference and related tools.
         """
         try:
             from google.adk.agents import LlmAgent
@@ -288,19 +380,27 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
                 self.tools = tools
                 logger.debug(f"SearchGuru agent received {len(tools)} tools")
 
-            # Use provided tools or empty list
+            # Start with provided tools or empty list
             agent_tools = tools or []
 
-            # Create ADK agent with native transfer support
+            # Add MCPToolset for SPL documentation tools
+            mcp_toolset = self._create_mcp_toolset_for_spl_reference()
+            if mcp_toolset:
+                agent_tools.append(mcp_toolset)
+                logger.info("Added MCPToolset with SPL documentation tools to SearchGuru")
+            else:
+                logger.warning("Failed to create MCPToolset - SearchGuru will work without MCP tools")
+
+            # Create ADK agent with MCP tools and native transfer support
             adk_agent = LlmAgent(
                 model=self.config.model.primary_model,
                 name=self.name,
-                description=f"{self.description} - Uses ADK native transfers to splunk_mcp",
+                description=f"{self.description} - Direct access to SPL documentation via MCP",
                 instruction=self.instructions,
                 tools=agent_tools,
             )
 
-            logger.debug(f"Created ADK agent for {self.name} with native transfer support")
+            logger.debug(f"Created ADK agent for {self.name} with {len(agent_tools)} tools (including MCP)")
             return adk_agent
 
         except ImportError:
@@ -326,7 +426,6 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
     async def cleanup(self) -> None:
         """Cleanup agent resources."""
         logger.info("SearchGuru cleanup completed")
-        pass
 
 
 # Factory function for easy instantiation

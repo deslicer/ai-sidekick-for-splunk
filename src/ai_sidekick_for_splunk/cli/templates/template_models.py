@@ -7,7 +7,6 @@ to complex FlowPilot JSON workflows.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -37,10 +36,10 @@ class SearchDefinition(BaseModel):
     name: str = Field(..., description="Unique name for the search")
     spl: str = Field(..., description="SPL search query")
     description: str = Field(..., description="What this search does")
-    earliest: Optional[str] = Field(default="-24h@h", description="Earliest time for the search")
-    latest: Optional[str] = Field(default="now", description="Latest time for the search")
-    expected_results: Optional[str] = Field(default=None, description="What results to expect")
-    timeout: Optional[int] = Field(default=300, description="Search timeout in seconds")
+    earliest: str | None = Field(default="-24h@h", description="Earliest time for the search")
+    latest: str | None = Field(default="now", description="Latest time for the search")
+    expected_results: str | None = Field(default=None, description="What results to expect")
+    timeout: int | None = Field(default=300, description="Search timeout in seconds")
 
     @field_validator("name")
     @classmethod
@@ -74,8 +73,8 @@ class PhaseDefinition(BaseModel):
     title: str = Field(..., description="Human-readable title for the phase")
     description: str = Field(..., description="What this phase accomplishes")
     searches: list[SearchDefinition] = Field(..., description="Searches in this phase")
-    parallel: Optional[bool] = Field(default=False, description="Can searches run in parallel")
-    depends_on: Optional[list[str]] = Field(default=None, description="Phase dependencies")
+    parallel: bool | None = Field(default=False, description="Can searches run in parallel")
+    depends_on: list[str] | None = Field(default=None, description="Phase dependencies")
 
     @field_validator("name")
     @classmethod
@@ -114,7 +113,7 @@ class TemplateMetadata(BaseModel):
     author: str = Field(default="community", description="Template author")
 
     # Auto-generated fields
-    last_updated: Optional[str] = Field(default=None, description="Last update timestamp")
+    last_updated: str | None = Field(default=None, description="Last update timestamp")
 
     @field_validator("name")
     @classmethod
@@ -141,8 +140,8 @@ class TemplateRequirements(BaseModel):
     required_permissions: list[str] = Field(
         default=["search"], description="Required Splunk permissions"
     )
-    required_indexes: Optional[list[str]] = Field(default=None, description="Required indexes")
-    dependencies: Optional[list[str]] = Field(default=None, description="Agent dependencies")
+    required_indexes: list[str] | None = Field(default=None, description="Required indexes")
+    dependencies: list[str] | None = Field(default=None, description="Agent dependencies")
 
     @field_validator("required_permissions")
     @classmethod
@@ -158,8 +157,8 @@ class TemplateBusinessContext(BaseModel):
 
     business_value: str = Field(..., description="Business value this template provides")
     use_cases: list[str] = Field(..., description="Use cases for this template")
-    success_metrics: Optional[list[str]] = Field(default=None, description="How to measure success")
-    target_audience: Optional[list[str]] = Field(default=None, description="Who should use this")
+    success_metrics: list[str] | None = Field(default=None, description="How to measure success")
+    target_audience: list[str] | None = Field(default=None, description="Who should use this")
 
     @field_validator("use_cases")
     @classmethod
@@ -194,10 +193,8 @@ class SimpleTemplate(BaseModel):
     business_context: TemplateBusinessContext = Field(..., description="Business context")
 
     # Workflow definition - either simple searches or complex phases
-    searches: Optional[list[SearchDefinition]] = Field(
-        default=None, description="Simple search list"
-    )
-    phases: Optional[list[PhaseDefinition]] = Field(
+    searches: list[SearchDefinition] | None = Field(default=None, description="Simple search list")
+    phases: list[PhaseDefinition] | None = Field(
         default=None, description="Complex phase definition"
     )
 

@@ -274,7 +274,7 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
         """Handle progress updates from flow engine."""
         logger.info(f"📊 FlowPilot Progress: {update.phase_name} - {update.message}")
 
-    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def execute(self, task: str, context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """
         Execute the loaded workflow.
 

@@ -42,7 +42,7 @@ jobs:
     - name: Check dependencies for security issues
       run: |
         echo "Scanning dependencies for security issues..."
-        uv run pip-audit --desc --output-format=json --output-file=security-report.json || true
+        uv tool run pip-audit --desc --format json -o security-report.json || true
 
         if [ -f security-report.json ]; then
           echo "Security scan completed. Check artifacts for details."

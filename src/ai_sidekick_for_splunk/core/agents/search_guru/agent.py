@@ -44,8 +44,19 @@ class SearchGuru(BaseAgent):
         metadata: AgentMetadata | None = None,
         tools: list[Any] | None = None,
         session_state: dict[str, Any] | None = None,
+        session_service: Any | None = None,
+        artifact_service: Any | None = None,
     ):
-        """Initialize the Search Guru."""
+        """Initialize the Search Guru.
+        
+        Args:
+            config: Configuration instance
+            metadata: Agent metadata
+            tools: List of tools for this agent
+            session_state: Shared session state
+            session_service: Optional session service (defaults to InMemorySessionService)
+            artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
+        """
         from ai_sidekick_for_splunk.core.config import Config
 
         # Use default config if none provided
@@ -74,6 +85,10 @@ class SearchGuru(BaseAgent):
         super().__init__(config, metadata, tools, session_state)
         self.name = "search_guru"
         self.description = "Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights"
+        
+        # Store configurable services
+        self.session_service = session_service
+        self.artifact_service = artifact_service
 
     def _create_mcp_toolset_for_spl_reference(self):
         """
@@ -445,14 +460,30 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
 
 
 # Factory function for easy instantiation
-def create_search_guru_agent() -> SearchGuru:
+def create_search_guru_agent(
+    config: Config | None = None,
+    session_service: Any | None = None,
+    artifact_service: Any | None = None,
+    **kwargs
+) -> SearchGuru:
     """
     Create and return a configured Search Guru agent instance.
+
+    Args:
+        config: Optional configuration instance
+        session_service: Optional session service (defaults to InMemorySessionService)
+        artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
+        **kwargs: Additional arguments
 
     Returns:
         SearchGuru: Configured agent ready for SPL optimization and search strategy.
     """
-    return SearchGuru()
+    return SearchGuru(
+        config=config,
+        session_service=session_service,
+        artifact_service=artifact_service,
+        **kwargs
+    )
 
 
 # Export the main agent for discovery system

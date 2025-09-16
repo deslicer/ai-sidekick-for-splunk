@@ -41,6 +41,9 @@ class FlowPilot(BaseAgent):
         tools: list[Any] | None = None,
         session_state: dict[str, Any] | None = None,
         orchestrator=None,
+        # Service configuration parameters
+        session_service: Any | None = None,
+        artifact_service: Any | None = None,
         # Legacy parameters for backward compatibility
         workflow_template_path: str | None = None,
         workflow_template: AgentFlow | None = None,
@@ -56,6 +59,8 @@ class FlowPilot(BaseAgent):
             tools: Additional tools
             session_state: Session state
             orchestrator: Main orchestrator instance
+            session_service: Optional session service (defaults to InMemorySessionService)
+            artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
             workflow_template_path: Path to JSON workflow definition
             workflow_template: Pre-loaded AgentFlow instance
             config: Configuration instance
@@ -94,6 +99,11 @@ class FlowPilot(BaseAgent):
         )
 
         self.orchestrator = orchestrator
+        
+        # Store configurable services (with defaults handled by orchestrator)
+        self.session_service = session_service
+        self.artifact_service = artifact_service
+        
         self.flow_engine = FlowEngine(
             config=self.config,
             orchestrator=orchestrator,
@@ -436,19 +446,33 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
 
 
 # Universal factory function - Template-driven approach
-def create_flow_pilot(template_path: str, orchestrator=None, **kwargs) -> FlowPilot:
+def create_flow_pilot(
+    template_path: str,
+    orchestrator=None,
+    session_service: Any | None = None,
+    artifact_service: Any | None = None,
+    **kwargs
+) -> FlowPilot:
     """
     Universal factory function for creating FlowPilot instances from any template.
 
     Args:
         template_path: Path to the workflow JSON template
         orchestrator: Main orchestrator instance
+        session_service: Optional session service (defaults to InMemorySessionService)
+        artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         **kwargs: Additional arguments
 
     Returns:
         FlowPilot instance configured for the specified workflow template
     """
-    return FlowPilot(workflow_template_path=template_path, orchestrator=orchestrator, **kwargs)
+    return FlowPilot(
+        workflow_template_path=template_path,
+        orchestrator=orchestrator,
+        session_service=session_service,
+        artifact_service=artifact_service,
+        **kwargs
+    )
 
 
 # Legacy convenience functions - DEPRECATED

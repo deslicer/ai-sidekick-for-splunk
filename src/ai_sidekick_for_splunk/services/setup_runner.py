@@ -10,10 +10,21 @@ import os
 import uuid
 from typing import Any
 
-from google.adk.agents.run_config import RunConfig, StreamingMode
-from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+# Google ADK imports are conditional to avoid import errors when ADK is not available
+try:
+    from google.adk.agents.run_config import RunConfig, StreamingMode
+    from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    ADK_AVAILABLE = True
+except ImportError:
+    # Create placeholder classes when ADK is not available
+    RunConfig = None
+    StreamingMode = None
+    InMemoryArtifactService = None
+    Runner = None
+    InMemorySessionService = None
+    ADK_AVAILABLE = False
 
 from ..core.config import Config
 
@@ -34,6 +45,8 @@ class SetupRunner:
         agent=None,
         model: str | None = None,
         config: Config | None = None,
+        session_service: Any | None = None,
+        artifact_service: Any | None = None,
     ):
         """
         Initialize the Setup Runner.
@@ -42,17 +55,34 @@ class SetupRunner:
             agent: The root agent to use (if None, will import lazily)
             model: LLM model to use, defaults to config.model.primary_model
             config: Configuration instance, defaults to Config()
+            session_service: Optional session service (defaults to InMemorySessionService)
+            artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         """
         self.config = config or Config()
         self.model = model or self.config.model.primary_model
 
-        # Use ADK's InMemorySessionService as recommended starting point
-        self.session_service = InMemorySessionService()
-        logger.info("Using ADK InMemorySessionService for session management")
+        # Initialize services with in-memory defaults if not provided
+        if session_service is None:
+            if ADK_AVAILABLE and InMemorySessionService:
+                self.session_service = InMemorySessionService()
+                logger.info("Using default ADK InMemorySessionService for session management")
+            else:
+                self.session_service = None
+                logger.warning("ADK not available, session_service will be None")
+        else:
+            self.session_service = session_service
+            logger.info("Using provided session service for session management")
 
-        # Initialize ADK's InMemoryArtifactService for artifact storage
-        self.artifact_service = InMemoryArtifactService()
-        logger.info("Using ADK InMemoryArtifactService for artifact management")
+        if artifact_service is None:
+            if ADK_AVAILABLE and InMemoryArtifactService:
+                self.artifact_service = InMemoryArtifactService()
+                logger.info("Using default ADK InMemoryArtifactService for artifact management")
+            else:
+                self.artifact_service = None
+                logger.warning("ADK not available, artifact_service will be None")
+        else:
+            self.artifact_service = artifact_service
+            logger.info("Using provided artifact service for artifact management")
 
         # Get the agent (import lazily to avoid circular imports)
         if agent is None:
@@ -64,24 +94,35 @@ class SetupRunner:
         enable_streaming = os.getenv("SPLUNK_AI_ENABLE_STREAMING", "true").lower() == "true"
         max_llm_calls = int(os.getenv("SPLUNK_AI_MAX_LLM_CALLS", "200"))
 
-        self.run_config = RunConfig(
-            streaming_mode=StreamingMode.SSE if enable_streaming else StreamingMode.NONE,
-            max_llm_calls=max_llm_calls,
-        )
+        if ADK_AVAILABLE and RunConfig and StreamingMode:
+            self.run_config = RunConfig(
+                streaming_mode=StreamingMode.SSE if enable_streaming else StreamingMode.NONE,
+                max_llm_calls=max_llm_calls,
+            )
+        else:
+            self.run_config = None
+            logger.warning("ADK not available, run_config will be None")
 
         # Initialize the runner with the root agent, session service, and artifact service
-        self.runner = Runner(
-            agent=agent,
-            app_name="splunk-ai-sidekick",
-            session_service=self.session_service,
-            artifact_service=self.artifact_service,
-        )
+        if ADK_AVAILABLE and Runner:
+            self.runner = Runner(
+                agent=agent,
+                app_name="splunk-ai-sidekick",
+                session_service=self.session_service,
+                artifact_service=self.artifact_service,
+            )
+        else:
+            self.runner = None
+            logger.warning("ADK not available, runner will be None")
 
         logger.info(f"Initialized Setup Runner with model: {self.model}")
         logger.info("Services configured: SessionService, ArtifactService")
-        logger.info(
-            f"Streaming enabled: {self.run_config.streaming_mode} with max {self.run_config.max_llm_calls} LLM calls"
-        )
+        if self.run_config:
+            logger.info(
+                f"Streaming enabled: {self.run_config.streaming_mode} with max {self.run_config.max_llm_calls} LLM calls"
+            )
+        else:
+            logger.info("ADK not available - streaming configuration skipped")
 
     async def execute(
         self,

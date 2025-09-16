@@ -148,6 +148,16 @@ class SetupRunner:
             session_id = str(uuid.uuid4())
             logger.info(f"Created new session ID: {session_id}")
 
+        # Guard against ADK unavailability or missing services
+        if not ADK_AVAILABLE or self.session_service is None or self.runner is None:
+            logger.warning("ADK not available or services uninitialized - execute() cannot proceed")
+            return {
+                "session_id": session_id,
+                "reply": "Agent execution is unavailable because ADK is not installed.",
+                "success": False,
+                "error": "ADK unavailable",
+            }
+
         try:
             # Create or get session using proper ADK SessionService API
             # According to ADK docs, create_session will return existing session if it exists
@@ -235,6 +245,11 @@ class SetupRunner:
         Returns:
             Status dictionary indicating success
         """
+        # Guard against ADK unavailability or missing services
+        if not ADK_AVAILABLE or self.session_service is None:
+            logger.warning("ADK not available or session service uninitialized - clean_session() cannot proceed")
+            return {"success": False, "message": "Session management unavailable: ADK is not installed."}
+
         try:
             # Check if session exists before attempting deletion
             existing_session = await self.session_service.get_session(
@@ -276,6 +291,17 @@ class SetupRunner:
         Returns:
             Dictionary with list of sessions and metadata
         """
+        # Guard against ADK unavailability or missing services
+        if not ADK_AVAILABLE or self.session_service is None:
+            logger.warning("ADK not available or session service uninitialized - list_sessions() cannot proceed")
+            return {
+                "success": False,
+                "message": "Session listing unavailable: ADK is not installed.",
+                "sessions": [],
+                "total_count": 0,
+                "user_id": user_id,
+            }
+
         try:
             # Use proper ADK SessionService list_sessions method
             sessions_response = await self.session_service.list_sessions(
@@ -347,6 +373,11 @@ class SetupRunner:
         Returns:
             Dictionary with detailed session information
         """
+        # Guard against ADK unavailability or missing services
+        if not ADK_AVAILABLE or self.session_service is None:
+            logger.warning("ADK not available or session service uninitialized - get_session_details() cannot proceed")
+            return {"success": False, "message": "Session details unavailable: ADK is not installed."}
+
         try:
             # Use proper ADK SessionService get_session method
             session = await self.session_service.get_session(

@@ -228,6 +228,10 @@ class SplunkOrchestrator:
 
         for name, entry in agent_entries.items():
             try:
+                if name == "generic_mcp":
+                    logger.debug(f"Skipping generic_mcp agent as per configuration")
+                    continue
+
                 # Use existing instance if available, otherwise create new one
                 if entry.instance:
                     agent_instance = entry.instance
@@ -235,6 +239,9 @@ class SplunkOrchestrator:
                 else:
                     agent_instance = entry.cls(self.config, entry.metadata)
                     logger.debug(f"Created new instance for {name}")
+
+                # Define default empty tools list
+                agent_instance_tools = []
 
                 # Check if it's an ADK agent wrapper
                 if hasattr(agent_instance, "get_adk_agent"):

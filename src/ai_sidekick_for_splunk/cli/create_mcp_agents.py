@@ -149,6 +149,118 @@ def enhance_prompt(tool_list: list) -> str:
     enhanced = DEFAULT_MCP_PROMPT + "\n" + tool_catalog
     return enhanced
 
+def update_orchestrator_prompt(agent_descriptions: list[str]) -> None:
+    """Update orchestrator_prompt.py with new MCP agent descriptions."""
+    orchestrator_prompt_path = Path("src/ai_sidekick_for_splunk/core/orchestrator_prompt.py")
+    
+    if not orchestrator_prompt_path.exists():
+        logger.error(f"Orchestrator prompt file not found: {orchestrator_prompt_path}")
+        return
+    
+    try:
+        # Read current content
+        content = orchestrator_prompt_path.read_text()
+        
+        # Find the </tools> closing tag
+        tools_end = content.find("</tools>")
+        if tools_end == -1:
+            logger.error("Could not find </tools> closing tag in orchestrator prompt")
+            return
+        
+        # Check if we already have MCP agent descriptions
+        mcp_section_start = content.find("## Generated MCP Agents")
+        
+        if mcp_section_start != -1 and mcp_section_start < tools_end:
+            # Remove existing MCP section
+            mcp_section_end = content.find("\n</tools>", mcp_section_start)
+            if mcp_section_end != -1:
+                content = content[:mcp_section_start] + content[mcp_section_end:]
+                tools_end = content.find("</tools>")
+        
+        # Generate new MCP section
+        mcp_section = "\n## Generated MCP Agents\n"
+        for description in agent_descriptions:
+            mcp_section += description + "\n"
+        
+        # Insert before </tools>
+        new_content = content[:tools_end] + mcp_section + "\n" + content[tools_end:]
+        
+        # Write back to file
+        orchestrator_prompt_path.write_text(new_content)
+        logger.info(f"✅ Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions")
+        
+    except Exception as e:
+        logger.error(f"Failed to update orchestrator prompt: {e}")
+
+def generate_agent_description_for_orchestrator(agent_name: str, server_key: str, tool_list: list) -> str:
+    """Generate agent description for orchestrator prompt in the correct format."""
+    
+    # Extract tool names and descriptions
+    tool_info = []
+    for tool in tool_list:
+        info = extract_tool_info(tool)
+        tool_info.append(f"- {info['name']}: {info['description']}")
+    
+    # Limit to first 10 tools for readability
+    if len(tool_info) > 10:
+        tool_display = tool_info[:10] + [f"- ... and {len(tool_info) - 10} more tools"]
+    else:
+        tool_display = tool_info
+    
+    tool_capabilities = "\n".join(tool_display) if tool_display else "- No tools discovered"
+    
+    # Generate description based on server type
+    server_description = f"{server_key} MCP server integration"
+    
+    # Create use cases based on server type
+    use_cases = []
+    if 'firecrawl' in server_key.lower():
+        use_cases = [
+            "Web scraping and content extraction",
+            "Website crawling and data collection", 
+            "Content analysis and documentation"
+        ]
+    elif 'github' in server_key.lower():
+        use_cases = [
+            "Repository management and analysis",
+            "Issue and pull request operations",
+            "Code search and workflow automation"
+        ]
+    elif 'context7' in server_key.lower():
+        use_cases = [
+            "Documentation library access",
+            "Technical reference and examples",
+            "Library and framework information"
+        ]
+    else:
+        use_cases = [
+            f"{server_key} server operations",
+            "Tool execution and data processing",
+            "External system integration"
+        ]
+    
+    use_case_text = "\n".join([f"- {use_case}" for use_case in use_cases])
+    
+    return f"""
+### **{agent_name}**: {server_description.title()}
+**When to Use**:
+{use_case_text}
+
+**How to Use**:
+- Pass complete user context and requirements
+- Specify the operation or data needed from {server_key}
+- Expect structured responses with tool execution results
+
+**Available Tools ({len(tool_list)} total)**:
+{tool_capabilities}
+
+**Capabilities**:
+- Direct integration with {server_key} MCP server
+- Automatic tool discovery and execution
+- Enhanced error handling with timeout management
+- Full callback support for observability and validation
+"""
+
 def create_agent_files(agent_name: str, server_key: str, connection_params, custom_prompt: str, agents_dir: Path, server_data: dict) -> None:
     """Create agent files in the contrib/agents directory structure."""
     # Create agent directory
@@ -552,7 +664,7 @@ def _generate_connection_params_code(connection_params, server_data: dict) -> st
     else:
         return "None  # Unknown connection type"
 
-async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override: bool = False) -> Dict[str, Any]:
+async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override: bool = False, update_orchestrator: bool = False) -> Dict[str, Any]:
     """Create MCP agent instances from mcp.json configurations."""
     try:
         with open(json_path, 'r') as f:
@@ -563,6 +675,7 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
 
     agents = {}
     mcp_servers = data.get('mcpServers', {})
+    agent_descriptions = []  # For orchestrator prompt update
 
     # Set up agents directory if saving to disk
     if save_to_disk:
@@ -677,6 +790,13 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
             }
             agents[agent_name] = agent_config
             logger.info(f"✅ Created agent configuration: {agent_name} with enhanced prompt")
+            
+            # Generate description for orchestrator prompt if requested
+            if update_orchestrator:
+                description = generate_agent_description_for_orchestrator(agent_name, server_key, tool_response or [])
+                agent_descriptions.append(description)
+                logger.debug(f"Generated orchestrator description for {agent_name}")
+            
         except Exception as e:
             logger.error(f"❌ Failed to create agent configuration for {agent_name}: {e}")
             continue
@@ -689,7 +809,17 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
     if successful_agents < total_servers:
         skipped = total_servers - successful_agents
         logger.warning(f"⚠️  {skipped} servers were skipped due to errors or existing agents")
-
+    
+    # Update orchestrator prompt if requested and we have descriptions
+    if update_orchestrator and agent_descriptions:
+        try:
+            update_orchestrator_prompt(agent_descriptions)
+            logger.info(f"🔄 Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions")
+        except Exception as e:
+            logger.error(f"❌ Failed to update orchestrator prompt: {e}")
+    elif update_orchestrator and not agent_descriptions:
+        logger.warning("⚠️  No agent descriptions to add to orchestrator prompt")
+    
     return agents
 
 def main():
@@ -714,6 +844,7 @@ Generated agents can be further customized by editing the timeout value in agent
     parser.add_argument("--save", default=False, action="store_true", help="Save agents to disk in contrib/agents directory")
     parser.add_argument("--override", default=False, action="store_true", help="Override existing agent files if they exist")
     parser.add_argument("--quiet", "-q", action="store_true", help="Reduce output verbosity (INFO level, overrides LOG_LEVEL)")
+    parser.add_argument("--update-orchestrator", action="store_true", help="Update orchestrator_prompt.py with generated agent descriptions")
     args = parser.parse_args()
 
     # Determine logging level from multiple sources (priority order)
@@ -767,7 +898,7 @@ Generated agents can be further customized by editing the timeout value in agent
     else:
         try:
             logger.info("🚀 Starting agent creation process...")
-            agents = asyncio.run(create_mcp_agents(config_path, save_to_disk=args.save, override=args.override))
+            agents = asyncio.run(create_mcp_agents(config_path, save_to_disk=args.save, override=args.override, update_orchestrator=args.update_orchestrator))
 
             logger.info(f"🎉 Agent creation complete!")
             print(f"✅ Created {len(agents)} agents: {list(agents.keys())}")
@@ -778,6 +909,11 @@ Generated agents can be further customized by editing the timeout value in agent
                     print(f"🔄 Override mode was enabled - existing agents were replaced")
             else:
                 print(f"💡 Use --save to write agents to disk")
+                
+            if args.update_orchestrator:
+                print(f"🔄 Orchestrator prompt updated with MCP agent descriptions")
+            else:
+                print(f"💡 Use --update-orchestrator to add agent descriptions to orchestrator prompt")
 
         except KeyboardInterrupt:
             logger.warning("⚠️  Process interrupted by user")

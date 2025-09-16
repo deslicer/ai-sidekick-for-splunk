@@ -229,7 +229,7 @@ class SplunkOrchestrator:
         for name, entry in agent_entries.items():
             try:
                 if name == "generic_mcp":
-                    logger.debug(f"Skipping generic_mcp agent as per configuration")
+                    logger.debug("Skipping generic_mcp agent as per configuration")
                     continue
 
                 # Use existing instance if available, otherwise create new one

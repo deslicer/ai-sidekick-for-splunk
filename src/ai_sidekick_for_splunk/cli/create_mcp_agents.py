@@ -1,17 +1,20 @@
 import argparse
+import asyncio
 import json
 import logging
-import sys
-from typing import Dict, Any, Optional
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-import asyncio
 import re
+import sys
+from pathlib import Path
+from typing import Any
 
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams, StdioConnectionParams, StdioServerParameters
+from dotenv import load_dotenv
+from google.adk.tools.mcp_tool.mcp_session_manager import (
+    StdioConnectionParams,
+    StdioServerParameters,
+    StreamableHTTPConnectionParams,
+)
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
-from ai_sidekick_for_splunk.core.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +47,7 @@ Present results in a structured format with execution details, results, and key 
 Present tool results with factual analysis derived only from the actual data returned.
 """
 
+
 async def test_mcp_connection(toolset: McpToolset) -> list | None:
     """Test MCP connection with proper timeout and error handling."""
     try:
@@ -63,7 +67,7 @@ async def test_mcp_connection(toolset: McpToolset) -> list | None:
                 logger.info("Connection successful but no tools returned")
                 return []
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Connection test timed out after 30 seconds")
             return []
         except asyncio.CancelledError:
@@ -76,9 +80,17 @@ async def test_mcp_connection(toolset: McpToolset) -> list | None:
         # Look for dynamically added tool attributes
         tool_attrs = []
         for attr_name in dir(toolset):
-            if not attr_name.startswith('_') and attr_name not in ['get_tools', 'close', 'from_config', 'get_tools_with_prefix', 'process_llm_request', 'tool_filter', 'tool_name_prefix']:
+            if not attr_name.startswith("_") and attr_name not in [
+                "get_tools",
+                "close",
+                "from_config",
+                "get_tools_with_prefix",
+                "process_llm_request",
+                "tool_filter",
+                "tool_name_prefix",
+            ]:
                 attr = getattr(toolset, attr_name)
-                if hasattr(attr, 'run') or hasattr(attr, '__call__'):  # Looks like a tool
+                if hasattr(attr, "run") or hasattr(attr, "__call__"):  # Looks like a tool
                     tool_attrs.append(attr)
 
         if tool_attrs:
@@ -94,43 +106,45 @@ async def test_mcp_connection(toolset: McpToolset) -> list | None:
     finally:
         # Ensure proper cleanup
         try:
-            if hasattr(toolset, 'close'):
+            if hasattr(toolset, "close"):
                 await toolset.close()
         except Exception as cleanup_e:
             logger.debug(f"Cleanup error (ignored): {cleanup_e}")
 
+
 def extract_tool_info(mcp_tool) -> dict:
     """Extract name, description, and schema from MCPTool object."""
     info = {
-        'name': 'Unknown',
-        'description': 'No description available',
-        'schema': 'No input schema available'
+        "name": "Unknown",
+        "description": "No description available",
+        "schema": "No input schema available",
     }
 
     try:
         # Try to get tool metadata via _mcp_tool attribute (common in ADK MCPTool)
-        if hasattr(mcp_tool, '_mcp_tool'):
+        if hasattr(mcp_tool, "_mcp_tool"):
             mcp_spec = mcp_tool._mcp_tool
-            info['name'] = getattr(mcp_spec, 'name', 'Unknown')
-            info['description'] = getattr(mcp_spec, 'description', 'No description')
-            if hasattr(mcp_spec, 'inputSchema'):
-                schema = getattr(mcp_spec, 'inputSchema', {})
-                info['schema'] = json.dumps(schema, indent=2) if schema else 'No schema'
+            info["name"] = getattr(mcp_spec, "name", "Unknown")
+            info["description"] = getattr(mcp_spec, "description", "No description")
+            if hasattr(mcp_spec, "inputSchema"):
+                schema = getattr(mcp_spec, "inputSchema", {})
+                info["schema"] = json.dumps(schema, indent=2) if schema else "No schema"
 
         # Fallback: try direct attributes
-        elif hasattr(mcp_tool, 'name'):
-            info['name'] = mcp_tool.name
-            info['description'] = getattr(mcp_tool, 'description', 'No description')
+        elif hasattr(mcp_tool, "name"):
+            info["name"] = mcp_tool.name
+            info["description"] = getattr(mcp_tool, "description", "No description")
 
         # Last resort: use string representation
         else:
-            info['name'] = str(mcp_tool)
+            info["name"] = str(mcp_tool)
 
     except Exception as e:
         logger.debug(f"Failed to extract tool info: {e}")
-        info['name'] = str(mcp_tool)
+        info["name"] = str(mcp_tool)
 
     return info
+
 
 def enhance_prompt(tool_list: list) -> str:
     """Enhance the default prompt with the actual tool catalog."""
@@ -141,7 +155,7 @@ def enhance_prompt(tool_list: list) -> str:
     for tool in tool_list:
         info = extract_tool_info(tool)
         tool_catalog += f"- **{info['name']}**: {info['description']}\n"
-        if info['schema'] != 'No input schema available':
+        if info["schema"] != "No input schema available":
             tool_catalog += f"  **Input Schema**:\n```json\n{info['schema']}\n```\n\n"
         else:
             tool_catalog += "\n"
@@ -149,98 +163,104 @@ def enhance_prompt(tool_list: list) -> str:
     enhanced = DEFAULT_MCP_PROMPT + "\n" + tool_catalog
     return enhanced
 
+
 def update_orchestrator_prompt(agent_descriptions: list[str]) -> None:
     """Update orchestrator_prompt.py with new MCP agent descriptions."""
     orchestrator_prompt_path = Path("src/ai_sidekick_for_splunk/core/orchestrator_prompt.py")
-    
+
     if not orchestrator_prompt_path.exists():
         logger.error(f"Orchestrator prompt file not found: {orchestrator_prompt_path}")
         return
-    
+
     try:
         # Read current content
         content = orchestrator_prompt_path.read_text()
-        
+
         # Find the </tools> closing tag
         tools_end = content.find("</tools>")
         if tools_end == -1:
             logger.error("Could not find </tools> closing tag in orchestrator prompt")
             return
-        
+
         # Check if we already have MCP agent descriptions
         mcp_section_start = content.find("## Generated MCP Agents")
-        
+
         if mcp_section_start != -1 and mcp_section_start < tools_end:
             # Remove existing MCP section
             mcp_section_end = content.find("\n</tools>", mcp_section_start)
             if mcp_section_end != -1:
                 content = content[:mcp_section_start] + content[mcp_section_end:]
                 tools_end = content.find("</tools>")
-        
+
         # Generate new MCP section
         mcp_section = "\n## Generated MCP Agents\n"
         for description in agent_descriptions:
             mcp_section += description + "\n"
-        
+
         # Insert before </tools>
         new_content = content[:tools_end] + mcp_section + "\n" + content[tools_end:]
-        
+
         # Write back to file
         orchestrator_prompt_path.write_text(new_content)
-        logger.info(f"✅ Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions")
-        
+        logger.info(
+            f"✅ Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions"
+        )
+
     except Exception as e:
         logger.error(f"Failed to update orchestrator prompt: {e}")
 
-def generate_agent_description_for_orchestrator(agent_name: str, server_key: str, tool_list: list) -> str:
+
+def generate_agent_description_for_orchestrator(
+    agent_name: str, server_key: str, tool_list: list
+) -> str:
     """Generate agent description for orchestrator prompt in the correct format."""
-    
+
     # Extract tool names and descriptions
     tool_info = []
     for tool in tool_list:
         info = extract_tool_info(tool)
         tool_info.append(f"- {info['name']}: {info['description']}")
-    
+
     # Limit to first 10 tools for readability
     if len(tool_info) > 10:
         tool_display = tool_info[:10] + [f"- ... and {len(tool_info) - 10} more tools"]
     else:
         tool_display = tool_info
-    
+
     tool_capabilities = "\n".join(tool_display) if tool_display else "- No tools discovered"
-    
+
     # Generate description based on server type
     server_description = f"{server_key} MCP server integration"
-    
+
     # Create use cases based on server type
     use_cases = []
-    if 'firecrawl' in server_key.lower():
+    if "firecrawl" in server_key.lower():
         use_cases = [
             "Web scraping and content extraction",
-            "Website crawling and data collection", 
-            "Content analysis and documentation"
+            "Website crawling and data collection",
+            "Content analysis and documentation",
         ]
-    elif 'github' in server_key.lower():
+    elif "github" in server_key.lower():
         use_cases = [
             "Repository management and analysis",
             "Issue and pull request operations",
-            "Code search and workflow automation"
+            "Code search and workflow automation",
         ]
-    elif 'context7' in server_key.lower():
+    elif "context7" in server_key.lower():
         use_cases = [
             "Documentation library access",
             "Technical reference and examples",
-            "Library and framework information"
+            "Library and framework information",
         ]
     else:
         use_cases = [
             f"{server_key} server operations",
             "Tool execution and data processing",
-            "External system integration"
+            "External system integration",
         ]
-    
+
     use_case_text = "\n".join([f"- {use_case}" for use_case in use_cases])
-    
+
     return f"""
 ### **{agent_name}**: {server_description.title()}
 **When to Use**:
@@ -261,7 +281,15 @@ def generate_agent_description_for_orchestrator(agent_name: str, server_key: str
 - Full callback support for observability and validation
 """
 
-def create_agent_files(agent_name: str, server_key: str, connection_params, custom_prompt: str, agents_dir: Path, server_data: dict) -> None:
+
+def create_agent_files(
+    agent_name: str,
+    server_key: str,
+    connection_params,
+    custom_prompt: str,
+    agents_dir: Path,
+    server_data: dict,
+) -> None:
     """Create agent files in the contrib/agents directory structure."""
     # Create agent directory
     agent_dir = agents_dir / agent_name
@@ -554,7 +582,7 @@ class {class_name}(BaseAgent):
         xml_counter = 0
 
         # Find and temporarily replace XML-style tags like <success_criteria>
-        xml_pattern = r'<([^>]+)>'
+        xml_pattern = r"<([^>]+)>"
         for match in re.finditer(xml_pattern, text):
             placeholder = f"__XML_TAG_{xml_counter}__"
             xml_tags[placeholder] = match.group(0)
@@ -562,12 +590,12 @@ class {class_name}(BaseAgent):
             xml_counter += 1
 
         # Handle malformed patterns first
-        text = re.sub(r'\{([^}>]+)>', r'<\1>', text)        # {var> -> <var>
-        text = re.sub(r'<([^}>]+)\}', r'<\1>', text)        # <var} -> <var>
-        text = re.sub(r'\{([^}]+)\}\}', r'<\1>', text)      # {var}} -> <var>
+        text = re.sub(r"\{([^}>]+)>", r"<\1>", text)  # {var> -> <var>
+        text = re.sub(r"<([^}>]+)\}", r"<\1>", text)  # <var} -> <var>
+        text = re.sub(r"\{([^}]+)\}\}", r"<\1>", text)  # {var}} -> <var>
 
         # Then handle normal {var} patterns -> convert to <var>
-        text = re.sub(r'\{([^}]+)\}', r'<\1>', text)
+        text = re.sub(r"\{([^}]+)\}", r"<\1>", text)
 
         # Restore protected XML tags
         for placeholder, original in xml_tags.items():
@@ -576,7 +604,9 @@ class {class_name}(BaseAgent):
         return text
 
     sanitized_prompt = escape_braces(custom_prompt)
-    logger.debug(f"Sanitized prompt for {agent_name} (first 200 chars): {sanitized_prompt[:200]}...")
+    logger.debug(
+        f"Sanitized prompt for {agent_name} (first 200 chars): {sanitized_prompt[:200]}..."
+    )
 
     # Generate prompt.py file - use regular string, not f-string to avoid syntax errors with JSON schemas
     prompt_py_content = f'''"""
@@ -604,17 +634,17 @@ __all__ = ["{class_name}"]
 '''
 
     # Generate README.md file
-    readme_content = f'''# {agent_name.title()} Agent
+    readme_content = f"""# {agent_name.title()} Agent
 
 Auto-generated agent for {server_key} MCP server integration.
 
 ## Usage
 
 ```python
-from ai_sidekick_for_splunk.contrib.agents.{agent_name} import {agent_name.title().replace('_', '')}Agent
+from ai_sidekick_for_splunk.contrib.agents.{agent_name} import {agent_name.title().replace("_", "")}Agent
 
 # Create and use the agent
-agent = {agent_name.title().replace('_', '')}Agent()
+agent = {agent_name.title().replace("_", "")}Agent()
 result = await agent.execute("Your task here")
 ```
 
@@ -625,8 +655,8 @@ This agent is pre-configured to connect to the {server_key} MCP server with the 
 - Enhanced prompt with discovered tools
 - Automatic connection management
 
-Generated on: {__import__('datetime').datetime.now().isoformat()}
-'''
+Generated on: {__import__("datetime").datetime.now().isoformat()}
+"""
 
     # Write files
     (agent_dir / "agent.py").write_text(agent_py_content)
@@ -636,12 +666,13 @@ Generated on: {__import__('datetime').datetime.now().isoformat()}
 
     logger.info(f"Created agent files in {agent_dir}")
 
+
 def _generate_connection_params_code(connection_params, server_data: dict) -> str:
     """Generate Python code for connection parameters."""
     if isinstance(connection_params, StreamableHTTPConnectionParams):
         return f'''StreamableHTTPConnectionParams(
-            url="{server_data.get('url')}",
-            headers={server_data.get('headers', {})},
+            url="{server_data.get("url")}",
+            headers={server_data.get("headers", {})},
             timeout=15.0,
             sse_read_timeout=300.0,
             terminate_on_close=True,
@@ -650,13 +681,13 @@ def _generate_connection_params_code(connection_params, server_data: dict) -> st
         )'''
     elif isinstance(connection_params, StdioConnectionParams):
         # Get timeout from server config or use default
-        timeout = server_data.get('timeout', 60.0)  # Default 60s, user-configurable
+        timeout = server_data.get("timeout", 60.0)  # Default 60s, user-configurable
 
         return f'''StdioConnectionParams(
             server_params=StdioServerParameters(
-                command="{server_data.get('command')}",
-                args={server_data.get('args', [])},
-                env={{**{server_data.get('env', {})}, 'DEBUG': '1'}}
+                command="{server_data.get("command")}",
+                args={server_data.get("args", [])},
+                env={{**{server_data.get("env", {})}, 'DEBUG': '1'}}
             ),
             terminate_on_close=True,
             timeout={timeout},  # User-configurable timeout (default 60s)
@@ -664,17 +695,23 @@ def _generate_connection_params_code(connection_params, server_data: dict) -> st
     else:
         return "None  # Unknown connection type"
 
-async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override: bool = False, update_orchestrator: bool = False) -> Dict[str, Any]:
+
+async def create_mcp_agents(
+    json_path: str,
+    save_to_disk: bool = False,
+    override: bool = False,
+    update_orchestrator: bool = False,
+) -> dict[str, Any]:
     """Create MCP agent instances from mcp.json configurations."""
     try:
-        with open(json_path, 'r') as f:
+        with open(json_path) as f:
             data = json.load(f)
     except Exception as e:
         logger.error(f"Failed to load mcp.json: {e}")
         sys.exit(1)
 
     agents = {}
-    mcp_servers = data.get('mcpServers', {})
+    mcp_servers = data.get("mcpServers", {})
     agent_descriptions = []  # For orchestrator prompt update
 
     # Set up agents directory if saving to disk
@@ -686,7 +723,7 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
         logger.info(f"Will save agents to: {agents_dir}")
 
     for server_key, server_data in mcp_servers.items():
-        if server_data.get('enabled', True) is False:
+        if server_data.get("enabled", True) is False:
             logger.debug(f"Skipping disabled server: {server_key}")
             continue
 
@@ -694,9 +731,9 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
         connection_params = None
 
         # Check for StreamableHTTP pattern
-        url = server_data.get('url')
-        if url and 'mcp' in url.lower():
-            headers = server_data.get('headers', {})
+        url = server_data.get("url")
+        if url and "mcp" in url.lower():
+            headers = server_data.get("headers", {})
             connection_params = StreamableHTTPConnectionParams(
                 url=url,
                 headers=headers,
@@ -709,14 +746,14 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
             logger.info(f"Configured StreamableHTTP for {server_key}")
 
         # Default to stdio pattern
-        elif 'command' in server_data:
+        elif "command" in server_data:
             server_params = StdioServerParameters(
-                command=server_data['command'],
-                args=server_data.get('args', []),
-                env={**server_data.get('env', {}), 'DEBUG': '1'}  # Enable server debug
+                command=server_data["command"],
+                args=server_data.get("args", []),
+                env={**server_data.get("env", {}), "DEBUG": "1"},  # Enable server debug
             )
             # Get timeout from server config or use default
-            timeout = server_data.get('timeout', 60.0)  # Default 60s for all stdio connections
+            timeout = server_data.get("timeout", 60.0)  # Default 60s for all stdio connections
 
             connection_params = StdioConnectionParams(
                 server_params=server_params,
@@ -742,7 +779,9 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
         # Always define custom_prompt
         tool_response = await test_mcp_connection(toolset)  # Await async test
         custom_prompt = enhance_prompt(tool_response or [])  # Use empty if None
-        logger.debug(f"Enhanced prompt for {server_key}: {custom_prompt[:200]}...")  # Truncate for log
+        logger.debug(
+            f"Enhanced prompt for {server_key}: {custom_prompt[:200]}..."
+        )  # Truncate for log
 
         # Create the agent with enhanced prompt
         agent_name = f"{server_key}_agent".lower()
@@ -761,6 +800,7 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
                 logger.info(f"Overriding existing agent: {agent_name}")
                 # Remove existing directory to ensure clean override
                 import shutil
+
                 try:
                     shutil.rmtree(agent_dir)
                     logger.debug(f"Removed existing agent directory: {agent_dir}")
@@ -770,33 +810,43 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
 
             try:
                 # Create a copy of server_data with server_key for the template
-                server_data_with_key = {**server_data, 'server_key': server_key}
-                create_agent_files(agent_name, server_key, connection_params, custom_prompt, agents_dir, server_data_with_key)
+                server_data_with_key = {**server_data, "server_key": server_key}
+                create_agent_files(
+                    agent_name,
+                    server_key,
+                    connection_params,
+                    custom_prompt,
+                    agents_dir,
+                    server_data_with_key,
+                )
                 logger.info(f"✅ Successfully created agent files for: {agent_name}")
             except Exception as e:
                 logger.error(f"❌ Failed to create agent files for {agent_name}: {e}")
                 import traceback
+
                 logger.debug(traceback.format_exc())
                 continue
 
         # Store agent configuration (agents are generated as files, not instances)
         try:
             agent_config = {
-                'name': agent_name,
-                'server_key': server_key,
-                'connection_params': connection_params,
-                'custom_prompt': custom_prompt,
-                'tools_discovered': len(tool_response or [])
+                "name": agent_name,
+                "server_key": server_key,
+                "connection_params": connection_params,
+                "custom_prompt": custom_prompt,
+                "tools_discovered": len(tool_response or []),
             }
             agents[agent_name] = agent_config
             logger.info(f"✅ Created agent configuration: {agent_name} with enhanced prompt")
-            
+
             # Generate description for orchestrator prompt if requested
             if update_orchestrator:
-                description = generate_agent_description_for_orchestrator(agent_name, server_key, tool_response or [])
+                description = generate_agent_description_for_orchestrator(
+                    agent_name, server_key, tool_response or []
+                )
                 agent_descriptions.append(description)
                 logger.debug(f"Generated orchestrator description for {agent_name}")
-            
+
         except Exception as e:
             logger.error(f"❌ Failed to create agent configuration for {agent_name}: {e}")
             continue
@@ -809,18 +859,21 @@ async def create_mcp_agents(json_path: str, save_to_disk: bool = False, override
     if successful_agents < total_servers:
         skipped = total_servers - successful_agents
         logger.warning(f"⚠️  {skipped} servers were skipped due to errors or existing agents")
-    
+
     # Update orchestrator prompt if requested and we have descriptions
     if update_orchestrator and agent_descriptions:
         try:
             update_orchestrator_prompt(agent_descriptions)
-            logger.info(f"🔄 Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions")
+            logger.info(
+                f"🔄 Updated orchestrator prompt with {len(agent_descriptions)} MCP agent descriptions"
+            )
         except Exception as e:
             logger.error(f"❌ Failed to update orchestrator prompt: {e}")
     elif update_orchestrator and not agent_descriptions:
         logger.warning("⚠️  No agent descriptions to add to orchestrator prompt")
-    
+
     return agents
+
 
 def main():
     load_dotenv()  # Load .env from current dir
@@ -837,48 +890,80 @@ Timeout configuration:
   Example: {"Firecrawl": {"command": "...", "timeout": 120.0}}
 
 Generated agents can be further customized by editing the timeout value in agent.py
-        """
+        """,
     )
     parser.add_argument("-c", "--config", default="~/.cursor/mcp.json", help="Path to mcp.json")
-    parser.add_argument("--test-only", default=False, action="store_true", help="Test connections without creating agents")
-    parser.add_argument("--save", default=False, action="store_true", help="Save agents to disk in contrib/agents directory")
-    parser.add_argument("--override", default=False, action="store_true", help="Override existing agent files if they exist")
-    parser.add_argument("--quiet", "-q", action="store_true", help="Reduce output verbosity (INFO level, overrides LOG_LEVEL)")
-    parser.add_argument("--update-orchestrator", action="store_true", help="Update orchestrator_prompt.py with generated agent descriptions")
+    parser.add_argument(
+        "--test-only",
+        default=False,
+        action="store_true",
+        help="Test connections without creating agents",
+    )
+    parser.add_argument(
+        "--save",
+        default=False,
+        action="store_true",
+        help="Save agents to disk in contrib/agents directory",
+    )
+    parser.add_argument(
+        "--override",
+        default=False,
+        action="store_true",
+        help="Override existing agent files if they exist",
+    )
+    parser.add_argument(
+        "--quiet",
+        "-q",
+        action="store_true",
+        help="Reduce output verbosity (INFO level, overrides LOG_LEVEL)",
+    )
+    parser.add_argument(
+        "--update-orchestrator",
+        action="store_true",
+        help="Update orchestrator_prompt.py with generated agent descriptions",
+    )
     args = parser.parse_args()
 
     # Determine logging level from multiple sources (priority order)
     log_level = logging.DEBUG  # Default
 
     # 1. Check environment variable LOG_LEVEL from .env
-    env_log_level = os.environ.get('LOG_LEVEL', '').upper()
-    if env_log_level in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+    env_log_level = os.environ.get("LOG_LEVEL", "").upper()
+    if env_log_level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
         log_level = getattr(logging, env_log_level)
 
     # 2. Override with --quiet flag if provided
     if args.quiet:
         log_level = logging.INFO
 
-    logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     # Suppress noisy ADK authentication warnings
     logging.getLogger("google_adk.google.adk.tools.base_authenticated_tool").setLevel(logging.ERROR)
     # Suppress noisy MCP client debug messages
     logging.getLogger("mcp.client.streamable_http").setLevel(logging.WARNING)
     logging.getLogger("httpcore.connection").setLevel(logging.WARNING)
-    logging.getLogger("google_adk.google.adk.tools.mcp_tool.mcp_session_manager").setLevel(logging.INFO)
+    logging.getLogger("google_adk.google.adk.tools.mcp_tool.mcp_session_manager").setLevel(
+        logging.INFO
+    )
     # Suppress asyncio errors from MCP cleanup issues
     logging.getLogger("asyncio").setLevel(logging.CRITICAL)
 
     if not args.quiet:
-        logger.debug(f"Log level set to: {logging.getLevelName(log_level)} (env: {env_log_level or 'not set'}, quiet: {args.quiet})")
+        logger.debug(
+            f"Log level set to: {logging.getLevelName(log_level)} (env: {env_log_level or 'not set'}, quiet: {args.quiet})"
+        )
         logger.debug(f"GOOGLE_GENAI_USE_VERTEXAI: {os.environ.get('GOOGLE_GENAI_USE_VERTEXAI')}")
 
     # Expand user home dir
     config_path = os.path.expanduser(args.config)
 
     logger.info(f"📁 Using config file: {config_path}")
-    logger.info(f"🔧 Options: test_only={args.test_only}, save={args.save}, override={args.override}")
+    logger.info(
+        f"🔧 Options: test_only={args.test_only}, save={args.save}, override={args.override}"
+    )
 
     if not os.path.exists(config_path):
         logger.error(f"❌ Config file not found: {config_path}")
@@ -888,7 +973,7 @@ Generated agents can be further customized by editing the timeout value in agent
         logger.info("🧪 Test-only mode: Will test connections without creating agents")
         try:
             data = json.load(open(config_path))
-            server_count = len(data.get('mcpServers', {}))
+            server_count = len(data.get("mcpServers", {}))
             logger.info(f"Found {server_count} servers in config")
             # TODO: Add actual connection testing logic here
             print("✅ Tests complete")
@@ -898,22 +983,31 @@ Generated agents can be further customized by editing the timeout value in agent
     else:
         try:
             logger.info("🚀 Starting agent creation process...")
-            agents = asyncio.run(create_mcp_agents(config_path, save_to_disk=args.save, override=args.override, update_orchestrator=args.update_orchestrator))
+            agents = asyncio.run(
+                create_mcp_agents(
+                    config_path,
+                    save_to_disk=args.save,
+                    override=args.override,
+                    update_orchestrator=args.update_orchestrator,
+                )
+            )
 
-            logger.info(f"🎉 Agent creation complete!")
+            logger.info("🎉 Agent creation complete!")
             print(f"✅ Created {len(agents)} agents: {list(agents.keys())}")
 
             if args.save:
-                print(f"💾 Agents saved to disk in contrib/agents/ directory")
+                print("💾 Agents saved to disk in contrib/agents/ directory")
                 if args.override:
-                    print(f"🔄 Override mode was enabled - existing agents were replaced")
+                    print("🔄 Override mode was enabled - existing agents were replaced")
             else:
-                print(f"💡 Use --save to write agents to disk")
-                
+                print("💡 Use --save to write agents to disk")
+
             if args.update_orchestrator:
-                print(f"🔄 Orchestrator prompt updated with MCP agent descriptions")
+                print("🔄 Orchestrator prompt updated with MCP agent descriptions")
             else:
-                print(f"💡 Use --update-orchestrator to add agent descriptions to orchestrator prompt")
+                print(
+                    "💡 Use --update-orchestrator to add agent descriptions to orchestrator prompt"
+                )
 
         except KeyboardInterrupt:
             logger.warning("⚠️  Process interrupted by user")
@@ -921,8 +1015,10 @@ Generated agents can be further customized by editing the timeout value in agent
         except Exception as e:
             logger.error(f"❌ Agent creation failed: {e}")
             import traceback
+
             logger.debug(traceback.format_exc())
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

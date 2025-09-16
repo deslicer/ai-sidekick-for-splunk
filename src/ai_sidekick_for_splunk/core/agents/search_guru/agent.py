@@ -59,7 +59,15 @@ class SearchGuru(BaseAgent):
                 description="Comprehensive Splunk search specialist with direct MCP tool access for SPL generation, optimization, and insights",
                 version="4.0.0",
                 author="Saikrishna Gundeti",
-                tags=["search", "spl", "optimization", "insights", "analysis", "mcp", "direct_tools"],
+                tags=[
+                    "search",
+                    "spl",
+                    "optimization",
+                    "insights",
+                    "analysis",
+                    "mcp",
+                    "direct_tools",
+                ],
                 dependencies=["mcp_server"],
             )
 
@@ -70,17 +78,17 @@ class SearchGuru(BaseAgent):
     def _create_mcp_toolset_for_spl_reference(self):
         """
         Create MCPToolset specifically for SPL documentation tools.
-        
+
         Uses the same MCP server configuration as splunk_mcp but filters to only
         allow get_spl_reference and related documentation tools.
-        
+
         Returns:
             MCPToolset instance with documentation tools only, or None if creation fails
         """
         try:
             from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
             from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-            
+
             # Session management headers (same as splunk_mcp)
             session_id = f"search-guru-{uuid.uuid4()}"
             headers = {
@@ -118,21 +126,25 @@ class SearchGuru(BaseAgent):
                     # Whitelist only SPL documentation tools for search_guru
                     tool_filter=[
                         "get_spl_reference",
-                        "get_splunk_documentation", 
+                        "get_splunk_documentation",
                         "get_splunk_cheat_sheet",
                         "list_spl_commands",
                         "get_troubleshooting_guide",
                         "get_admin_guide",
                         "list_troubleshooting_topics",
                         "list_admin_topics",
-                    ]
+                    ],
                 )
             finally:
                 # Restore original logging level
                 adk_auth_logger.setLevel(original_level)
 
-            logger.info(f"SearchGuru MCP toolset created for documentation tools at: {self.config.splunk.mcp_server_url}")
-            logger.debug("Whitelisted tools: get_spl_reference, get_splunk_documentation, get_splunk_cheat_sheet, etc.")
+            logger.info(
+                f"SearchGuru MCP toolset created for documentation tools at: {self.config.splunk.mcp_server_url}"
+            )
+            logger.debug(
+                "Whitelisted tools: get_spl_reference, get_splunk_documentation, get_splunk_cheat_sheet, etc."
+            )
             return mcp_toolset
 
         except Exception as e:
@@ -209,7 +221,7 @@ Splunk documentation and provide you with accurate SPL examples.
 """,
             "capabilities": [
                 "✅ Direct get_spl_reference tool access",
-                "✅ Real-time SPL syntax validation", 
+                "✅ Real-time SPL syntax validation",
                 "✅ Official Splunk documentation lookup",
                 "✅ Best practices from Splunk knowledge base",
             ],
@@ -331,7 +343,7 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
                 "troubleshooting_tools": ["get_troubleshooting_guide", "get_admin_guide"],
                 "discovery_tools": [
                     "list_spl_commands",
-                    "list_troubleshooting_topics", 
+                    "list_troubleshooting_topics",
                     "list_admin_topics",
                 ],
             },
@@ -346,7 +358,7 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
         """Get comprehensive agent capabilities with direct MCP tool access."""
         return [
             "spl_generation",
-            "spl_optimization", 
+            "spl_optimization",
             "search_execution_transfer",
             "result_analysis",
             "index_data_insights",
@@ -389,7 +401,9 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
                 agent_tools.append(mcp_toolset)
                 logger.info("Added MCPToolset with SPL documentation tools to SearchGuru")
             else:
-                logger.warning("Failed to create MCPToolset - SearchGuru will work without MCP tools")
+                logger.warning(
+                    "Failed to create MCPToolset - SearchGuru will work without MCP tools"
+                )
 
             # Create ADK agent with MCP tools and native transfer support
             adk_agent = LlmAgent(
@@ -400,7 +414,9 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
                 tools=agent_tools,
             )
 
-            logger.debug(f"Created ADK agent for {self.name} with {len(agent_tools)} tools (including MCP)")
+            logger.debug(
+                f"Created ADK agent for {self.name} with {len(agent_tools)} tools (including MCP)"
+            )
             return adk_agent
 
         except ImportError:

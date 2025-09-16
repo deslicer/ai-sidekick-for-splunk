@@ -6,12 +6,9 @@ agents, tools, and external systems using our modular architecture.
 """
 
 import logging
-import os
-import sys
 from typing import Any
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+# Removed sys.path manipulation - use proper relative imports instead
 
 from .config import Config
 from .discovery import ComponentDiscovery

@@ -17,7 +17,10 @@ permissions:
 jobs:
   attempt-fix:
     if: >-
-      ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.name != 'Fix CI Failures' }}
+      ${{ github.event.workflow_run.conclusion == 'failure' &&
+          github.event.workflow_run.event == 'pull_request' &&
+          !github.event.workflow_run.head_repository.fork &&
+          github.event.workflow_run.name != 'Fix CI Failures' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,10 +28,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Cursor CLI
+      - name: Install Cursor CLI (pinned/verified)
+        env:
+          CURSOR_INSTALL_URL: https://cursor.com/install
         run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+          set -euo pipefail
+          curl -fsSLo install-cursor.sh "$CURSOR_INSTALL_URL"
+          # Optional checksum verification: set CURSOR_INSTALL_SHA256 in repo secrets to enforce
+          if [ -n "${CURSOR_INSTALL_SHA256:-}" ]; then
+            echo "$CURSOR_INSTALL_SHA256  install-cursor.sh" | sha256sum -c -
+          fi
+          bash install-cursor.sh
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+          cursor-agent --version
 
       - name: Configure git identity
         run: |
@@ -39,7 +51,7 @@ jobs:
         env:
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           MODEL: gpt-5
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           BRANCH_PREFIX: ci-fix
         run: |
           # Ensure MODEL has a safe default

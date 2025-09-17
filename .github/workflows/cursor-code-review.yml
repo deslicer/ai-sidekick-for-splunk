@@ -18,10 +18,18 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Install Cursor CLI
+      - name: Install Cursor CLI (pinned/verified)
+        env:
+          CURSOR_INSTALL_URL: https://cursor.com/install
         run: |
-          curl https://cursor.com/install -fsS | bash
+          set -euo pipefail
+          curl -fsSLo install-cursor.sh "$CURSOR_INSTALL_URL"
+          if [ -n "${CURSOR_INSTALL_SHA256:-}" ]; then
+            echo "$CURSOR_INSTALL_SHA256  install-cursor.sh" | sha256sum -c -
+          fi
+          bash install-cursor.sh
           echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+          cursor-agent --version
 
       - name: Perform code review
         env:

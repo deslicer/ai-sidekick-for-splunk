@@ -56,7 +56,7 @@ class SetupRunner:
 
         # Get the agent (import lazily to avoid circular imports)
         if agent is None:
-            from ..agent import root_agent
+            from ..core.agent import root_agent
 
             agent = root_agent
 

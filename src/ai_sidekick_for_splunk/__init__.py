@@ -23,9 +23,23 @@ from .core.config import Config
 from .core.discovery import ComponentDiscovery
 from .core.orchestrator import SplunkOrchestrator, create_agent
 from .core.registry import AgentRegistry, RegistryManager, ToolRegistry
-from .services import SetupRunner
+# Import services with graceful fallback for optional dependencies
+_services_available = True
+try:
+    from .services import SetupRunner
+except ImportError:
+    # SetupRunner requires Google ADK - provide a placeholder
+    _services_available = False
+    
+    class SetupRunner:
+        """Placeholder for SetupRunner when Google ADK is not available."""
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "SetupRunner requires Google ADK. Install with: pip install google-adk"
+            )
 
-__all__ = [
+# Build __all__ dynamically based on available imports
+_base_exports = [
     "SplunkOrchestrator",
     "BaseAgent",
     "AgentMetadata",
@@ -36,6 +50,7 @@ __all__ = [
     "ToolRegistry",
     "RegistryManager",
     "ComponentDiscovery",
-    "SetupRunner",
     "create_agent",
 ]
+
+__all__ = _base_exports + (["SetupRunner"] if _services_available else [])

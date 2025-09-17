@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 # Removed sys.path manipulation - use proper relative imports instead
-
 from .config import Config
 from .discovery import ComponentDiscovery
 from .registry import RegistryManager

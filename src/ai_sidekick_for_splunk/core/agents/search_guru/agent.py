@@ -48,7 +48,7 @@ class SearchGuru(BaseAgent):
         artifact_service: Any | None = None,
     ):
         """Initialize the Search Guru.
-        
+
         Args:
             config: Configuration instance
             metadata: Agent metadata
@@ -85,7 +85,7 @@ class SearchGuru(BaseAgent):
         super().__init__(config, metadata, tools, session_state)
         self.name = "search_guru"
         self.description = "Comprehensive Splunk search specialist for SPL generation, optimization, execution, and insights"
-        
+
         # Store configurable services
         self.session_service = session_service
         self.artifact_service = artifact_service
@@ -461,10 +461,10 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
 
 # Factory function for easy instantiation
 def create_search_guru_agent(
-    config: Config | None = None,
+    config: Any | None = None,
     session_service: Any | None = None,
     artifact_service: Any | None = None,
-    **kwargs
+    **kwargs,
 ) -> SearchGuru:
     """
     Create and return a configured Search Guru agent instance.
@@ -479,10 +479,7 @@ def create_search_guru_agent(
         SearchGuru: Configured agent ready for SPL optimization and search strategy.
     """
     return SearchGuru(
-        config=config,
-        session_service=session_service,
-        artifact_service=artifact_service,
-        **kwargs
+        config=config, session_service=session_service, artifact_service=artifact_service, **kwargs
     )
 
 

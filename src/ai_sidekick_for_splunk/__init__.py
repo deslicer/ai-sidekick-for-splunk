@@ -17,12 +17,16 @@ __version__ = "0.3.0"
 __author__ = "AI Sidekick for Splunk Team"
 
 # Core exports for framework consumers
-from .core.base_agent import AgentMetadata, BaseAgent
-from .core.base_tool import BaseTool, ToolMetadata
-from .core.config import Config
-from .core.discovery import ComponentDiscovery
-from .core.orchestrator import SplunkOrchestrator, create_agent, create_orchestrator
-from .core.registry import AgentRegistry, RegistryManager, ToolRegistry
+from .core.base_agent import AgentMetadata, BaseAgent  # noqa: F401
+from .core.base_tool import BaseTool, ToolMetadata  # noqa: F401
+from .core.config import Config  # noqa: F401
+from .core.discovery import ComponentDiscovery  # noqa: F401
+from .core.orchestrator import (
+    SplunkOrchestrator,  # noqa: F401
+    create_agent,  # noqa: F401
+    create_orchestrator,  # noqa: F401
+)
+from .core.registry import AgentRegistry, RegistryManager, ToolRegistry  # noqa: F401
 
 # Import services with graceful fallback for optional dependencies
 _services_available = True
@@ -41,9 +45,11 @@ except ImportError:
             )
 
 
-from .core.agents.flow_pilot.agent import create_flow_pilot
-from .core.agents.search_guru.agent import create_search_guru_agent
-from .core.agents.index_analysis_flow.agent import create_index_analysis_flow_agent
+from .core.agents.flow_pilot.agent import create_flow_pilot  # noqa: F401
+from .core.agents.index_analysis_flow.agent import (
+    create_index_analysis_flow_agent,  # noqa: F401
+)
+from .core.agents.search_guru.agent import create_search_guru_agent  # noqa: F401
 
 # Build __all__ dynamically based on available imports
 _base_exports = [

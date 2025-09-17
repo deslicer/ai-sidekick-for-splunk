@@ -670,28 +670,28 @@ Generated on: {__import__("datetime").datetime.now().isoformat()}
 def _generate_connection_params_code(connection_params, server_data: dict) -> str:
     """Generate Python code for connection parameters."""
     if isinstance(connection_params, StreamableHTTPConnectionParams):
-        return f'''StreamableHTTPConnectionParams(
-            url="{server_data.get("url")}",
+        return f"""StreamableHTTPConnectionParams(
+            url={repr(server_data.get("url"))},
             headers={server_data.get("headers", {})},
             timeout=15.0,
             sse_read_timeout=300.0,
             terminate_on_close=True,
             max_retries=2,
             retry_delay=1.0,
-        )'''
+        )"""
     elif isinstance(connection_params, StdioConnectionParams):
         # Get timeout from server config or use default
         timeout = server_data.get("timeout", 60.0)  # Default 60s, user-configurable
 
-        return f'''StdioConnectionParams(
+        return f"""StdioConnectionParams(
             server_params=StdioServerParameters(
-                command="{server_data.get("command")}",
+                command={repr(server_data.get("command"))},
                 args={server_data.get("args", [])},
                 env={{**{server_data.get("env", {})}, 'DEBUG': '1'}}
             ),
             terminate_on_close=True,
             timeout={timeout},  # User-configurable timeout (default 60s)
-        )'''
+        )"""
     else:
         return "None  # Unknown connection type"
 

@@ -16,6 +16,7 @@ try:
     from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
     from google.adk.runners import Runner
     from google.adk.sessions import InMemorySessionService
+
     ADK_AVAILABLE = True
 except ImportError:
     # Create placeholder classes when ADK is not available
@@ -247,8 +248,13 @@ class SetupRunner:
         """
         # Guard against ADK unavailability or missing services
         if not ADK_AVAILABLE or self.session_service is None:
-            logger.warning("ADK not available or session service uninitialized - clean_session() cannot proceed")
-            return {"success": False, "message": "Session management unavailable: ADK is not installed."}
+            logger.warning(
+                "ADK not available or session service uninitialized - clean_session() cannot proceed"
+            )
+            return {
+                "success": False,
+                "message": "Session management unavailable: ADK is not installed.",
+            }
 
         try:
             # Check if session exists before attempting deletion
@@ -293,7 +299,9 @@ class SetupRunner:
         """
         # Guard against ADK unavailability or missing services
         if not ADK_AVAILABLE or self.session_service is None:
-            logger.warning("ADK not available or session service uninitialized - list_sessions() cannot proceed")
+            logger.warning(
+                "ADK not available or session service uninitialized - list_sessions() cannot proceed"
+            )
             return {
                 "success": False,
                 "message": "Session listing unavailable: ADK is not installed.",
@@ -375,8 +383,13 @@ class SetupRunner:
         """
         # Guard against ADK unavailability or missing services
         if not ADK_AVAILABLE or self.session_service is None:
-            logger.warning("ADK not available or session service uninitialized - get_session_details() cannot proceed")
-            return {"success": False, "message": "Session details unavailable: ADK is not installed."}
+            logger.warning(
+                "ADK not available or session service uninitialized - get_session_details() cannot proceed"
+            )
+            return {
+                "success": False,
+                "message": "Session details unavailable: ADK is not installed.",
+            }
 
         try:
             # Use proper ADK SessionService get_session method

@@ -99,11 +99,11 @@ class FlowPilot(BaseAgent):
         )
 
         self.orchestrator = orchestrator
-        
+
         # Store configurable services (with defaults handled by orchestrator)
         self.session_service = session_service
         self.artifact_service = artifact_service
-        
+
         self.flow_engine = FlowEngine(
             config=self.config,
             orchestrator=orchestrator,
@@ -451,7 +451,7 @@ def create_flow_pilot(
     orchestrator=None,
     session_service: Any | None = None,
     artifact_service: Any | None = None,
-    **kwargs
+    **kwargs,
 ) -> FlowPilot:
     """
     Universal factory function for creating FlowPilot instances from any template.
@@ -471,7 +471,7 @@ def create_flow_pilot(
         orchestrator=orchestrator,
         session_service=session_service,
         artifact_service=artifact_service,
-        **kwargs
+        **kwargs,
     )
 
 

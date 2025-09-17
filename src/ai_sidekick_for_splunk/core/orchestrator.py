@@ -41,11 +41,12 @@ class SplunkOrchestrator:
             artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         """
         self.config = config or Config()
-        
+
         # Initialize services with in-memory defaults if not provided
         if session_service is None:
             try:
                 from google.adk.sessions import InMemorySessionService
+
                 self.session_service = InMemorySessionService()
                 logger.debug("Using default InMemorySessionService")
             except ImportError:
@@ -54,10 +55,11 @@ class SplunkOrchestrator:
         else:
             self.session_service = session_service
             logger.debug("Using provided session service")
-            
+
         if artifact_service is None:
             try:
                 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+
                 self.artifact_service = InMemoryArtifactService()
                 logger.debug("Using default InMemoryArtifactService")
             except ImportError:

@@ -97,11 +97,11 @@ class IndexAnalysisFlowAgent(BaseAgent):
 
         self.flow_definition_path = Path(flow_definition_path)
         self.orchestrator = orchestrator
-        
+
         # Store configurable services
         self.session_service = session_service
         self.artifact_service = artifact_service
-        
+
         self.agent_flow: AgentFlow | None = None
         self.flow_engine: FlowEngine | None = None
 
@@ -700,7 +700,7 @@ def create_index_analysis_flow_agent(
     orchestrator=None,
     session_service: Any | None = None,
     artifact_service: Any | None = None,
-    **kwargs
+    **kwargs,
 ) -> IndexAnalysisFlowAgent:
     """
     Factory function to create IndexAnalysisFlowAgent instance.
@@ -720,7 +720,7 @@ def create_index_analysis_flow_agent(
         orchestrator=orchestrator,
         session_service=session_service,
         artifact_service=artifact_service,
-        **kwargs
+        **kwargs,
     )
 
 

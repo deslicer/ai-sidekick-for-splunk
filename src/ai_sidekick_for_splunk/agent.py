@@ -15,5 +15,5 @@ warnings.warn(
     "Importing from ai_sidekick_for_splunk.agent is deprecated. "
     "Please import from ai_sidekick_for_splunk.core.agent instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )

@@ -5,10 +5,6 @@
             "Shell(gh *)",
             "Shell(git *)"
         ],
-        "deny": [
-            "Shell(git push)",
-            "Shell(gh pr create)",
-            "Write(**)"
-        ]
+        "deny": []
     }
 }

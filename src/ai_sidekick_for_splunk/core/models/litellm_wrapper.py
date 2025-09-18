@@ -124,25 +124,25 @@ class LiteLlmWrapper:
         # Set OpenAI API key if available
         if self.config.openai_api_key and not os.getenv("OPENAI_API_KEY"):
             os.environ["OPENAI_API_KEY"] = self.config.openai_api_key
-            logger.debug("Set OPENAI_API_KEY from config")
+            logger.debug("Configured provider credentials for OpenAI")
 
         # Set Anthropic API key if available
         if self.config.anthropic_api_key and not os.getenv("ANTHROPIC_API_KEY"):
             os.environ["ANTHROPIC_API_KEY"] = self.config.anthropic_api_key
-            logger.debug("Set ANTHROPIC_API_KEY from config")
+            logger.debug("Configured provider credentials for Anthropic")
 
         # Set Azure API configuration if available
         if self.config.azure_api_key and not os.getenv("AZURE_API_KEY"):
             os.environ["AZURE_API_KEY"] = self.config.azure_api_key
-            logger.debug("Set AZURE_API_KEY from config")
+            logger.debug("Configured provider credentials for Azure OpenAI")
 
         if self.config.azure_api_base and not os.getenv("AZURE_API_BASE"):
             os.environ["AZURE_API_BASE"] = self.config.azure_api_base
-            logger.debug("Set AZURE_API_BASE from config")
+            logger.debug("Configured Azure OpenAI API base")
 
         if self.config.azure_api_version and not os.getenv("AZURE_API_VERSION"):
             os.environ["AZURE_API_VERSION"] = self.config.azure_api_version
-            logger.debug("Set AZURE_API_VERSION from config")
+            logger.debug("Configured Azure OpenAI API version")
 
     def __str__(self) -> str:
         """String representation of the wrapper."""

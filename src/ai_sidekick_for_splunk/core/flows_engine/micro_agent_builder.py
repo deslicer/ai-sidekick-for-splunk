@@ -637,8 +637,7 @@ Remember to validate SPL syntax and optimize queries for performance.
                     if google_api_key:
                         logger.debug(f"✅ Google API key found for micro agent {task_id}")
                     else:
-                        logger.error(f"❌ Google API key NOT found for micro agent {task_id}")
-                        logger.error(f"❌ Available env vars: {list(os.environ.keys())}")
+                        logger.error(f"❌ Missing Google credentials for micro agent {task_id}")
             except Exception as key_check_error:
                 logger.debug(f"Skipped Google API key check: {key_check_error}")
 

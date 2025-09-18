@@ -317,8 +317,13 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
 """
 
             # Create agent with flow-based instructions
+            from ...models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=self.name,
                 description=self.description,
                 instruction=custom_instructions,

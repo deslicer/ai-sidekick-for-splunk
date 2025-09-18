@@ -421,8 +421,13 @@ Next_Step: I'll analyze the search results and provide insights and recommendati
                 )
 
             # Create ADK agent with MCP tools and native transfer support
+            from ...models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             adk_agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=self.name,
                 description=f"{self.description} - Direct access to SPL documentation via MCP",
                 instruction=self.instructions,

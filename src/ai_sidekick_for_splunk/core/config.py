@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ModelConfig:
-    """Configuration for LLM models."""
+    """Configuration for LLM models with multi-provider support."""
 
     # Default to Gemini models for Google ADK compatibility
     # Note: Using 2.0-flash for better multi-tool support (Google Search + sub-agents)
@@ -31,6 +31,22 @@ class ModelConfig:
     max_tokens: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_TOKENS", "4096")))
     timeout: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_TIMEOUT", "30")))
 
+    # Multi-provider settings
+    model_provider: str = field(
+        default_factory=lambda: os.getenv("MODEL_PROVIDER", "auto")  # auto, google, litellm
+    )
+
+    # Agent-specific model preferences (loaded from environment)
+    model_preferences: dict[str, str] = field(
+        default_factory=lambda: {
+            # Load agent-specific model preferences from environment
+            # Format: AGENT_NAME_MODEL=model_name
+            key.lower().replace("_model", ""): value
+            for key, value in os.environ.items()
+            if key.endswith("_MODEL") and key != "BASE_MODEL" and key != "TUTOR_MODEL"
+        }
+    )
+
     # Google ADK specific settings
     use_vertex_ai: bool = field(
         default_factory=lambda: os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true"
@@ -42,6 +58,31 @@ class ModelConfig:
     google_cloud_location: str = field(
         default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     )
+
+    # LiteLLM settings for non-Gemini models
+    litellm_api_base: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_BASE"))
+    litellm_api_key: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_KEY"))
+
+    # Provider-specific API keys (LiteLLM will auto-detect based on model name)
+    openai_api_key: str | None = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    anthropic_api_key: str | None = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"))
+    azure_api_key: str | None = field(default_factory=lambda: os.getenv("AZURE_API_KEY"))
+    azure_api_base: str | None = field(default_factory=lambda: os.getenv("AZURE_API_BASE"))
+    azure_api_version: str | None = field(default_factory=lambda: os.getenv("AZURE_API_VERSION"))
+
+    def is_gemini_model(self, model_name: str) -> bool:
+        """Check if a model name refers to a Gemini model."""
+        return model_name.startswith("gemini-")
+
+    def get_model_for_agent(self, agent_name: str) -> str:
+        """Get the preferred model for a specific agent."""
+        # Check agent-specific preferences first
+        agent_model = self.model_preferences.get(agent_name.lower())
+        if agent_model:
+            return agent_model
+
+        # Fall back to primary model
+        return self.primary_model
 
 
 @dataclass
@@ -151,7 +192,8 @@ class Config:
             load_dotenv()
             logger.debug("✅ Environment variables loaded from .env file")
 
-            # Reload SplunkConfig fields after .env is loaded
+            # Reload config fields after .env is loaded to pick up new environment variables
+            self.model = ModelConfig()
             self.splunk = SplunkConfig()
         except ImportError:
             logger.debug("⚠️ python-dotenv not available, relying on system environment variables")
@@ -215,20 +257,21 @@ class Config:
 
     def _validate_google_adk_config(self) -> None:
         """Validate Google ADK specific configuration."""
-        if self.model.use_vertex_ai:
-            if not self.model.google_cloud_project:
-                logger.warning(
-                    "GOOGLE_GENAI_USE_VERTEXAI is true but GOOGLE_CLOUD_PROJECT is not set. "
-                    "This may cause authentication issues."
-                )
-            if not self.model.google_cloud_location:
-                logger.warning("GOOGLE_CLOUD_LOCATION is not set, using default: us-central1")
-        else:
-            if not self.model.google_api_key:
-                logger.warning(
-                    "GOOGLE_GENAI_USE_VERTEXAI is false but GOOGLE_API_KEY is not set. "
-                    "This may cause authentication issues with Google AI Studio."
-                )
+        if self._uses_google_models():
+            if self.model.use_vertex_ai:
+                if not self.model.google_cloud_project:
+                    logger.warning(
+                        "GOOGLE_GENAI_USE_VERTEXAI is true but GOOGLE_CLOUD_PROJECT is not set. "
+                        "This may cause authentication issues."
+                    )
+                if not self.model.google_cloud_location:
+                    logger.warning("GOOGLE_CLOUD_LOCATION is not set, using default: us-central1")
+            else:
+                if not self.model.google_api_key:
+                    logger.warning(
+                        "GOOGLE_GENAI_USE_VERTEXAI is false but GOOGLE_API_KEY is not set. "
+                        "This may cause authentication issues with Google AI Studio."
+                    )
 
     def _load_from_environment(self) -> None:
         """
@@ -316,12 +359,13 @@ class Config:
             errors.append("Max tokens must be positive")
 
         # Validate Google ADK configuration
-        if self.model.use_vertex_ai:
-            if not self.model.google_cloud_project:
-                errors.append("Google Cloud Project must be specified when using Vertex AI")
-        else:
-            if not self.model.google_api_key:
-                errors.append("Google API Key must be specified when not using Vertex AI")
+        if self._uses_google_models():
+            if self.model.use_vertex_ai:
+                if not self.model.google_cloud_project:
+                    errors.append("Google Cloud Project must be specified when using Vertex AI")
+            else:
+                if not self.model.google_api_key:
+                    errors.append("Google API Key must be specified when not using Vertex AI")
 
         # Validate paths
         if not self.project_root.exists():
@@ -436,3 +480,27 @@ class Config:
             f"splunk='{self.splunk.host}:{self.splunk.port}', "
             f"debug={self.debug_mode})"
         )
+
+    # Internal helpers
+    def _uses_google_models(self) -> bool:
+        """Return True if configured models require Google/Gemini credentials."""
+        try:
+            # Explicit provider override
+            if (self.model.model_provider or "").lower() == "google":
+                return True
+
+            # Primary or fallback models
+            if self.model.is_gemini_model(self.model.primary_model):
+                return True
+            if self.model.fallback_model and self.model.is_gemini_model(self.model.fallback_model):
+                return True
+
+            # Any agent-specific preference
+            for preferred_model in (self.model.model_preferences or {}).values():
+                if isinstance(preferred_model, str) and self.model.is_gemini_model(preferred_model):
+                    return True
+        except Exception:
+            # Be conservative if anything goes wrong
+            return False
+
+        return False

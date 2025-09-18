@@ -100,9 +100,14 @@ class DataExplorerAgent(BaseAgent):
                 },
             )
 
+            # Get the appropriate model instance using ModelFactory
+            from ...core.models import ModelFactory
+
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             agent = LlmAgent(
                 name=self.name,
-                model="gemini-1.5-pro-latest",
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 instruction=self.instructions,
                 description=self.description,
                 tools=tools or [],

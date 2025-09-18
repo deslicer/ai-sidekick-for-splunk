@@ -181,16 +181,24 @@ class SplunkOrchestrator:
             # LlmAgent provides better call-return patterns
             from google.adk.agents import LlmAgent
 
+            from .models import ModelFactory
+
+            # Get the appropriate model instance for the orchestrator
+            orchestrator_model = ModelFactory.get_model_for_agent("orchestrator", self.config.model)
+
             self._adk_agent = LlmAgent(
-                model=self.config.model.primary_model,  # Use Gemini 2.0 model for Google Search compatibility
+                model=orchestrator_model,  # Dynamic model selection (string for Gemini, LiteLLM for others)
                 name="ai_sidekick_for_splunk",
                 description="AI Sidekick for Splunk orchestrator with specialized agent tools for collaborative workflows",
                 instruction=self._get_main_agent_instructions(),
                 tools=all_tools,
             )
 
+            # Get model name for logging
+            orchestrator_model_name = self.config.model.get_model_for_agent("orchestrator")
+
             logger.info(
-                f"Created main ADK agent with {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
+                f"Created main ADK agent with model '{orchestrator_model_name}' and {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
             )
             return self._adk_agent
 

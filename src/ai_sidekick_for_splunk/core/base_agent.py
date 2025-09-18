@@ -28,6 +28,7 @@ class AgentMetadata:
     dependencies: list[str] = field(default_factory=list)
     display_name: str | None = None  # User-friendly name for web interface
     disabled: bool = False  # If True, agent will be skipped during discovery
+    preferred_model: str | None = None  # Agent-specific model preference (overrides config)
 
 
 class BaseAgent(ABC):
@@ -89,12 +90,17 @@ class BaseAgent(ABC):
     @property
     def model_name(self) -> str:
         """
-        Get the preferred model for this agent.
+        Get the preferred model name for this agent.
 
         Returns:
-            Model name (defaults to config primary model if not overridden)
+            Model name (checks agent metadata preference, then config preferences, then primary model)
         """
-        return self.config.model.primary_model
+        # Check agent metadata preference first
+        if self.metadata.preferred_model:
+            return self.metadata.preferred_model
+
+        # Use config method to check agent-specific preferences
+        return self.config.model.get_model_for_agent(self.metadata.name)
 
     @property
     def display_name(self) -> str:
@@ -118,20 +124,29 @@ class BaseAgent(ABC):
         return self._llm_agent
 
     def _initialize_llm_agent(self) -> None:
-        """Initialize the ADK LlmAgent instance."""
+        """Initialize the ADK LlmAgent instance with dynamic model selection."""
         try:
             # Import at runtime to avoid import errors
             from google.adk.agents import LlmAgent
 
+            from .models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
+            logger.debug(f"Using model instance for {self.metadata.name}: {model_instance}")
+
             self._llm_agent = LlmAgent(
-                model=self.model_name,
+                model=model_instance,  # Could be string (Gemini) or LiteLLM instance
                 name=self.display_name,  # Use display_name for user-facing name
                 description=self.metadata.description,
                 instruction=self.instructions,
                 tools=self.tools,
             )
             self._is_initialized = True
-            logger.debug(f"Initialized LlmAgent for: {self.metadata.name}")
+            logger.info(
+                f"Initialized LlmAgent for {self.metadata.name} with model: {self.model_name}"
+            )
         except ImportError as e:
             logger.error(f"ADK LlmAgent not available for {self.metadata.name}: {e}")
             raise RuntimeError(

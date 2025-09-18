@@ -45,12 +45,37 @@ git push origin feature/my-awesome-agent
 - **At least one AI API key** (Google AI Studio recommended for beginners)
 
 ### Getting AI API Keys
-**🥇 Google AI Studio (Recommended)**
+
+AI Sidekick supports multiple LLM providers. Choose one or more based on your needs:
+
+**🥇 Google Gemini (Recommended for beginners)**
 1. Visit [Google AI Studio](https://aistudio.google.com/)
 2. Sign in → "Get API Key" → "Create API Key"
 3. Add to your `.env`: `GOOGLE_API_KEY=your_key_here`
 
-**Other Options**: OpenAI, Anthropic Claude, or local LLMs (Ollama)
+**🚀 OpenAI GPT Models**
+1. Visit [OpenAI API](https://platform.openai.com/api-keys)
+2. Create API key
+3. Add to your `.env`: `OPENAI_API_KEY=sk-your-key-here`
+
+**🧠 Anthropic Claude Models**
+1. Visit [Anthropic Console](https://console.anthropic.com/)
+2. Create API key
+3. Add to your `.env`: `ANTHROPIC_API_KEY=sk-ant-your-key-here`
+
+**☁️ Azure OpenAI**
+1. Set up Azure OpenAI resource
+2. Add to your `.env`:
+   ```bash
+   AZURE_API_KEY=your-azure-key
+   AZURE_API_BASE=https://your-resource.openai.azure.com/
+   AZURE_API_VERSION=2023-12-01-preview
+   ```
+
+**💡 Multi-Model Development Tips**
+- Use `MODEL_PROVIDER=auto` for automatic provider detection
+- Test with different models: `uv run ai-sidekick --list-models`
+- Use agent-specific models: `SEARCH_GURU_MODEL=claude-3-sonnet`
 
 ### Agent Development Workflow
 1. **Generate Structure**: `./scripts/agent/create-agent.sh agent_name "description"`

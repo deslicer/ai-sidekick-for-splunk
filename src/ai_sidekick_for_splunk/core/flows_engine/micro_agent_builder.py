@@ -623,17 +623,34 @@ Remember to validate SPL syntax and optimize queries for performance.
                 logger.info("Skipping LlmAgent creation, will use direct agent coordination")
                 return await self._try_direct_agent_coordination(task_metadata, allowed_tools)
 
-            # Verify Google API key is available
-            google_api_key = os.getenv("GOOGLE_API_KEY")
-            if google_api_key:
-                logger.debug(f"✅ Google API key found for micro agent {task_id}")
-            else:
-                logger.error(f"❌ Google API key NOT found for micro agent {task_id}")
-                logger.error(f"❌ Available env vars: {list(os.environ.keys())}")
+            # Verify Google API key only if using Gemini/Google provider
+            try:
+                uses_google = False
+                try:
+                    uses_google = self.config._uses_google_models()  # type: ignore[attr-defined]
+                except Exception:
+                    # Fallback: simple heuristic on model name
+                    uses_google = str(self.config.model.primary_model).startswith("gemini-")
+
+                if uses_google:
+                    google_api_key = os.getenv("GOOGLE_API_KEY")
+                    if google_api_key:
+                        logger.debug(f"✅ Google API key found for micro agent {task_id}")
+                    else:
+                        logger.error(f"❌ Missing Google credentials for micro agent {task_id}")
+            except Exception as key_check_error:
+                logger.debug(f"Skipped Google API key check: {key_check_error}")
 
             # Create the LlmAgent for this specific task
+            from ..models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.create_model(
+                self.config.model.primary_model, self.config.model
+            )
+
             micro_agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=f"MicroAgent_{task_id}",
                 description=f"Specialized agent for task: {task_metadata.get('title', task_id)}",
                 instruction=instructions,

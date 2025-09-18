@@ -39,6 +39,7 @@ def main():
 Examples:
   ai-sidekick --start                                        # Start the AI Sidekick system
   ai-sidekick --stop                                         # Stop the AI Sidekick system
+  ai-sidekick --list-models                                  # List available models and configuration
   ai-sidekick --create-flow-agent dev123                     # Create a generic workflow agent
   
   # Built-in templates (curated, stable)
@@ -91,6 +92,12 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
         "--create-template",
         action="store_true",
         help="Create a new YAML template interactively",
+    )
+
+    action_group.add_argument(
+        "--list-models",
+        action="store_true",
+        help="List all available models based on current configuration",
     )
 
     # Optional arguments for create-flow-agent
@@ -210,6 +217,12 @@ For more information, visit: https://github.com/deslicer/ai-sidekick-for-splunk
             finally:
                 # Restore original argv
                 sys.argv = original_argv
+
+        elif args.list_models:
+            # Import and call list_models
+            from ai_sidekick_for_splunk.cli.list_models import main as list_models_main
+
+            list_models_main()
 
         elif args.create_flow_agent:
             # Import and call create_flow_agent with the name

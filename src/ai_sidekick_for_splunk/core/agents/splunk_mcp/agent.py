@@ -102,8 +102,13 @@ class SplunkMCPAgent(BaseAgent):
 
             # Create agent with MCP toolset - wrap the toolset in a list
             # ADK LlmAgent expects tools to be a list, so wrap the MCPToolset in a list
+            from ...models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             self._llm_agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=self.display_name,  # Use display_name for user-facing name
                 description=self.metadata.description,
                 instruction=self.instructions,
@@ -201,8 +206,13 @@ class SplunkMCPAgent(BaseAgent):
 
             # Create agent with MCP toolset - wrap the toolset in a list
             # ADK LlmAgent expects tools to be a list, so wrap the MCPToolset in a list
+            from ...models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=self.name,
                 description=self.description,
                 instruction=SPLUNK_MCP_PROMPT,

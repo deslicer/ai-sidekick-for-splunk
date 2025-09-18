@@ -85,9 +85,14 @@ class IndexAnalyzerAgent(BaseAgent):
         try:
             logger.info(f"🔧 Creating {self.name} LlmAgent")
 
+            # Get the appropriate model instance using ModelFactory
+            from ...core.models import ModelFactory
+
+            model_instance = ModelFactory.get_model_for_agent(self.metadata.name, self.config.model)
+
             agent = LlmAgent(
                 name=self.name,
-                model="gemini-2.5-pro",
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 instruction=self.instructions,
                 description=self.description,
                 tools=tools or [],

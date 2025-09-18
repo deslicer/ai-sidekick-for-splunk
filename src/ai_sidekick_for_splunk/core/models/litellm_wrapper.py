@@ -55,7 +55,21 @@ class LiteLlmWrapper:
             Configured LiteLLM instance
         """
         try:
-            from google.adk.models.lite_llm import LiteLlm
+            # Feature-check for LiteLlm in ADK to avoid runtime import errors
+            from importlib import import_module
+            try:
+                adk_litellm_module = import_module("google.adk.models.lite_llm")
+            except Exception as import_error:
+                raise ImportError(
+                    f"ADK LiteLLM module not available: {import_error}"
+                ) from import_error
+
+            try:
+                LiteLlm = getattr(adk_litellm_module, "LiteLlm")
+            except AttributeError as attr_error:
+                raise ImportError(
+                    f"ADK LiteLLM support missing 'LiteLlm' symbol: {attr_error}"
+                ) from attr_error
 
             # Prepare LiteLLM configuration
             litellm_config = {
@@ -92,7 +106,7 @@ class LiteLlmWrapper:
             logger.error(f"LiteLLM not available in Google ADK: {e}")
             raise RuntimeError(
                 f"LiteLLM support not available in Google ADK for model {self.model_name}. "
-                "Please ensure you have the latest version of google-adk with LiteLLM support."
+                "Please install or upgrade google-adk to a version that includes LiteLLM support."
             ) from e
         except Exception as e:
             logger.error(f"Failed to create LiteLLM instance for {self.model_name}: {e}")

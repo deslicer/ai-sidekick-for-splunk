@@ -257,20 +257,21 @@ class Config:
 
     def _validate_google_adk_config(self) -> None:
         """Validate Google ADK specific configuration."""
-        if self.model.use_vertex_ai:
-            if not self.model.google_cloud_project:
-                logger.warning(
-                    "GOOGLE_GENAI_USE_VERTEXAI is true but GOOGLE_CLOUD_PROJECT is not set. "
-                    "This may cause authentication issues."
-                )
-            if not self.model.google_cloud_location:
-                logger.warning("GOOGLE_CLOUD_LOCATION is not set, using default: us-central1")
-        else:
-            if not self.model.google_api_key:
-                logger.warning(
-                    "GOOGLE_GENAI_USE_VERTEXAI is false but GOOGLE_API_KEY is not set. "
-                    "This may cause authentication issues with Google AI Studio."
-                )
+        if self._uses_google_models():
+            if self.model.use_vertex_ai:
+                if not self.model.google_cloud_project:
+                    logger.warning(
+                        "GOOGLE_GENAI_USE_VERTEXAI is true but GOOGLE_CLOUD_PROJECT is not set. "
+                        "This may cause authentication issues."
+                    )
+                if not self.model.google_cloud_location:
+                    logger.warning("GOOGLE_CLOUD_LOCATION is not set, using default: us-central1")
+            else:
+                if not self.model.google_api_key:
+                    logger.warning(
+                        "GOOGLE_GENAI_USE_VERTEXAI is false but GOOGLE_API_KEY is not set. "
+                        "This may cause authentication issues with Google AI Studio."
+                    )
 
     def _load_from_environment(self) -> None:
         """
@@ -358,12 +359,13 @@ class Config:
             errors.append("Max tokens must be positive")
 
         # Validate Google ADK configuration
-        if self.model.use_vertex_ai:
-            if not self.model.google_cloud_project:
-                errors.append("Google Cloud Project must be specified when using Vertex AI")
-        else:
-            if not self.model.google_api_key:
-                errors.append("Google API Key must be specified when not using Vertex AI")
+        if self._uses_google_models():
+            if self.model.use_vertex_ai:
+                if not self.model.google_cloud_project:
+                    errors.append("Google Cloud Project must be specified when using Vertex AI")
+            else:
+                if not self.model.google_api_key:
+                    errors.append("Google API Key must be specified when not using Vertex AI")
 
         # Validate paths
         if not self.project_root.exists():
@@ -478,3 +480,27 @@ class Config:
             f"splunk='{self.splunk.host}:{self.splunk.port}', "
             f"debug={self.debug_mode})"
         )
+
+    # Internal helpers
+    def _uses_google_models(self) -> bool:
+        """Return True if configured models require Google/Gemini credentials."""
+        try:
+            # Explicit provider override
+            if (self.model.model_provider or "").lower() == "google":
+                return True
+
+            # Primary or fallback models
+            if self.model.is_gemini_model(self.model.primary_model):
+                return True
+            if self.model.fallback_model and self.model.is_gemini_model(self.model.fallback_model):
+                return True
+
+            # Any agent-specific preference
+            for preferred_model in (self.model.model_preferences or {}).values():
+                if isinstance(preferred_model, str) and self.model.is_gemini_model(preferred_model):
+                    return True
+        except Exception:
+            # Be conservative if anything goes wrong
+            return False
+
+        return False

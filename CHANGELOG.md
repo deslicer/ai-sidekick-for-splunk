@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/deslicer/ai-sidekick-for-splunk/compare/v0.3.0...v0.4.0) (2025-09-18)
+
+
+### Features
+
+* Add comprehensive multi-model support via LiteLLM ([#22](https://github.com/deslicer/ai-sidekick-for-splunk/issues/22)) ([1a6bc80](https://github.com/deslicer/ai-sidekick-for-splunk/commit/1a6bc80aaa045741025e417408ecbbf7253232a3))
+* Add dynamic MCP agent creation system ([#17](https://github.com/deslicer/ai-sidekick-for-splunk/issues/17)) ([e4f3208](https://github.com/deslicer/ai-sidekick-for-splunk/commit/e4f3208fd0acc45a5bd02f14053551e93e6d501a))
+
 ## [0.3.0](https://github.com/deslicer/ai-sidekick-for-splunk/compare/v0.2.0...v0.3.0) (2025-09-09)
 
 

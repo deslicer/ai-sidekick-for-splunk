@@ -9,6 +9,9 @@ dependencies = [
   # Core AI/Agent framework
   "google-adk>=1.11.0",
 
+  # Multi-model support
+  "litellm>=1.0.0",
+
   # Data validation and configuration
   "pydantic>=2.11.0",
   "python-dotenv>=1.0.0",

@@ -632,8 +632,15 @@ Remember to validate SPL syntax and optimize queries for performance.
                 logger.error(f"❌ Available env vars: {list(os.environ.keys())}")
 
             # Create the LlmAgent for this specific task
+            from ..models import ModelFactory
+
+            # Get the appropriate model instance using ModelFactory
+            model_instance = ModelFactory.create_model(
+                self.config.model.primary_model, self.config.model
+            )
+
             micro_agent = LlmAgent(
-                model=self.config.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=f"MicroAgent_{task_id}",
                 description=f"Specialized agent for task: {task_metadata.get('title', task_id)}",
                 instruction=instructions,

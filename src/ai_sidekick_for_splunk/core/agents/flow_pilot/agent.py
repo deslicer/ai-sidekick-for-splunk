@@ -413,8 +413,16 @@ REMEMBER: You are the bridge between user intent and sophisticated workflow exec
                     return asyncio.run(self.execute(task, context))
 
             flow_tools.append(execute_workflow)
+
+            # Get the appropriate model instance using ModelFactory
+            from ...models import ModelFactory
+
+            model_instance = ModelFactory.get_model_for_agent(
+                self.metadata.name, config_to_use.model
+            )
+
             agent = LlmAgent(
-                model=config_to_use.model.primary_model,
+                model=model_instance,  # Use ModelFactory for dynamic model selection
                 name=self._sanitize_name(self.name),
                 description=self.description,
                 instruction=self._instructions,

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ModelConfig:
-    """Configuration for LLM models."""
+    """Configuration for LLM models with multi-provider support."""
 
     # Default to Gemini models for Google ADK compatibility
     # Note: Using 2.0-flash for better multi-tool support (Google Search + sub-agents)
@@ -31,6 +31,22 @@ class ModelConfig:
     max_tokens: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_MAX_TOKENS", "4096")))
     timeout: int = field(default_factory=lambda: int(os.getenv("SPLUNK_AI_TIMEOUT", "30")))
 
+    # Multi-provider settings
+    model_provider: str = field(
+        default_factory=lambda: os.getenv("MODEL_PROVIDER", "auto")  # auto, google, litellm
+    )
+
+    # Agent-specific model preferences (loaded from environment)
+    model_preferences: dict[str, str] = field(
+        default_factory=lambda: {
+            # Load agent-specific model preferences from environment
+            # Format: AGENT_NAME_MODEL=model_name
+            key.lower().replace("_model", ""): value
+            for key, value in os.environ.items()
+            if key.endswith("_MODEL") and key != "BASE_MODEL" and key != "TUTOR_MODEL"
+        }
+    )
+
     # Google ADK specific settings
     use_vertex_ai: bool = field(
         default_factory=lambda: os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "false").lower() == "true"
@@ -42,6 +58,31 @@ class ModelConfig:
     google_cloud_location: str = field(
         default_factory=lambda: os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     )
+
+    # LiteLLM settings for non-Gemini models
+    litellm_api_base: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_BASE"))
+    litellm_api_key: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_KEY"))
+
+    # Provider-specific API keys (LiteLLM will auto-detect based on model name)
+    openai_api_key: str | None = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    anthropic_api_key: str | None = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"))
+    azure_api_key: str | None = field(default_factory=lambda: os.getenv("AZURE_API_KEY"))
+    azure_api_base: str | None = field(default_factory=lambda: os.getenv("AZURE_API_BASE"))
+    azure_api_version: str | None = field(default_factory=lambda: os.getenv("AZURE_API_VERSION"))
+
+    def is_gemini_model(self, model_name: str) -> bool:
+        """Check if a model name refers to a Gemini model."""
+        return model_name.startswith("gemini-")
+
+    def get_model_for_agent(self, agent_name: str) -> str:
+        """Get the preferred model for a specific agent."""
+        # Check agent-specific preferences first
+        agent_model = self.model_preferences.get(agent_name.lower())
+        if agent_model:
+            return agent_model
+
+        # Fall back to primary model
+        return self.primary_model
 
 
 @dataclass
@@ -151,7 +192,8 @@ class Config:
             load_dotenv()
             logger.debug("✅ Environment variables loaded from .env file")
 
-            # Reload SplunkConfig fields after .env is loaded
+            # Reload config fields after .env is loaded to pick up new environment variables
+            self.model = ModelConfig()
             self.splunk = SplunkConfig()
         except ImportError:
             logger.debug("⚠️ python-dotenv not available, relying on system environment variables")

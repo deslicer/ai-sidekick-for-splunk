@@ -6,7 +6,11 @@ This guide will help you set up AI Sidekick for Splunk for development or contri
 
 - Git (will be checked and installed if needed)
 - Internet connection for downloading dependencies
-- Google API key (Gemini) or OpenAI API key
+- **LLM API Key** (choose one or more):
+  - Google API key (Gemini) - **Recommended for getting started**
+  - OpenAI API key (GPT models)
+  - Anthropic API key (Claude models)
+  - Azure OpenAI credentials
 
 ## Quick Setup
 
@@ -57,14 +61,76 @@ source .venv/bin/activate
 
 ```bash
 # Copy environment template
-cp .env.example .env
+cp examples/env.example .env
 
-# Edit .env file with your API keys
-# Required:
-# GOOGLE_API_KEY=your_gemini_api_key_here
-# 
-# Optional:
-# SPLUNK_MCP_SERVER_URL=http://localhost:8003
+# Edit .env file with your API keys and model preferences
+```
+
+#### **Basic Configuration (Gemini Only)**
+
+For the simplest setup using only Google Gemini models:
+
+```bash
+# Required for Gemini models
+GOOGLE_API_KEY=your_gemini_api_key_here
+
+# Optional Splunk connection
+SPLUNK_MCP_SERVER_URL=http://localhost:8003/mcp/
+```
+
+#### **Multi-Model Configuration**
+
+AI Sidekick supports multiple LLM providers through LiteLLM integration. You can use different models for different agents to optimize performance and cost.
+
+**Available Providers:**
+- **Google Gemini** (default): `gemini-2.5-pro`, `gemini-2.0-flash`, etc.
+- **OpenAI**: `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo`, etc.
+- **Anthropic**: `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`, etc.
+- **Azure OpenAI**: Azure-hosted GPT models
+
+**Example 1: Use OpenAI GPT-4 for all agents**
+```bash
+MODEL_PROVIDER=litellm
+BASE_MODEL=gpt-4
+OPENAI_API_KEY=sk-your-openai-api-key-here
+```
+
+**Example 2: Use Anthropic Claude for all agents**
+```bash
+MODEL_PROVIDER=litellm
+BASE_MODEL=claude-3-sonnet
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-api-key-here
+```
+
+**Example 3: Use Azure OpenAI**
+```bash
+MODEL_PROVIDER=litellm
+BASE_MODEL=gpt-4
+AZURE_API_KEY=your-azure-api-key
+AZURE_API_BASE=https://your-resource.openai.azure.com/
+AZURE_API_VERSION=2023-12-01-preview
+```
+
+**Example 4: Mix different models per agent (recommended)**
+```bash
+# Keep Gemini as default (fast and cost-effective)
+BASE_MODEL=gemini-2.0-flash
+
+# Use specialized models for specific agents
+ORCHESTRATOR_MODEL=gpt-4          # Best coordination
+SEARCH_GURU_MODEL=claude-3-sonnet # Best code analysis
+FLOW_PILOT_MODEL=gpt-4            # Best workflows
+SPLUNK_MCP_MODEL=gemini-2.0-flash # Fast tool execution
+
+# Add required API keys
+OPENAI_API_KEY=sk-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+```
+
+**Check Available Models:**
+```bash
+# See which models are available with your current configuration
+uv run ai-sidekick --list-models
 ```
 
 ### 5. Verify Installation

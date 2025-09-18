@@ -5,11 +5,15 @@ This module contains core system agents that provide reusable functionality
 across the entire AI Sidekick for Splunk system, including workflow execution agents.
 """
 
+import logging
+
 from .flow_pilot import FlowPilot, create_dynamic_flowpilot_agents, get_all_dynamic_agents
 from .index_analysis_flow import IndexAnalysisFlowAgent
 from .result_synthesizer import ResultSynthesizerAgent
 from .search_guru import SearchGuru, create_search_guru_agent
 from .splunk_mcp import SplunkMCPAgent
+
+logger = logging.getLogger(__name__)
 
 # Agent instances for auto-discovery
 result_synthesizer_agent = ResultSynthesizerAgent()
@@ -29,7 +33,7 @@ _dynamic_agents = {}
 _dynamic_attr_names = []
 _agents_initialized = False
 
-print("📋 Dynamic FlowPilot agents will be initialized when orchestrator is available")
+logger.info("Dynamic FlowPilot agents will be initialized when orchestrator is available")
 
 
 def initialize_dynamic_agents(orchestrator=None):
@@ -48,11 +52,11 @@ def initialize_dynamic_agents(orchestrator=None):
     global _dynamic_agents, _dynamic_attr_names, _agents_initialized
 
     if _agents_initialized:
-        print(f"📋 Dynamic agents already initialized ({len(_dynamic_agents)} agents)")
+        logger.info("Dynamic agents already initialized (%d agents)", len(_dynamic_agents))
         return _dynamic_agents
 
     try:
-        print("🔄 Initializing dynamic FlowPilot agents with orchestrator...")
+        logger.info("Initializing dynamic FlowPilot agents with orchestrator...")
         _dynamic_agents = create_dynamic_flowpilot_agents(orchestrator)
 
         # Add dynamic agents as module attributes for discovery
@@ -64,12 +68,15 @@ def initialize_dynamic_agents(orchestrator=None):
             _dynamic_attr_names.append(attr_name)
 
         _agents_initialized = True
-        print(f"✅ Initialized {len(_dynamic_agents)} dynamic FlowPilot agents with orchestrator")
-        print(f"   Dynamic agent attributes: {_dynamic_attr_names}")
+        logger.info(
+            "Initialized %d dynamic FlowPilot agents with orchestrator",
+            len(_dynamic_agents),
+        )
+        logger.debug("Dynamic agent attributes: %s", _dynamic_attr_names)
         return _dynamic_agents
 
     except Exception as e:
-        print(f"❌ Failed to initialize dynamic agents: {e}")
+        logger.error("Failed to initialize dynamic agents: %s", e)
         import traceback
 
         traceback.print_exc()

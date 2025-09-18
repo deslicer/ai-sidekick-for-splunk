@@ -65,7 +65,7 @@ class LiteLlmWrapper:
                 ) from import_error
 
             try:
-                LiteLlm = getattr(adk_litellm_module, "LiteLlm")
+                adk_litellm_class = getattr(adk_litellm_module, "LiteLlm")
             except AttributeError as attr_error:
                 raise ImportError(
                     f"ADK LiteLLM support missing 'LiteLlm' symbol: {attr_error}"
@@ -97,7 +97,7 @@ class LiteLlmWrapper:
             logger.debug(f"Creating LiteLLM instance with config: {litellm_config}")
 
             # Create LiteLLM instance
-            litellm_instance = LiteLlm(**litellm_config)
+            litellm_instance = adk_litellm_class(**litellm_config)
 
             logger.info(f"Successfully created LiteLLM instance for {self.model_name}")
             return litellm_instance

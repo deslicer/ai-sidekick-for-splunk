@@ -6,13 +6,9 @@ agents, tools, and external systems using our modular architecture.
 """
 
 import logging
-import os
-import sys
 from typing import Any
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-
+# Removed sys.path manipulation - use proper relative imports instead
 from .config import Config
 from .discovery import ComponentDiscovery
 from .registry import RegistryManager
@@ -30,14 +26,48 @@ class SplunkOrchestrator:
     modular architecture with dynamic discovery and registration.
     """
 
-    def __init__(self, config: Config | None = None) -> None:
+    def __init__(
+        self,
+        config: Config | None = None,
+        session_service: Any | None = None,
+        artifact_service: Any | None = None,
+    ) -> None:
         """
         Initialize the orchestrator with configuration and registries.
 
         Args:
             config: Configuration object, uses default if None
+            session_service: Optional session service (defaults to InMemorySessionService)
+            artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         """
         self.config = config or Config()
+
+        # Initialize services with in-memory defaults if not provided
+        if session_service is None:
+            try:
+                from google.adk.sessions import InMemorySessionService
+
+                self.session_service = InMemorySessionService()
+                logger.debug("Using default InMemorySessionService")
+            except ImportError:
+                logger.warning("ADK not available, session_service will be None")
+                self.session_service = None
+        else:
+            self.session_service = session_service
+            logger.debug("Using provided session service")
+
+        if artifact_service is None:
+            try:
+                from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+
+                self.artifact_service = InMemoryArtifactService()
+                logger.debug("Using default InMemoryArtifactService")
+            except ImportError:
+                logger.warning("ADK not available, artifact_service will be None")
+                self.artifact_service = None
+        else:
+            self.artifact_service = artifact_service
+            logger.debug("Using provided artifact service")
 
         # Logging is configured at the application entry point (e.g., agent.py) per ADK docs.
         # Avoid duplicate logging configuration here.
@@ -228,6 +258,10 @@ class SplunkOrchestrator:
 
         for name, entry in agent_entries.items():
             try:
+                if name == "generic_mcp":
+                    logger.debug("Skipping generic_mcp agent as per configuration")
+                    continue
+
                 # Use existing instance if available, otherwise create new one
                 if entry.instance:
                     agent_instance = entry.instance
@@ -235,6 +269,9 @@ class SplunkOrchestrator:
                 else:
                     agent_instance = entry.cls(self.config, entry.metadata)
                     logger.debug(f"Created new instance for {name}")
+
+                # Define default empty tools list
+                agent_instance_tools = []
 
                 # Check if it's an ADK agent wrapper
                 if hasattr(agent_instance, "get_adk_agent"):
@@ -408,26 +445,46 @@ class SplunkOrchestrator:
         }
 
 
-def create_agent(config: Config | None = None) -> Any:
+def create_agent(
+    config: Config | None = None,
+    session_service: Any | None = None,
+    artifact_service: Any | None = None,
+) -> Any:
     """Factory function to create the main AI Sidekick for Splunk agent.
 
     Args:
         config: Optional configuration instance
+        session_service: Optional session service (defaults to InMemorySessionService)
+        artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
 
     Returns:
         ADK LlmAgent instance
     """
-    orchestrator = SplunkOrchestrator(config)
+    orchestrator = SplunkOrchestrator(
+        config=config,
+        session_service=session_service,
+        artifact_service=artifact_service,
+    )
     return orchestrator.create_adk_agent()
 
 
-def create_orchestrator(config: Config | None = None) -> SplunkOrchestrator:
+def create_orchestrator(
+    config: Config | None = None,
+    session_service: Any | None = None,
+    artifact_service: Any | None = None,
+) -> SplunkOrchestrator:
     """Factory function to create the orchestrator.
 
     Args:
         config: Optional configuration instance
+        session_service: Optional session service (defaults to InMemorySessionService)
+        artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
 
     Returns:
         SplunkOrchestrator instance
     """
-    return SplunkOrchestrator(config)
+    return SplunkOrchestrator(
+        config=config,
+        session_service=session_service,
+        artifact_service=artifact_service,
+    )

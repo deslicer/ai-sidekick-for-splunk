@@ -117,6 +117,17 @@ AI Sidekick includes several built-in agents for different tasks:
 - **ResultSynthesizer**: Intelligent result aggregation and insights
 - **FlowPilot**: Universal workflow execution engine for JSON-defined workflows
 
+#### **Creating Custom MCP Agents**
+
+You can create custom agents that integrate with any MCP (Model Context Protocol) server:
+
+```bash
+# Generate agents from MCP server configurations
+uv run python src/ai_sidekick_for_splunk/cli/create_mcp_agents.py -c mcp.json --save
+```
+
+📖 **[Complete MCP Agent Creation Guide](CREATING_MCP_AGENTS.md)** - Detailed instructions for creating and configuring MCP agents
+
 #### **Experimental Agent Control**
 
 For developers and contributors, agents can be disabled/enabled for experimentation without breaking the system:
@@ -378,6 +389,7 @@ uv run ai-sidekick --start --port 8088
 
 - **Explore Examples**: Check existing workflows in `core/flows/`
 - **Create Workflows**: Build your own FlowPilot templates
+- **Create MCP Agents**: Generate custom agents from MCP server configurations - see [MCP Agent Creation Guide](CREATING_MCP_AGENTS.md)
 - **Join Community**: Contribute to the open-source project
 - **Deploy Production**: Set up for organizational use
 

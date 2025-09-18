@@ -175,8 +175,21 @@ def create_from_template_file(
 
         # Create .template_source file for tracking
         source_file = output_dir / ".template_source"
+
+        # Prefer repo-relative path if inside project; otherwise mark as external
+        try:
+            base_path = get_base_path()
+            src_root = base_path.parent  # points to .../src
+
+            # If the template path is inside the repo's src root, write a src/ relative path
+            rel_to_src = template_path.resolve().relative_to(src_root.resolve())
+            source_template_value = str(Path("src") / rel_to_src)
+        except Exception:
+            # Outside the repo – avoid absolute paths and just mark as external
+            source_template_value = f"external:{template_path.name}"
+
         with open(source_file, "w", encoding="utf-8") as f:
-            f.write(f"source_template: {template_path.absolute()}\n")
+            f.write(f"source_template: {source_template_value}\n")
             f.write(f"generated_on: {datetime.now().isoformat()}\n")
             f.write(f"template_version: {template.metadata.version}\n")
             f.write(f"template_format: {template.metadata.template_format}\n")

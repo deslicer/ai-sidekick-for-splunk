@@ -12,22 +12,34 @@ from pathlib import Path
 from typing import Any
 
 from ai_sidekick_for_splunk.core.utils.cross_platform import safe_print
+from ai_sidekick_for_splunk.core.utils.input_validation import (
+    InputValidationError,
+    safe_input,
+)
 
 
 def get_user_input(prompt: str, default: str = "", required: bool = True) -> str:
     """Get user input with optional default and validation."""
     while True:
-        if default:
-            user_input = input(f"{prompt} [{default}]: ").strip()
-            if not user_input:
-                user_input = default
-        else:
-            user_input = input(f"{prompt}: ").strip()
+        try:
+            if default:
+                full_prompt = f"{prompt} [{default}]: "
+                user_input = safe_input(full_prompt, max_length=1000, allow_empty=True)
+                if not user_input:
+                    user_input = default
+            else:
+                full_prompt = f"{prompt}: "
+                user_input = safe_input(full_prompt, max_length=1000, allow_empty=not required)
 
-        if user_input or not required:
-            return user_input
+            if user_input or not required:
+                return user_input
 
-        safe_print("❌ This field is required. Please provide a value.")
+            safe_print("❌ This field is required. Please provide a value.")
+        except InputValidationError as e:
+            safe_print(f"❌ Invalid input: {e}. Please try again.")
+        except KeyboardInterrupt:
+            safe_print("\n❌ Operation cancelled by user.")
+            sys.exit(1)
 
 
 def get_list_input(prompt: str, min_items: int = 1) -> list[str]:
@@ -37,14 +49,20 @@ def get_list_input(prompt: str, min_items: int = 1) -> list[str]:
 
     items = []
     while True:
-        item = input(f"  {len(items) + 1}. ").strip()
-        if not item:
-            if len(items) >= min_items:
-                break
-            else:
-                safe_print(f"❌ Please provide at least {min_items} item(s).")
-                continue
-        items.append(item)
+        try:
+            item = safe_input(f"  {len(items) + 1}. ", max_length=500, allow_empty=True)
+            if not item:
+                if len(items) >= min_items:
+                    break
+                else:
+                    safe_print(f"❌ Please provide at least {min_items} item(s).")
+                    continue
+            items.append(item)
+        except InputValidationError as e:
+            safe_print(f"❌ Invalid input: {e}. Please try again.")
+        except KeyboardInterrupt:
+            safe_print("\n❌ Operation cancelled by user.")
+            sys.exit(1)
 
     return items
 
@@ -58,11 +76,13 @@ def get_choice(prompt: str, choices: list[str], default: str = "") -> str:
 
     while True:
         try:
-            choice_input = input(
+            choice_input = safe_input(
                 f"Choose 1-{len(choices)}"
                 + (f" [{choices.index(default) + 1}]" if default else "")
-                + ": "
-            ).strip()
+                + ": ",
+                max_length=10,
+                allow_empty=bool(default),
+            )
 
             if not choice_input and default:
                 return default
@@ -99,10 +119,16 @@ def create_search_definition() -> dict[str, Any]:
     spl_lines = []
     try:
         while True:
-            line = input()
-            spl_lines.append(line)
+            try:
+                line = safe_input("", max_length=1000, allow_empty=True)
+                spl_lines.append(line)
+            except InputValidationError as e:
+                safe_print(f"❌ Invalid input: {e}. Please try again.")
     except EOFError:
         pass
+    except KeyboardInterrupt:
+        safe_print("\n❌ Operation cancelled by user.")
+        sys.exit(1)
 
     search["spl"] = "\n".join(spl_lines).strip()
 
@@ -161,7 +187,14 @@ def create_phase_definition() -> dict[str, Any]:
         search = create_search_definition()
         phase["searches"].append(search)
 
-        if input(f"\nAdd another search to '{phase['title']}' phase? (y/N): ").lower() != "y":
+        if (
+            safe_input(
+                f"\nAdd another search to '{phase['title']}' phase? (y/N): ",
+                max_length=10,
+                allow_empty=True,
+            ).lower()
+            != "y"
+        ):
             break
 
     return phase
@@ -215,7 +248,12 @@ def generate_template_interactively() -> dict[str, Any]:
         "Required permissions (e.g., 'search', 'rest_api_access'):", 1
     )
 
-    if input("Does this workflow require specific indexes? (y/N): ").lower() == "y":
+    if (
+        safe_input(
+            "Does this workflow require specific indexes? (y/N): ", max_length=10, allow_empty=True
+        ).lower()
+        == "y"
+    ):
         template["required_indexes"] = get_list_input(
             "Required indexes (e.g., '_audit', '_internal'):", 1
         )
@@ -248,7 +286,10 @@ def generate_template_interactively() -> dict[str, Any]:
             search = create_search_definition()
             template["searches"].append(search)
 
-            if input("\nAdd another search? (y/N): ").lower() != "y":
+            if (
+                safe_input("\nAdd another search? (y/N): ", max_length=10, allow_empty=True).lower()
+                != "y"
+            ):
                 break
 
     else:
@@ -260,7 +301,10 @@ def generate_template_interactively() -> dict[str, Any]:
             phase = create_phase_definition()
             template["phases"].append(phase)
 
-            if input("\nAdd another phase? (y/N): ").lower() != "y":
+            if (
+                safe_input("\nAdd another phase? (y/N): ", max_length=10, allow_empty=True).lower()
+                != "y"
+            ):
                 break
 
     return template

@@ -95,7 +95,11 @@ class LiteLlmWrapper:
             # Set provider-specific environment variables for LiteLLM auto-detection
             self._set_provider_environment_variables()
 
-            logger.debug(f"Creating LiteLLM instance with config: {litellm_config}")
+            # Create a safe config for logging (mask sensitive data)
+            safe_config = {
+                k: "***MASKED***" if "key" in k.lower() else v for k, v in litellm_config.items()
+            }
+            logger.debug(f"Creating LiteLLM instance with config: {safe_config}")
 
             # Create LiteLLM instance
             litellm_instance = adk_litellm_class(**litellm_config)

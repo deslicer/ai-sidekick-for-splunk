@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from .config import Config
 from .discovery import ComponentDiscovery
 from .registry import RegistryManager
+from .utils.conversation_recovery import RobustLlmAgent
 
 # Import Google ADK components
 
@@ -156,7 +157,8 @@ class SplunkOrchestrator:
             # Get the appropriate model instance for the orchestrator
             orchestrator_model = ModelFactory.get_model_for_agent("orchestrator", self.config.model)
 
-            self._adk_agent = LlmAgent(
+            # Create base ADK agent
+            base_agent = LlmAgent(
                 model=orchestrator_model,  # Dynamic model selection (string for Gemini, LiteLLM for others)
                 name="ai_sidekick_for_splunk",
                 description="AI Sidekick for Splunk orchestrator with specialized agent tools for collaborative workflows",
@@ -164,11 +166,14 @@ class SplunkOrchestrator:
                 tools=all_tools,
             )
 
+            # Wrap with recovery capabilities
+            self._adk_agent = RobustLlmAgent(base_agent)
+
             # Get model name for logging
             orchestrator_model_name = self.config.model.get_model_for_agent("orchestrator")
 
             logger.info(
-                f"Created main ADK agent with model '{orchestrator_model_name}' and {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
+                f"Created main ADK agent with recovery capabilities, model '{orchestrator_model_name}' and {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
             )
             return self._adk_agent
 

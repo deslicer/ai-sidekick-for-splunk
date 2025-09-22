@@ -17,6 +17,8 @@ __version__ = "0.3.0"
 __author__ = "AI Sidekick for Splunk Team"
 
 # Core exports for framework consumers
+# Import root_agent for ADK discovery (this triggers agent initialization)
+from .agent import root_agent
 from .core.base_agent import AgentMetadata, BaseAgent
 from .core.base_tool import BaseTool, ToolMetadata
 from .core.config import Config
@@ -38,4 +40,5 @@ __all__ = [
     "ComponentDiscovery",
     "SetupRunner",
     "create_agent",
+    "root_agent",
 ]

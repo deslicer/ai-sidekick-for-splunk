@@ -11,6 +11,13 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# Import ADK BaseAgent for proper inheritance
+try:
+    from google.adk.agents.base_agent import BaseAgent as ADKBaseAgent
+except ImportError:
+    # Fallback if ADK not available during import
+    ADKBaseAgent = object
+
 
 class ConversationRecoveryHandler:
     """Handles tool call failures and conversation recovery."""
@@ -51,105 +58,135 @@ class ConversationRecoveryHandler:
         return any(indicator in error_message for indicator in indicators)
 
 
-class RobustLlmAgent:
+class RobustLlmAgent(ADKBaseAgent):
     """Wrapper around LlmAgent with conversation recovery capabilities."""
 
     def __init__(self, base_agent: Any):
+        # Don't call super().__init__() - we're a pure wrapper, not a real BaseAgent
+        # Just store the base agent and recovery handler
         self.base_agent = base_agent
         self.recovery_handler = ConversationRecoveryHandler()
 
-    async def run_async(self, messages: list[dict[str, Any]], **kwargs) -> dict[str, Any]:
-        """Run agent with automatic conversation recovery."""
+    def _run_async_impl(self, *args, **kwargs):
+        """Delegate _run_async_impl to the base agent."""
+        return self.base_agent._run_async_impl(*args, **kwargs)
+
+    def _run_live_impl(self, *args, **kwargs):
+        """Delegate _run_live_impl to the base agent."""
+        return self.base_agent._run_live_impl(*args, **kwargs)
+
+    @property
+    def tools(self):
+        """Delegate tools property to the base agent."""
+        return self.base_agent.tools
+
+    @tools.setter
+    def tools(self, value):
+        """Delegate tools setter to the base agent."""
+        self.base_agent.tools = value
+
+    @property
+    def description(self):
+        """Delegate description property to the base agent."""
+        return self.base_agent.description
+
+    @description.setter
+    def description(self, value):
+        """Delegate description setter to the base agent."""
+        self.base_agent.description = value
+
+    @property
+    def model(self):
+        """Delegate model property to the base agent."""
+        return self.base_agent.model
+
+    @model.setter
+    def model(self, value):
+        """Delegate model setter to the base agent."""
+        self.base_agent.model = value
+
+    @property
+    def instruction(self):
+        """Delegate instruction property to the base agent."""
+        return getattr(self.base_agent, "instruction", None)
+
+    @instruction.setter
+    def instruction(self, value):
+        """Delegate instruction setter to the base agent."""
+        if hasattr(self.base_agent, "instruction"):
+            self.base_agent.instruction = value
+
+    @property
+    def name(self):
+        """Delegate name property to the base agent."""
+        return getattr(self.base_agent, "name", "RobustLlmAgent")
+
+    @name.setter
+    def name(self, value):
+        """Delegate name setter to the base agent."""
+        if hasattr(self.base_agent, "name"):
+            self.base_agent.name = value
+
+    def _resolve_tools(self, *args, **kwargs):
+        """Delegate _resolve_tools to the base agent."""
+        return self.base_agent._resolve_tools(*args, **kwargs)
+
+    def __getattribute__(self, name: str) -> Any:
+        """Intercept ALL attribute access to ensure proper delegation."""
+        # Handle our own attributes first
+        if name in ["base_agent", "recovery_handler"]:
+            return object.__getattribute__(self, name)
+
+        # Handle critical ADK properties that need delegation
+        if name in ["model", "instruction", "tools", "name", "description"]:
+            try:
+                base_agent = object.__getattribute__(self, "base_agent")
+                result = getattr(base_agent, name)
+                return result
+            except AttributeError:
+                return object.__getattribute__(self, name)
+
+        # For all other attributes, try base_agent first, then self
         try:
-            # Try normal execution
-            result = await self.base_agent.run_async(messages, **kwargs)
-            return {"success": True, "result": result, "recovered": False, "error_type": None}
+            base_agent = object.__getattribute__(self, "base_agent")
+            if hasattr(base_agent, name):
+                result = getattr(base_agent, name)
+                return result
+        except AttributeError:
+            pass
 
-        except Exception as e:
-            error_str = str(e)
-            logger.warning(f"Agent execution error: {error_str}")
+        # Fall back to normal attribute access
+        return object.__getattribute__(self, name)
 
-            # Check if it's a tool call response error
-            if self.recovery_handler.is_tool_call_error(error_str):
-                logger.info("Detected tool call error, attempting recovery")
+    def __getattr__(self, name: str) -> Any:
+        """Delegate attribute access to the base agent (fallback)."""
+        # Always delegate to base_agent first (both public and private attributes)
+        if hasattr(self.base_agent, name):
+            result = getattr(self.base_agent, name)
+            return result
+        else:
+            # Fall back to BaseAgent's implementation for attributes not in base_agent
+            return getattr(super(), name)
 
-                # Extract missing tool call IDs
-                missing_calls = self.recovery_handler.extract_missing_tool_calls(error_str)
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Delegate attribute setting, but keep our own attributes."""
+        if name in ["base_agent", "recovery_handler"]:
+            self.__dict__[name] = value
+        else:
+            # Delegate to base agent if it exists and has the attribute
+            if hasattr(self, "base_agent") and hasattr(self.base_agent, name):
+                setattr(self.base_agent, name, value)
+            else:
+                # Fall back to setting on self for initialization
+                self.__dict__[name] = value
 
-                if missing_calls:
-                    logger.info(
-                        f"Found {len(missing_calls)} missing tool calls, creating recovery response"
-                    )
+    def __repr__(self) -> str:
+        """Return representation of the base agent."""
+        return repr(self.base_agent)
 
-                    # Create synthetic tool responses for missing calls
-                    recovery_messages = messages.copy()
-                    for call_id in missing_calls:
-                        tool_response = self.recovery_handler.create_tool_error_response(
-                            call_id, "Tool execution was interrupted or failed"
-                        )
-                        recovery_messages.append(tool_response)
-
-                    # Add recovery message
-                    recovery_message = self.recovery_handler.create_recovery_message(missing_calls)
-                    recovery_messages.append({"role": "assistant", "content": recovery_message})
-
-                    return {
-                        "success": True,
-                        "result": {
-                            "content": recovery_message,
-                            "metadata": {
-                                "recovered_from_error": True,
-                                "original_error": "Tool call interruption",
-                                "missing_tool_calls": len(missing_calls),
-                                "recovery_type": "tool_call_failure",
-                            },
-                        },
-                        "recovered": True,
-                        "error_type": "tool_call_error",
-                    }
-
-            # For other errors, provide generic recovery
-            logger.error(f"Unexpected agent error (not recoverable): {error_str}")
-            generic_recovery = (
-                "I'm experiencing technical difficulties with that request. "
-                "Please try rephrasing your question or try again in a moment."
-            )
-
-            return {
-                "success": False,
-                "result": {
-                    "content": generic_recovery,
-                    "metadata": {
-                        "recovered_from_error": True,
-                        "original_error": "Unexpected system error",
-                        "recovery_type": "generic_error",
-                    },
-                },
-                "recovered": True,
-                "error_type": "system_error",
-                "original_error": error_str,
-            }
-
-    def run_sync(self, messages: list[dict[str, Any]], **kwargs) -> dict[str, Any]:
-        """Synchronous version for compatibility."""
-        import asyncio
-
-        async def _run():
-            return await self.run_async(messages, **kwargs)
-
-        try:
-            return asyncio.run(_run())
-        except Exception as e:
-            logger.error(f"Synchronous execution failed: {e}")
-            return {
-                "success": False,
-                "result": {
-                    "content": "A system error occurred. Please try again.",
-                    "metadata": {"error": str(e)},
-                },
-                "recovered": False,
-                "error_type": "sync_execution_error",
-            }
+    def __str__(self) -> str:
+        """Return string representation of the base agent."""
+        return str(self.base_agent)
 
 
 class RecoveryAwareOrchestrator:

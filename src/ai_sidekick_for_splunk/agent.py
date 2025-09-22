@@ -12,6 +12,7 @@ import sys
 from typing import Any
 
 from . import create_agent
+from .core.utils.conversation_recovery import RobustLlmAgent
 from .core.utils.logging_config import setup_logging
 
 
@@ -90,10 +91,13 @@ def _create_root_agent() -> Any:
         logger.info("📋 Creating root agent - this is an INFO message")
 
         # Use our create_agent factory function
-        root_agent = create_agent()
+        base_agent = create_agent()
+
+        # Wrap with conversation recovery capabilities
+        root_agent = RobustLlmAgent(base_agent)
 
         logger.debug("🔍 Root agent created successfully - DEBUG visibility test")
-        logger.info("✅ Root agent created successfully using modular orchestrator")
+        logger.info("✅ Root agent created successfully using modular orchestrator with recovery")
         return root_agent
     except ImportError as e:
         logger.error(f"❌ Google ADK not available: {e}")

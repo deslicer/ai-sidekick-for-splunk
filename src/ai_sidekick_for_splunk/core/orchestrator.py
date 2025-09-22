@@ -16,7 +16,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from .config import Config
 from .discovery import ComponentDiscovery
 from .registry import RegistryManager
-from .utils.conversation_recovery import RobustLlmAgent
 
 # Import Google ADK components
 
@@ -166,14 +165,14 @@ class SplunkOrchestrator:
                 tools=all_tools,
             )
 
-            # Wrap with recovery capabilities
-            self._adk_agent = RobustLlmAgent(base_agent)
+            # Store the base agent (recovery will be handled at application level)
+            self._adk_agent = base_agent
 
             # Get model name for logging
             orchestrator_model_name = self.config.model.get_model_for_agent("orchestrator")
 
             logger.info(
-                f"Created main ADK agent with recovery capabilities, model '{orchestrator_model_name}' and {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
+                f"Created main ADK agent, model '{orchestrator_model_name}' and {len(all_tools)} tools ({len(root_tools)} standalone + {len(agent_tools)} agent tools)"
             )
             return self._adk_agent
 
@@ -249,43 +248,50 @@ class SplunkOrchestrator:
                     agent_instance = entry.cls(self.config, entry.metadata)
                     logger.debug(f"Created new instance for {name}")
 
+                # Initialize agent_instance_tools
+                agent_instance_tools = []
+
                 # Check if it's an ADK agent wrapper
                 if hasattr(agent_instance, "get_adk_agent"):
                     # Get associated tools for this agent
                     agent_tool_names = agent_tool_mapping.get_agent_tools(name)
                     agent_instance_tools = self._get_tools_for_sub_agent(agent_tool_names)
 
-                # CRITICAL: Set orchestrator on agent before creating ADK agent
-                # This allows agents to access other agents through the orchestrator
-                if hasattr(agent_instance, "set_orchestrator"):
-                    agent_instance.set_orchestrator(self)
-                    logger.debug(f"✅ Set orchestrator on agent: {name}")
-                elif hasattr(agent_instance, "orchestrator"):
-                    agent_instance.orchestrator = self
-                    logger.debug(f"✅ Set orchestrator property on agent: {name}")
+                    # CRITICAL: Set orchestrator on agent before creating ADK agent
+                    # This allows agents to access other agents through the orchestrator
+                    if hasattr(agent_instance, "set_orchestrator"):
+                        agent_instance.set_orchestrator(self)
+                        logger.debug(f"✅ Set orchestrator on agent: {name}")
+                    elif hasattr(agent_instance, "orchestrator"):
+                        agent_instance.orchestrator = self
+                        logger.debug(f"✅ Set orchestrator property on agent: {name}")
 
-                # CRITICAL: Update the registry entry to use this orchestrator-injected instance
-                # This ensures that get_instance() returns the same instance with orchestrator
-                try:
-                    registry_entry = self.registry_manager.agent_registry._entries.get(name)
-                    if registry_entry:
-                        registry_entry.instance = agent_instance
+                    # CRITICAL: Update the registry entry to use this orchestrator-injected instance
+                    # This ensures that get_instance() returns the same instance with orchestrator
+                    try:
+                        registry_entry = self.registry_manager.agent_registry._entries.get(name)
+                        if registry_entry:
+                            registry_entry.instance = agent_instance
+                            logger.debug(
+                                f"✅ Updated registry with orchestrator-injected agent: {name}"
+                            )
+                    except Exception as e:
+                        logger.warning(f"Could not update registry entry for {name}: {e}")
+
+                    # Create ADK agent (sub-agents use LlmAgent, not Agent class)
+                    adk_agent = agent_instance.get_adk_agent(tools=agent_instance_tools)
+
+                    if adk_agent:
+                        # Wrap agent as AgentTool for seamless delegation
+                        agent_tool = AgentTool(agent=adk_agent, skip_summarization=False)
+                        agent_tools.append(agent_tool)
                         logger.debug(
-                            f"✅ Updated registry with orchestrator-injected agent: {name}"
+                            f"Created AgentTool: {name} with {len(agent_instance_tools)} tools"
                         )
-                except Exception as e:
-                    logger.warning(f"Could not update registry entry for {name}: {e}")
-
-                # Create ADK agent (sub-agents use LlmAgent, not Agent class)
-                adk_agent = agent_instance.get_adk_agent(tools=agent_instance_tools)
-
-                if adk_agent:
-                    # Wrap agent as AgentTool for seamless delegation
-                    agent_tool = AgentTool(agent=adk_agent, skip_summarization=False)
-                    agent_tools.append(agent_tool)
-                    logger.debug(
-                        f"Created AgentTool: {name}_agent with {len(agent_instance_tools)} tools"
-                    )
+                    else:
+                        logger.debug(
+                            f"Agent {name} get_adk_agent() returned None - skipping AgentTool creation"
+                        )
                 else:
                     logger.debug(
                         f"Agent {name} is not ADK-compatible - skipping AgentTool creation"

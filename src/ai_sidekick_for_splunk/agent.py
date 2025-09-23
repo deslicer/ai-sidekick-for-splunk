@@ -11,7 +11,7 @@ import os
 import sys
 from typing import Any
 
-from . import create_agent
+from .core.orchestrator import create_agent
 from .core.utils.conversation_recovery import RobustLlmAgent
 from .core.utils.logging_config import setup_logging
 

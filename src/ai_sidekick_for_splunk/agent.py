@@ -11,9 +11,11 @@ import os
 import sys
 from typing import Any
 
+from .core.config import Config
 from .core.orchestrator import create_agent
 from .core.utils.conversation_recovery import RobustLlmAgent
 from .core.utils.logging_config import setup_logging
+from .core.utils.observability import initialize_observability
 
 
 # Configure logging for ADK web mode BEFORE creating the agent
@@ -89,6 +91,15 @@ def _create_root_agent() -> Any:
         # Log debug information to test visibility
         logger.debug("🔍 Creating root agent - this is a DEBUG message")
         logger.info("📋 Creating root agent - this is an INFO message")
+
+        # Initialize observability before creating agents
+        config = Config()
+        if config.observability.agentops_enabled:
+            initialize_observability(
+                trace_name=config.observability.trace_name,
+                api_key=config.observability.agentops_api_key,
+                auto_start_session=config.observability.auto_start_session,
+            )
 
         # Use our create_agent factory function
         base_agent = create_agent()

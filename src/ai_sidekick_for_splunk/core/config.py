@@ -128,6 +128,29 @@ class SplunkConfig:
 
 
 @dataclass
+class ObservabilityConfig:
+    """Configuration for observability and monitoring."""
+
+    # AgentOps configuration
+    agentops_api_key: str = field(default_factory=lambda: os.getenv("AGENTOPS_API_KEY", ""))
+    agentops_enabled: bool = field(default_factory=lambda: bool(os.getenv("AGENTOPS_API_KEY")))
+    trace_name: str = field(
+        default_factory=lambda: os.getenv("AGENTOPS_TRACE_NAME", "ai-sidekick-for-splunk")
+    )
+    auto_start_session: bool = field(
+        default_factory=lambda: os.getenv("AGENTOPS_AUTO_START", "true").lower() == "true"
+    )
+
+    # Additional observability settings
+    enable_performance_tracking: bool = field(
+        default_factory=lambda: os.getenv("ENABLE_PERFORMANCE_TRACKING", "true").lower() == "true"
+    )
+    enable_error_tracking: bool = field(
+        default_factory=lambda: os.getenv("ENABLE_ERROR_TRACKING", "true").lower() == "true"
+    )
+
+
+@dataclass
 class Config:
     """
     Main configuration class for AI Sidekick for Splunk.
@@ -141,6 +164,7 @@ class Config:
     model: ModelConfig = field(default_factory=ModelConfig)
     discovery: DiscoveryConfig = field(default_factory=DiscoveryConfig)
     splunk: SplunkConfig = field(default_factory=SplunkConfig)
+    observability: ObservabilityConfig = field(default_factory=ObservabilityConfig)
 
     # Framework settings
     project_root: Path = field(default_factory=Path.cwd)

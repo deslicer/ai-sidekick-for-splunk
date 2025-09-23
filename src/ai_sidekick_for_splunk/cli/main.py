@@ -9,6 +9,29 @@ import sys
 from pathlib import Path
 
 
+def initialize_cli_observability() -> None:
+    """Initialize AgentOps observability for CLI usage."""
+    try:
+        from ai_sidekick_for_splunk.core.config import Config
+        from ai_sidekick_for_splunk.core.utils.observability import initialize_observability
+
+        config = Config()
+        if config.observability.agentops_enabled:
+            success = initialize_observability(
+                trace_name=f"{config.observability.trace_name}-cli",
+                api_key=config.observability.agentops_api_key,
+                auto_start_session=config.observability.auto_start_session,
+            )
+            if success:
+                print("✅ AgentOps observability enabled for CLI")
+
+    except ImportError:
+        # AgentOps not available, continue without observability
+        pass
+    except Exception as e:
+        print(f"⚠️ AgentOps initialization failed: {e}")
+
+
 def get_available_templates() -> list[str]:
     """Get list of available built-in templates."""
     try:
@@ -28,6 +51,9 @@ def get_available_templates() -> list[str]:
 
 def main():
     """Main CLI function with subcommands."""
+    # Initialize observability early (if enabled)
+    initialize_cli_observability()
+
     # Get available templates dynamically
     available_templates = get_available_templates()
 

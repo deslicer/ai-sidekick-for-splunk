@@ -95,6 +95,9 @@ class LiteLlmWrapper:
             # Set provider-specific environment variables for LiteLLM auto-detection
             self._set_provider_environment_variables()
 
+            # Configure LiteLLM global settings
+            self._configure_litellm_global_settings()
+
             # Create a safe config for logging (mask sensitive data)
             safe_config = {
                 k: "***MASKED***" if "key" in k.lower() else v for k, v in litellm_config.items()
@@ -118,6 +121,31 @@ class LiteLlmWrapper:
             raise RuntimeError(
                 f"Failed to initialize LiteLLM for model {self.model_name}: {e}"
             ) from e
+
+    def _configure_litellm_global_settings(self) -> None:
+        """
+        Configure LiteLLM global settings based on configuration.
+        
+        This method sets global LiteLLM parameters that affect all model calls,
+        such as dropping unsupported parameters for specific models.
+        """
+        try:
+            import litellm
+            
+            # Configure drop_params setting to handle model-specific parameter restrictions
+            # For example, GPT-5 models only support temperature=1, not other values
+            if hasattr(self.config, 'litellm_drop_params'):
+                litellm.drop_params = self.config.litellm_drop_params
+                logger.debug(f"Set litellm.drop_params = {self.config.litellm_drop_params}")
+            else:
+                # Default to True for better compatibility
+                litellm.drop_params = True
+                logger.debug("Set litellm.drop_params = True (default)")
+                
+        except ImportError:
+            logger.warning("LiteLLM package not available for global configuration")
+        except Exception as e:
+            logger.warning(f"Failed to configure LiteLLM global settings: {e}")
 
     def _set_provider_environment_variables(self) -> None:
         """

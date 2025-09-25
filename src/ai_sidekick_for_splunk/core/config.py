@@ -62,6 +62,9 @@ class ModelConfig:
     # LiteLLM settings for non-Gemini models
     litellm_api_base: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_BASE"))
     litellm_api_key: str | None = field(default_factory=lambda: os.getenv("LITELLM_API_KEY"))
+    litellm_drop_params: bool = field(
+        default_factory=lambda: os.getenv("LITELLM_DROP_PARAMS", "true").lower() == "true"
+    )
 
     # Provider-specific API keys (LiteLLM will auto-detect based on model name)
     openai_api_key: str | None = field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))

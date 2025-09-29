@@ -30,11 +30,19 @@ def find_project_root(start: Path | None = None) -> Path:
 def run_command(command: list[str], cwd: Path) -> int:
     """Run a subprocess command in the given working directory."""
     try:
-        completed = subprocess.run(command, cwd=str(cwd))
+        from ..core.utils.subprocess_security import SecureSubprocess, SubprocessSecurityError
+
+        completed = SecureSubprocess.run_secure(command, cwd=cwd, timeout=60.0)
         return int(completed.returncode)
+    except SubprocessSecurityError as exc:
+        print(f"[SECURITY ERROR] Command blocked: {exc}", file=sys.stderr)
+        return 126
     except FileNotFoundError as exc:
         print(f"[ERROR] Command not found: {command[0]} ({exc})", file=sys.stderr)
         return 127
+    except subprocess.TimeoutExpired:
+        print(f"[ERROR] Command timed out: {command[0]}", file=sys.stderr)
+        return 124
     except Exception as exc:  # noqa: BLE001
         print(f"[ERROR] Failed to execute command: {' '.join(command)}\n{exc}", file=sys.stderr)
         return 1

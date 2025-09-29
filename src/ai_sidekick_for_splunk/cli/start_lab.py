@@ -22,6 +22,8 @@ from pathlib import Path
 
 import httpx
 
+from ..core.utils.subprocess_security import SecureSubprocess, SubprocessSecurityError
+
 
 def find_project_root(start: Path | None = None) -> Path:
     """Locate the project root by searching upward for pyproject.toml.
@@ -53,11 +55,17 @@ def run_command(command: list[str], cwd: Path) -> int:
         Process return code.
     """
     try:
-        completed = subprocess.run(command, cwd=str(cwd), check=False)
+        completed = SecureSubprocess.run_secure(command, cwd=cwd, check=False, timeout=60.0)
         return int(completed.returncode)
+    except SubprocessSecurityError as exc:
+        print(f"[SECURITY ERROR] Command blocked: {exc}", file=sys.stderr)
+        return 126
     except FileNotFoundError as exc:
         print(f"[ERROR] Command not found: {command[0]} ({exc})", file=sys.stderr)
         return 127
+    except subprocess.TimeoutExpired:
+        print(f"[ERROR] Command timed out: {command[0]}", file=sys.stderr)
+        return 124
     except OSError as exc:  # surface unexpected OS-level errors
         print(f"[ERROR] Failed to execute command: {' '.join(command)}\n{exc}", file=sys.stderr)
         return 1
@@ -355,10 +363,11 @@ def main() -> None:
     # Ensure no previous instance (best-effort): call our stop-lab entry if available
     try:
         # Use this same interpreter to invoke package entry
-        subprocess.run(
+        SecureSubprocess.run_secure(
             [sys.executable, "-m", "ai_sidekick_for_splunk.cli.stop_lab"],
-            cwd=str(project_root),
+            cwd=project_root,
             check=False,
+            timeout=30.0,
         )
     except OSError:
         pass
@@ -398,7 +407,7 @@ def main() -> None:
     start_cmd = ["adk", "web", "--port", str(sidekick_port)]
     child_env = os.environ.copy()
     child_env["PORT"] = str(sidekick_port)  # parity with bash script export
-    proc = subprocess.Popen(start_cmd, cwd=str(project_root / "src"), env=child_env)
+    proc = SecureSubprocess.popen_secure(start_cmd, cwd=project_root / "src", env=child_env)
 
     # Save PID
     (logs_dir / "ai-sidekick.pid").write_text(str(proc.pid))

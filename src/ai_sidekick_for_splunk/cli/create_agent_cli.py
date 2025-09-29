@@ -7,7 +7,6 @@ and exposes a non-interactive path for tests and automation.
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 from pathlib import Path
 
@@ -40,7 +39,14 @@ def main(argv: list[str] | None = None) -> None:
 
     # Best-effort: run helper and let contributor fill details; we print reminder.
     print("[INFO] Launching interactive agent creator. Use defaults where applicable.")
-    subprocess.run([sys.executable, str(helper)], cwd=str(project_root), check=False)
+    try:
+        from ..core.utils.subprocess_security import SecureSubprocess
+
+        SecureSubprocess.run_secure(
+            [sys.executable, str(helper)], cwd=project_root, check=False, timeout=120.0
+        )
+    except Exception as e:
+        print(f"[ERROR] Failed to launch agent creator: {e}", file=sys.stderr)
     sys.exit(0)
 
 

@@ -20,6 +20,8 @@ import sys
 from getpass import getpass
 from pathlib import Path
 
+from ..core.utils.input_validation import safe_input
+
 
 def print_banner() -> None:
     """Print a friendly header for the setup process."""
@@ -158,6 +160,11 @@ def write_env_file(
     )
     target_path.write_text(content)
 
+    # Set secure permissions (readable/writable only by owner)
+    import stat
+
+    target_path.chmod(stat.S_IRUSR | stat.S_IWUSR)  # 600 permissions
+
 
 def resolve_project_root(start: Path | None = None) -> Path:
     """Find project root by locating pyproject.toml upward from start or cwd."""
@@ -239,7 +246,7 @@ def interactive_setup(target_path: Path) -> None:
     existing = read_existing_env(target_path)
 
     if target_path.exists():
-        resp = input(".env exists. Overwrite? (y/N): ").strip() or "N"
+        resp = safe_input(".env exists. Overwrite? (y/N): ", max_length=10, allow_empty=True) or "N"
         if resp.lower() != "y":
             print("Keeping existing .env file.")
             return
@@ -253,7 +260,12 @@ def interactive_setup(target_path: Path) -> None:
     google_api_key = existing.get("GOOGLE_API_KEY", "")
     if workshop_csv.exists():
         auto_choice = (
-            input("Autogenerate Google API key for this workshop? (Y/n): ").strip() or "Y"
+            safe_input(
+                "Autogenerate Google API key for this workshop? (Y/n): ",
+                max_length=10,
+                allow_empty=True,
+            )
+            or "Y"
         ).lower()
         if auto_choice == "y":
             suggestion = suggest_workshop_key(workshop_csv)
@@ -272,12 +284,20 @@ def interactive_setup(target_path: Path) -> None:
     default_mcp = existing.get(
         "SPLUNK_MCP_SERVER_URL", DEFAULTS["MCP_URL"]
     )  # keep existing if present
-    mcp_url = input(f"MCP server URL [{default_mcp}]: ").strip() or default_mcp
+    mcp_url = (
+        safe_input(f"MCP server URL [{default_mcp}]: ", max_length=500, allow_empty=True)
+        or default_mcp
+    )
 
     print("\n🔗 Splunk Connection Configuration")
     print("The MCP server needs to connect to your Splunk instance.")
     use_workshop = (
-        input("Use workshop Splunk instance (dev*.splunk.show)? (Y/n): ").strip() or "Y"
+        safe_input(
+            "Use workshop Splunk instance (dev*.splunk.show)? (Y/n): ",
+            max_length=10,
+            allow_empty=True,
+        )
+        or "Y"
     ).lower() == "y"
     if use_workshop:
         splunk_host = "dev1666-i-035e95d7e4ea1c310.splunk.show"
@@ -287,22 +307,33 @@ def interactive_setup(target_path: Path) -> None:
         splunk_verify_ssl = True
         print("Using workshop Splunk instance")
     else:
-        splunk_host = input(
-            "Splunk host [blank keeps existing if present]: "
-        ).strip() or existing.get("SPLUNK_HOST", "")
-        splunk_port_str = input("Splunk port [8089]: ").strip() or existing.get(
-            "SPLUNK_PORT", "8089"
-        )
-        splunk_port = int(splunk_port_str)
-        splunk_scheme = input("Splunk scheme (http/https) [https]: ").strip() or existing.get(
-            "SPLUNK_SCHEME", "https"
-        )
-        splunk_username = input("Splunk username [admin]: ").strip() or existing.get(
-            "SPLUNK_USERNAME", "admin"
-        )
-        verify_str = input(
-            "Verify SSL certificates? (true/false) [true]: "
-        ).strip() or existing.get("SPLUNK_VERIFY_SSL", "true")
+        splunk_host = safe_input(
+            "Splunk host [blank keeps existing if present]: ", max_length=255, allow_empty=True
+        ) or existing.get("SPLUNK_HOST", "")
+        splunk_port_str = safe_input(
+            "Splunk port [8089]: ", max_length=10, allow_empty=True
+        ) or existing.get("SPLUNK_PORT", "8089")
+        try:
+            splunk_port = int(splunk_port_str)
+            if not (1 <= splunk_port <= 65535):
+                raise ValueError("Port must be between 1 and 65535")
+        except ValueError as e:
+            print(f"Invalid port number: {e}")
+            splunk_port = 8089
+
+        splunk_scheme = safe_input(
+            "Splunk scheme (http/https) [https]: ", max_length=10, allow_empty=True
+        ) or existing.get("SPLUNK_SCHEME", "https")
+        if splunk_scheme not in ["http", "https"]:
+            print("Invalid scheme, using https")
+            splunk_scheme = "https"
+
+        splunk_username = safe_input(
+            "Splunk username [admin]: ", max_length=100, allow_empty=True
+        ) or existing.get("SPLUNK_USERNAME", "admin")
+        verify_str = safe_input(
+            "Verify SSL certificates? (true/false) [true]: ", max_length=10, allow_empty=True
+        ) or existing.get("SPLUNK_VERIFY_SSL", "true")
         splunk_verify_ssl = verify_str.lower() == "true"
 
     print("")
@@ -316,13 +347,35 @@ def interactive_setup(target_path: Path) -> None:
 
     print("\n🤖 Model Configuration")
     default_model = existing.get("BASE_MODEL", DEFAULTS["MODEL"])
-    model = input(f"LLM Model [{default_model}]: ").strip() or default_model
+    model = (
+        safe_input(f"LLM Model [{default_model}]: ", max_length=100, allow_empty=True)
+        or default_model
+    )
 
     print("\n🌐 Server Configuration")
     default_port = existing.get("PORT", DEFAULTS["PORT"]).strip()
-    port = int(input(f"Server port [{default_port}]: ").strip() or default_port)
+    port_str = (
+        safe_input(f"Server port [{default_port}]: ", max_length=10, allow_empty=True)
+        or default_port
+    )
+    try:
+        port = int(port_str)
+        if not (1 <= port <= 65535):
+            raise ValueError("Port must be between 1 and 65535")
+    except ValueError as e:
+        print(f"Invalid port number: {e}")
+        port = int(default_port)
+
     default_log = existing.get("LOG_LEVEL", DEFAULTS["LOG_LEVEL"])  # keep existing if present
-    log_level = input(f"Log level [{default_log}]: ").strip() or default_log
+    log_level = (
+        safe_input(f"Log level [{default_log}]: ", max_length=20, allow_empty=True) or default_log
+    )
+
+    # Validate log level
+    valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    if log_level.upper() not in valid_log_levels:
+        print(f"Invalid log level '{log_level}', using INFO")
+        log_level = "INFO"
 
     write_env_file(
         target_path=target_path,

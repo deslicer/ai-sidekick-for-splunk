@@ -29,6 +29,8 @@ from .services import SetupRunner
 
 __all__ = [
     "SplunkOrchestrator",
+    "create_orchestrator",
+    "create_agent",
     "BaseAgent",
     "AgentMetadata",
     "BaseTool",
@@ -42,3 +44,5 @@ __all__ = [
     "create_agent",
     "root_agent",
 ]
+
+__all__ = _base_exports + (["SetupRunner"] if _services_available else [])

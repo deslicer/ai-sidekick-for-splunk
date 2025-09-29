@@ -1,0 +1,19 @@
+{
+    "permissions": {
+        "allow": [
+            "Shell(gh)",
+            "Shell(git)",
+            "Read(**)",
+            "Write(**)"
+        ],
+        "deny": [
+            "Shell(rm)",
+            "Read(.env*)",
+            "Read(**/*.key)",
+            "Read(mcp.json)",
+            "Write(.env*)",
+            "Write(**/*.key)",
+            "Write(mcp.json)"
+        ]
+    }
+}

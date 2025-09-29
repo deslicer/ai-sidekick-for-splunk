@@ -1,17 +1,18 @@
 """
-Backward compatibility alias for agent module.
+AI Sidekick for Splunk - Root Agent Entry Point for ADK Web Interface.
 
-The agent module has been moved to core/agent.py for better organization.
-This file provides backward compatibility.
+This module provides the root_agent that ADK web interface expects to find.
+It integrates with our modular orchestrator system and provides proper
+error handling for missing dependencies.
 """
 
-# Import everything from the new location
-# Maintain backward compatibility warnings
-import warnings
+import logging
+import os
+import sys
+from typing import Any
 
-from .core.orchestrator import create_agent
-from .core.utils.conversation_recovery import RobustLlmAgent
-from .core.utils.logging_config import setup_logging
+from .. import create_agent
+from .utils.logging_config import setup_logging
 
 
 # Configure logging for ADK web mode BEFORE creating the agent
@@ -89,13 +90,10 @@ def _create_root_agent() -> Any:
         logger.info("📋 Creating root agent - this is an INFO message")
 
         # Use our create_agent factory function
-        base_agent = create_agent()
-
-        # Wrap with conversation recovery capabilities
-        root_agent = RobustLlmAgent(base_agent)
+        root_agent = create_agent()
 
         logger.debug("🔍 Root agent created successfully - DEBUG visibility test")
-        logger.info("✅ Root agent created successfully using modular orchestrator with recovery")
+        logger.info("✅ Root agent created successfully using modular orchestrator")
         return root_agent
     except ImportError as e:
         logger.error(f"❌ Google ADK not available: {e}")

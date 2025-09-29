@@ -61,6 +61,8 @@ class IndexAnalysisFlowAgent(BaseAgent):
         session_state: dict[str, Any] | None = None,
         flow_definition_path: str | None = None,
         orchestrator=None,
+        session_service: Any | None = None,
+        artifact_service: Any | None = None,
     ) -> None:
         """
         Initialize the IndexAnalysisFlowAgent.
@@ -72,6 +74,8 @@ class IndexAnalysisFlowAgent(BaseAgent):
             session_state: Shared session state
             flow_definition_path: Path to flow JSON definition
             orchestrator: Main orchestrator for agent coordination
+            session_service: Optional session service (defaults to InMemorySessionService)
+            artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         """
         logger.info(
             "🔧 Initializing IndexAnalysisFlowAgent (POC)",
@@ -93,6 +97,11 @@ class IndexAnalysisFlowAgent(BaseAgent):
 
         self.flow_definition_path = Path(flow_definition_path)
         self.orchestrator = orchestrator
+
+        # Store configurable services
+        self.session_service = session_service
+        self.artifact_service = artifact_service
+
         self.agent_flow: AgentFlow | None = None
         self.flow_engine: FlowEngine | None = None
 
@@ -692,7 +701,11 @@ NEVER provide static responses or fabricated data. Always use the execute_index_
 
 # Factory function for agent discovery
 def create_index_analysis_flow_agent(
-    config: Config | None = None, orchestrator=None, **kwargs
+    config: Config | None = None,
+    orchestrator=None,
+    session_service: Any | None = None,
+    artifact_service: Any | None = None,
+    **kwargs,
 ) -> IndexAnalysisFlowAgent:
     """
     Factory function to create IndexAnalysisFlowAgent instance.
@@ -700,12 +713,20 @@ def create_index_analysis_flow_agent(
     Args:
         config: Configuration instance
         orchestrator: Main orchestrator instance
+        session_service: Optional session service (defaults to InMemorySessionService)
+        artifact_service: Optional artifact service (defaults to InMemoryArtifactService)
         **kwargs: Additional arguments
 
     Returns:
         IndexAnalysisFlowAgent instance
     """
-    return IndexAnalysisFlowAgent(config=config, orchestrator=orchestrator, **kwargs)
+    return IndexAnalysisFlowAgent(
+        config=config,
+        orchestrator=orchestrator,
+        session_service=session_service,
+        artifact_service=artifact_service,
+        **kwargs,
+    )
 
 
 # Agent instance for discovery

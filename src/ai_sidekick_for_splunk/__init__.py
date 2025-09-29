@@ -23,7 +23,7 @@ from .core.base_agent import AgentMetadata, BaseAgent
 from .core.base_tool import BaseTool, ToolMetadata
 from .core.config import Config
 from .core.discovery import ComponentDiscovery
-from .core.orchestrator import SplunkOrchestrator, create_agent
+from .core.orchestrator import SplunkOrchestrator, create_agent, create_orchestrator
 from .core.registry import AgentRegistry, RegistryManager, ToolRegistry
 from .services import SetupRunner
 
@@ -41,8 +41,5 @@ __all__ = [
     "RegistryManager",
     "ComponentDiscovery",
     "SetupRunner",
-    "create_agent",
     "root_agent",
 ]
-
-__all__ = _base_exports + (["SetupRunner"] if _services_available else [])

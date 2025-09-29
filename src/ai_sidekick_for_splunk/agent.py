@@ -5,9 +5,12 @@ The agent module has been moved to core/agent.py for better organization.
 This file provides backward compatibility.
 """
 
-# Import everything from the new location
-# Maintain backward compatibility warnings
-import warnings
+from __future__ import annotations
+
+import logging
+import os
+import sys
+from typing import Any
 
 from .core.orchestrator import create_agent
 from .core.utils.conversation_recovery import RobustLlmAgent
@@ -15,7 +18,7 @@ from .core.utils.logging_config import setup_logging
 
 
 # Configure logging for ADK web mode BEFORE creating the agent
-def _configure_adk_web_logging():
+def _configure_adk_web_logging() -> None:
     """Configure logging specifically for ADK web mode to show debug statements."""
 
     # Get log level from environment variables

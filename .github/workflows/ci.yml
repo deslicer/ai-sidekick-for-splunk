@@ -91,7 +91,7 @@ jobs:
         python -c "import ai_sidekick_for_splunk; print('[OK] Wheel installation successful')"
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: dist-files
         path: dist/

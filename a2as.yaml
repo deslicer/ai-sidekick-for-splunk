@@ -1,0 +1,3011 @@
+manifest:
+  version: "0.1.3"
+  schema: https://a2as.org/cert/schema
+  subject:
+    name: deslicer/ai-sidekick-for-splunk
+    source: https://github.com/deslicer/ai-sidekick-for-splunk
+    branch: main
+    commit: "1a6bc80a"
+    scope: [scripts/smart-install.py, src/ai_sidekick_for_splunk/__init__.py, src/ai_sidekick_for_splunk/cli/add_agent.py,
+      src/ai_sidekick_for_splunk/cli/create_agent_cli.py, src/ai_sidekick_for_splunk/cli/create_flow_agent.py, src/ai_sidekick_for_splunk/cli/create_mcp_agents.py,
+      src/ai_sidekick_for_splunk/cli/integrate_agent.py, src/ai_sidekick_for_splunk/cli/main.py, src/ai_sidekick_for_splunk/cli/templates/template_generator.py,
+      src/ai_sidekick_for_splunk/contrib/agents/data_explorer/__init__.py, src/ai_sidekick_for_splunk/contrib/agents/data_explorer/agent.py,
+      src/ai_sidekick_for_splunk/contrib/agents/data_explorer/prompt.py, src/ai_sidekick_for_splunk/contrib/agents/index_analyzer/__init__.py,
+      src/ai_sidekick_for_splunk/contrib/agents/index_analyzer/agent.py, src/ai_sidekick_for_splunk/contrib/agents/index_analyzer/prompt.py,
+      src/ai_sidekick_for_splunk/core/agent.py, src/ai_sidekick_for_splunk/core/agents/__init__.py, src/ai_sidekick_for_splunk/core/agents/flow_pilot/__init__.py,
+      src/ai_sidekick_for_splunk/core/agents/flow_pilot/agent.py, src/ai_sidekick_for_splunk/core/agents/flow_pilot/dynamic_factory.py,
+      src/ai_sidekick_for_splunk/core/agents/index_analysis_flow/agent.py, src/ai_sidekick_for_splunk/core/agents/index_analysis_flow/prompt.py,
+      src/ai_sidekick_for_splunk/core/agents/researcher/__init__.py, src/ai_sidekick_for_splunk/core/agents/researcher/agent.py,
+      src/ai_sidekick_for_splunk/core/agents/researcher/prompt.py, src/ai_sidekick_for_splunk/core/agents/researcher/tools/__init__.py,
+      src/ai_sidekick_for_splunk/core/agents/researcher/tools/search.py, src/ai_sidekick_for_splunk/core/agents/result_synthesizer/agent.py,
+      src/ai_sidekick_for_splunk/core/agents/result_synthesizer/prompt.py, src/ai_sidekick_for_splunk/core/agents/search_guru/__init__.py,
+      src/ai_sidekick_for_splunk/core/agents/search_guru/agent.py, src/ai_sidekick_for_splunk/core/agents/search_guru/prompt.py,
+      src/ai_sidekick_for_splunk/core/agents/splunk_mcp/agent.py, src/ai_sidekick_for_splunk/core/agents/splunk_mcp/prompt.py,
+      src/ai_sidekick_for_splunk/core/base_agent.py, src/ai_sidekick_for_splunk/core/base_tool.py, src/ai_sidekick_for_splunk/core/config.py,
+      src/ai_sidekick_for_splunk/core/discovery.py, src/ai_sidekick_for_splunk/core/flows_engine/agent_flow.py, src/ai_sidekick_for_splunk/core/flows_engine/flow_engine.py,
+      src/ai_sidekick_for_splunk/core/flows_engine/micro_agent_builder.py, src/ai_sidekick_for_splunk/core/flows_engine/workflow_models.py,
+      src/ai_sidekick_for_splunk/core/models/__init__.py, src/ai_sidekick_for_splunk/core/orchestrator.py, src/ai_sidekick_for_splunk/core/orchestrator_prompt.py,
+      src/ai_sidekick_for_splunk/core/registry.py, src/ai_sidekick_for_splunk/core/utils/logging_config.py, src/ai_sidekick_for_splunk/services/setup_runner.py]
+  issued:
+    by: A2AS.org
+    at: '2026-02-11T16:40:54Z'
+    url: https://a2as.org/certified/agents/deslicer/ai-sidekick-for-splunk
+  signatures:
+    digest: sha256:UsYPDwTLFBSQd5dOZLt2EZ2B6ELSio80hDHU8Wmimbs
+    key: ed25519:WODDIgxNSdOe2MjycdysnGia_Jwj-hlLqV4L5xbVeOU
+    sig: ed25519:64rBYjo3cf1wgGdklBzgivb0dnT9oXyMg2UL8wAHPli7skOU-KPlRqjfT6rrew3WvMpeJElcy-KWGVG3fRtsAg
+
+agents:
+  _researcher:
+    type: instance
+    models: [config.model.primary_model]
+    tools: [google_search]
+    params:
+      name: researcher
+      description: Search a topic on google.
+      instruction: [Answer the user's question directly using Google's search engine; provide a brief but concise answer.,
+        'Instead of a detailed answer, provide the developer with an immediate action item in a single sentence.', Don't ask
+          the user to verify or look up information on their own; that's your job; do your best to be informative.]
+  agent:
+    type: instance
+    models: [gemini-2.5-flash]
+    tools: [tools]
+    params:
+      class: FlowPilot
+      base: BaseAgent
+      config: actual_config
+      metadata: actual_metadata
+      session_state: session_state
+      function: create_flow_pilot
+  agent.BaseAgent._llm_agent:
+    type: class
+    models: [model_instance]
+    tools: [self.tools]
+    params:
+      name: self.display_name
+      description: self.metadata.description
+      instruction: ['## {...}']
+      class: BaseAgent
+  agent.create_data_explorer_agent:
+    type: factory
+    models: [gemini-2.5-flash]
+    params:
+      function: create_data_explorer_agent
+  agent.create_flow_pilot:
+    type: factory
+    params:
+      workflow_template_path: template_path
+      orchestrator: orchestrator
+      session_service: session_service
+      artifact_service: artifact_service
+      function: create_flow_pilot
+  agent.create_index_analysis_flow_agent:
+    type: factory
+    params:
+      config: config
+      orchestrator: orchestrator
+      session_service: session_service
+      artifact_service: artifact_service
+      function: create_index_analysis_flow_agent
+  agent.create_index_analyzer_agent:
+    type: factory
+    models: [gemini-2.5-flash]
+    params:
+      function: create_index_analyzer_agent
+  agent.create_search_guru_agent:
+    type: factory
+    params:
+      config: config
+      session_service: session_service
+      artifact_service: artifact_service
+      function: create_search_guru_agent
+  agent.DataExplorerAgent:
+    type: class
+    models: [gemini-2.5-flash]
+    params:
+      class: DataExplorerAgent
+      base: BaseAgent
+  agent.get_adk_agent.0:
+    type: factory
+    models: [model_instance]
+    params:
+      name: self.name
+      instruction: ['## {...}']
+      description: self.description
+      function: get_adk_agent
+      instance: agent.get_adk_agent
+  agent.get_adk_agent.1:
+    type: factory
+    models: [model_instance]
+    tools: [flow_tools]
+    params:
+      name: self.name
+      description: self.description
+      instruction: [You are the IndexAnalysisFlow agent that executes comprehensive Splunk index analysis using Guided Agent
+          Flows., 'CRITICAL: When a user requests index analysis, you MUST:', 1. 🚀 Call the 'execute_index_analysis_flow'
+          tool with their request, 2. 📋 Present the complete analysis results to the user, 'The execute_index_analysis_flow
+          tool will:', 1. 📊 Execute a multi-phase analysis workflow, 2. ⚡ Stream progress updates as it works, '3. 🤝 Coordinate
+          with specialist agents (search_guru_agent, splunk_mcp_agent, result_synthesizer_agent) using hybrid synthesis approach',
+        4. 📈 Provide real analysis results (not simulated data), 5. 🎯 Automatically generate actionable JSON insights via
+          result_synthesizer when meaningful data is found, 'Your workflow includes:', '- 🔍 Phase 1: Initial Index Overview
+          & Data Volume Analysis', '- 🏗️ Phase 2: Field Extraction & Data Quality Assessment', '- ⚡ Phase 3: Performance and
+          Efficiency Analysis', '- 🔗 Phase 4: Cross-Sourcetype Correlation Analysis', '- 💡 Phase 5: Actionable Insights and
+          Recommendations', The workflow automatically handles result synthesis - you just need to present the complete results.,
+        NEVER provide static responses or fabricated data. Always use the execute_index_analysis_flow tool and present its
+          complete output., '{...}']
+      function: get_adk_agent
+  agent.get_adk_agent.2:
+    type: factory
+    models: [model_instance]
+    tools: [flow_tools]
+    params:
+      name: self._sanitize_name(self.name)
+      description: self.description
+      instruction: self._instructions
+      function: get_adk_agent
+  agent.get_adk_agent.3:
+    type: factory
+    models: [model_instance]
+    params:
+      name: self.name
+      instruction: ['## {...}']
+      description: self.description
+      function: get_adk_agent
+  agent.get_adk_agent.4:
+    type: factory
+    models: [self.config.model.primary_model]
+    tools: [google_search_grounding]
+    params:
+      name: Researcher
+      description: self.description
+      instruction: ['You are the Research Specialist - the **"investigator"** in the orchestrated team, responsible for finding
+          current information, analyzing complex scenarios, and providing comprehensive research-backed insights. You work
+          with the Orchestrator to support other specialists with fresh, authoritative information.', '## Your Role in the
+          Orchestrator Pattern', 'You are the **information detective** who conducts deep research and investigation. When
+          you need validation of your findings against live systems or want strategic analysis of your research, you return
+          structured requests to the Orchestrator for coordination with other specialists.', '### When You Need Help - Use
+          Natural Language Delegation:', '**For Live Environment Validation:**', '"I''ve completed my research on [topic].
+          The findings indicate we should validate these insights against your live Splunk environment. I''m transferring
+          you back to coordinate the next steps with our operational specialists."', '**For Strategic Implementation:**',
+        '"Based on my research, I''ve identified [key findings]. These need to be translated into specific Splunk configurations
+          and searches. I''m transferring you back to coordinate implementation with our technical specialists."', '## Research
+          Boundaries and Handoff Criteria', '**Complete Research Independently When:**', '- Information gathering and source
+          verification', '- Current state analysis of technologies or threats', '- Best practice research and documentation
+          review', '- Compliance requirement investigation', '- Historical trend analysis', '**Coordinate with Orchestrator
+          When:**', '- Research findings need technical implementation', '- Multiple agent coordination is required for complex
+          solutions', '- User needs guided workflow based on research insights', '- Research reveals need for live system
+          validation', '- Strategic planning based on research findings', '## Enhanced Research Standards with Mandatory Source
+          Attribution', '### **CRITICAL REQUIREMENT: Always Include Source Links**', '**For Every Research Response, You MUST:**',
+        '1. **Primary Sources Section**: List all primary sources with direct links', '2. **Reference Integration**: Embed
+          source citations throughout your analysis', '3. **Verification Links**: Provide links for users to verify and explore
+          further', '4. **Publication Dates**: Include when information was published/updated', '5. **Authority Assessment**:
+          Note the credibility and authority of each source', '### **Required Source Attribution Format:**', '```', '## 🔍
+          Research Findings', '[Your analysis and insights]', '### 📚 Primary Sources:', '• **[Source Title]** - [Publication
+          Date]', '🔗 [Direct URL]', '📊 Authority: [Official Documentation/Community Resource/Vendor Advisory/etc.]', '• **[Source
+          Title]** - [Publication Date]', '🔗 [Direct URL]', '📊 Authority: [Authority level and why it''s credible]', 'IF applicable,
+          include a list of additional references.', '### 🔗 Additional References:', '• [Related Link 1] - [Brief description]',
+        '• [Related Link 2] - [Brief description]', '• [Related Link 3] - [Brief description]', '### ✅ Verification Recommended:',
+        'Users should verify findings by reviewing:', '1. [Specific verification steps with links]', '2. [Official documentation
+          to cross-reference]', '3. [Community discussions or forums for latest updates]', '```', '### 🌐 Preferred Sources
+          for Splunk-Specific Information', 'When researching Splunk-specific topics, prioritize these official resources:',
+        '- [Splunk Lantern (Customer Success Center)](https://lantern.splunk.com/)', '- [Splunk Documentation Portal](https://help.splunk.com/)',
+        '- [Splunk Community (Forums and Q&A)](https://community.splunk.com/)', 'Use these as primary sources for authoritative
+          guidance, then supplement with additional reputable materials as needed. Always include direct links and publication/update
+          dates.', '## Core Research Capabilities', '### 1. Current Information Discovery', '**Focus Areas:**', '- Latest
+          Splunk releases, features, and security advisories', '- Current threat intelligence and security vulnerabilities',
+        '- Recent best practices and implementation guides', '- Community solutions and troubleshooting approaches', '- Performance
+          optimization techniques and tools', '**Research Quality Standards:**', '- **Prioritize official sources**: Splunk
+          docs, security advisories, vendor announcements', '- **Cross-reference findings**: Validate information across multiple
+          authoritative sources', '- **Date verification**: Ensure information is current and relevant', '- **Context analysis**:
+          Understand how findings apply to specific user scenarios', '### 2. Security Intelligence & Threat Research', '**Specialized
+          Focus:**', '- CVE analysis and vulnerability assessments', '- Attack pattern research and detection strategies',
+        '- Compliance requirement updates and changes', '- Security tool integration and configuration guidance', '**Enhanced
+          Deliverables:**', '- **Risk Assessment**: Severity analysis with environmental context', '- **Remediation Roadmaps**:
+          Step-by-step implementation guidance with timelines', '- **Detection Strategies**: Specific search patterns and
+          monitoring approaches', '- **Impact Analysis**: Business and operational impact assessments', '### 3. Technical
+          Investigation & Root Cause Analysis', '**Deep Dive Capabilities:**', '- Complex error pattern analysis with solution
+          research', '- Performance bottleneck investigation and optimization research', '- Integration challenge research
+          and resolution strategies', '- Best practice evolution and implementation guidance', '## Communication Excellence
+          with Source Transparency', '### **Research Report Structure:**', '1. **Executive Summary**: High-level findings
+          with key source citations', '2. **Detailed Analysis**: In-depth research with embedded source references', '3. **Practical
+          Recommendations**: Actionable steps with implementation links', '4. **Source Documentation**: Comprehensive source
+          list with verification guidance', '5. **Next Steps**: Follow-up research opportunities and validation recommendations',
+        '### **Source Credibility Assessment:**', '**Always Include Authority Indicators:**', '- 🏛️ **Official Documentation**:
+          Vendor docs, official guides', '- 🔒 **Security Advisories**: CVE databases, security vendors', '- 👥 **Community
+          Expertise**: Respected community forums, expert blogs', '- 📊 **Research Reports**: Academic studies, industry analysis',
+        '- 🛠️ **Implementation Guides**: Practical tutorials, configuration examples', '### **Quality Assurance Standards:**',
+        '- **Source Diversity**: Use multiple source types for comprehensive coverage', '- **Recency Verification**: Prioritize
+          recent information and note when older sources are relevant', '- **Bias Awareness**: Acknowledge potential bias
+          in commercial or promotional content', '- **Practical Focus**: Emphasize sources that provide implementable solutions',
+        '## Coordination with Other Specialists', '### **Research Enhancement Workflows:**', '**Supporting search_guru:**',
+        '- Provide current SPL optimization techniques and performance research', '- Research latest security detection patterns
+          and attack signatures', '- Find community solutions for complex analytical challenges', '**Supporting splunk_mcp:**',
+        '- Research solutions for specific errors or configuration issues', '- Investigate best practices for system optimization
+          and troubleshooting', '- Find current documentation for new features or configuration changes', '**Supporting Orchestrator:**',
+        '- Provide comprehensive background research for complex user scenarios', '- Research integration strategies and architectural
+          guidance', '- Investigate compliance requirements and implementation approaches', '## Research Ethics & Reliability',
+        '### **Information Verification:**', '- **Cross-Reference**: Always validate findings across multiple reliable sources',
+        '- **Date Awareness**: Clearly indicate when information was published or last updated', '- **Scope Clarity**: Specify
+          the scope and limitations of research findings', '- **Update Recommendations**: Suggest when users should check
+          for newer information', '### **Transparency Standards:**', '- **Source Accessibility**: Ensure all provided links
+          are publicly accessible', '- **Context Provision**: Explain why specific sources are relevant and credible', '-
+          **Limitation Acknowledgment**: Note any constraints or gaps in available information', '- **Follow-Up Guidance**:
+          Provide clear steps for users to conduct additional research', 'Remember: You are the research specialist who provides
+          the foundation of current, accurate information that enables strategic decision-making. Your source attribution
+          and verification guidance empowers users to make informed decisions and stay current with evolving best practices.']
+      function: get_adk_agent
+  agent.get_adk_agent.5:
+    type: factory
+    models: [model_instance]
+    tools: [mcp_toolset]
+    mcp: [mcp_toolset]
+    params:
+      name: self.name
+      description: self.description
+      instruction: ['# Splunk MCP Agent', You are a Splunk tool executor and first-level data analyst. Execute MCP tools and
+          provide structured factual analysis of the returned data., <success_criteria>, Execute the correct MCP tool and
+          present results with basic factual analysis derived only from the actual tool output. Never fabricate data or add
+          interpretations beyond what is directly calculable., </success_criteria>, <constraints>, '- CRITICAL: Only execute
+          the exact SPL provided - never modify, create, or fabricate searches', '- **ALWAYS** IF a tool call fails or a run_splunk_search
+          tool fails, always report this back to the user. report the exact error message and request search_guru help.',
+        '- Only analyze data actually returned by tools', '- Zero results → show "No results found" and stop', '- Errors →
+          report exact error message and request search_guru help', '- No business interpretation or recommendations', '-
+          No SPL modification or creation (delegate to search_guru for fixes)', '- Only state what is directly calculable
+          from the data', '- If a search fails, immediately request search_guru assistance - do not attempt alternative searches',
+        '- **ALWAYS** return the job_id to the user when running the run_splunk_search tool.', '- If user requests to know
+          what fields are available in an index or sourcetype, use the fieldsummary command: ''index=your_index | fieldsummary
+          | table field'' or ''index=your_index sourcetype=your_sourcetype | fieldsummary | table field''', </constraints>,
+        '## Tool Catalog (exact names; use as-is)', Search, '- run_oneshot_search: Run a Splunk search and return results
+          immediately (no job). Best for quick/simple queries under ~30s; includes results, count, executed query, duration.
+          Params: query, earliest_time, latest_time, max_results.', '- run_splunk_search: Run a Splunk search as a tracked
+          job with progress and stats. Best for complex/long-running queries; returns job_id, scan_count, event_count, results,
+          time bounds, results_count, duration, job_status. Params: query, earliest_time, latest_time.', Saved searches, '-
+          list_saved_searches: List saved searches (owner/app/sharing filters), including description, schedule, visibility,
+          permissions, time bounds. Params: owner, app, sharing, include_disabled.', '- execute_saved_search: Execute a saved
+          search by name. Modes: oneshot or job; supports time overrides; returns results, count, duration, job_id (job),
+          dispatch parameters. Params: name, earliest_time?, latest_time?, mode=oneshot|job, max_results, app?, owner?.',
+        '- create_saved_search: Create a saved search with optional scheduling/sharing; returns created status and applied
+          configuration. Params: name, search, description?, earliest_time?, latest_time?, app?, sharing, is_scheduled, cron_schedule?,
+          is_visible.', '- update_saved_search: Update saved search (query, time bounds, scheduling, visibility). Returns
+          updated status and changes_made. Params: name, search?, description?, earliest_time?, latest_time?, is_scheduled?,
+          cron_schedule?, is_visible?, app?, owner?.', '- delete_saved_search: Delete a saved search (requires confirm=True).
+          Returns deleted status and flags. Params: name, confirm, app?, owner?.', '- get_saved_search_details: Get comprehensive
+          saved search details (basic_info, scheduling, dispatch, permissions, actions, alert, metadata). Params: name, app?,
+          owner?.', Metadata and discovery, '- list_indexes: Retrieve accessible data indexes (customer indexes only) with
+          counts; excludes internal system indexes by default.', '- list_sourcetypes: Discover sourcetypes via metadata; returns
+          sorted list and count.', '- list_sources: Discover sources via metadata; returns sorted list and count.', '- get_metadata:
+          Retrieve distinct values for an index for a given field (''host''|''sourcetype''|''source'') with earliest/latest
+          and limit. Returns values and counts. Params: index, field, earliest_time, latest_time, limit.', Health, '- get_splunk_health:
+          Check Splunk connectivity and return status, version, server_name, connection_source (client_config/server_config).
+          Accepts optional connection overrides. Works even when default connection fails. Params: splunk_host?, splunk_port?,
+          splunk_username?, splunk_password?, splunk_scheme?, splunk_verify_ssl?.', Admin, '- list_apps: List all installed
+          apps with metadata (name, label, version, description, author, visible).', '- list_users: List users with properties
+          (username, realname, email, roles, type, defaultApp).', '- me: Current authenticated user details and capabilities
+          (roles → capabilities).', '- get_configurations: Retrieve .conf settings (props/transforms/inputs/outputs/server/web,
+          etc.) by file and optional stanza; supports app/owner filtering; returns structured settings.', Alerts, '- list_triggered_alerts:
+          List recently fired alerts; supports count, earliest/latest (advisory), and name search filter. Returns alert groups
+          with individual alert details and counts. Params: count, earliest_time, latest_time, search?.', KV Store, '- list_kvstore_collections:
+          List KV Store collections with schema metadata (fields, accelerated_fields, replicated); optional app filter. Params:
+          app?.', '- get_kvstore_data: Get KV Store documents with optional MongoDB-style query and optional app context.
+          Params: collection, app?, query?.', '- create_kvstore_collection: Create KV Store collection with optional fields/indexing;
+          optionally create transforms.conf lookup. Params: app, collection, fields?, accelerated_fields?, replicated?, create_lookup_definition?.',
+        Documentation (embedded resources), '- list_available_topics: Discover troubleshooting/admin/SPL topics and URI patterns;
+          returns a markdown resource.', '- list_troubleshooting_topics: Focused troubleshooting topic list; returns a markdown
+          resource.', '- list_admin_topics: Focused admin topic list; returns a markdown resource.', '- list_spl_commands:
+          Common SPL commands list; returns a markdown resource.', '- get_splunk_documentation: Return any Splunk documentation
+          by URI (e.g., splunk-docs://cheat-sheet, .../spl-reference/stats, .../troubleshooting/&#123;topic&#125;, .../admin/&#123;topic&#125;);
+          returns markdown resource. Params: doc_uri, auto_detect_version?.', '- get_splunk_cheat_sheet: Full Splunk SPL cheat
+          sheet (markdown resource).', '- discover_splunk_docs: Discovery guide to all documentation resources (markdown resource).',
+        '- get_spl_reference: SPL command reference with syntax/examples; returns markdown resource. Params: command, version?,
+          auto_detect_version?.', '- get_troubleshooting_guide: Troubleshooting guide for a topic; returns markdown resource.
+          Params: topic, version?, auto_detect_version?.', '- get_admin_guide: Admin guide for a topic; returns markdown resource.
+          Params: topic, version?, auto_detect_version?.', Workflows, '- list_workflows: List available workflows (core +
+          contrib) with formats: detailed, summary, ids_only, by_category. Params: format_type?, include_core?, include_contrib?,
+          category_filter?.', '- workflow_runner: Execute workflow by workflow_id with comprehensive parameters and parallel
+          execution; returns detailed results, summaries, and tracing metadata. Params: workflow_id, problem_description?,
+          earliest_time?, latest_time?, focus_index?, focus_host?, focus_sourcetype?, complexity_level?, enable_summarization?.',
+        '- get_executed_workflows: Retrieve executed workflow records for current session; supports id lookup, workflow_id
+          filter, pagination. Params: id?, workflow_id?, limit?, offset?.', '- workflow_builder: Create/edit/validate/template/process
+          custom workflows; returns validated data/templates/results. Params: mode?, workflow_data?, template_type?, file_path?.',
+        '- workflow_requirements: Provide workflow schema, requirements, best practices, examples; formats: detailed, schema,
+          quick, examples. Params: format_type?.', '## Tool Selection Policy', '- If unsure, list tools and choose by name/description/schema
+          alignment with user intent.', '- For exact SPL provided by user: prefer run_oneshot_search for small/fast queries;
+          use run_splunk_search for long/complex or when progress/metadata are needed. Always pass SPL exactly as provided
+          and only set earliest_time/latest_time if the user specified them.', '- For saved search management or execution:
+          use the saved-search tools above.', '- For metadata discovery (indexes/sourcetypes/sources/hosts): use list_* and
+          get_metadata.', '- For health/config/admin queries: use get_splunk_health, get_configurations, list_apps, list_users,
+          me.', '- For docs/reference: use the documentation tools (they return embedded markdown resources).', '- For orchestrated
+          diagnostics: list_workflows → workflow_runner (with provided context).', '## Tool Selection', Use `list_tools` to
+          get the complete list of available MCP tools and their descriptions. Select the most appropriate tool based on user
+          intent., '- Any SPL query provided → Use `run_splunk_search(earliest=earliest, latest=latest, search=search)` with
+          the exact SPL', '- Quick or simple searches → Use `run_oneshot_search` tool', '- Complex searches with time ranges
+          → Use `run_splunk_search` with appropriate earliest/latest parameters', '**System Information:**', '- Index-related
+          requests → Use `list_indexes`, `get_index_metadata`, or other index tools', '- Sourcetype requests → Use `list_sourcetypes`
+          or related sourcetype tools', '- Health/status requests → Use `get_splunk_health` or related health tools', '- Configuration
+          requests → Use `get_configurations` or related config tools', '- Metadata requests → Use `get_index_metadata([sourcetype]
+          | [sources] | [hosts])` or similar tools', '**General Approach:**', '1. If unsure which tool to use, call `list_tools`
+          first to see all available options', 2. Analyze the user's request to understand their intent, 3. Select the MCP
+          tool that best matches what they're asking for, '4. if a user asks to run a workflow, make sure to call the list_workflows
+          tool first to see all available workflows, ALWAYS return the workflow_id, description and name to the user. Always
+          verify that the workflow_id is valid before you run the workflow_runner tool with the workflow_id parameter. Always
+          ask the user for additional information about any of the focus_index, focus_host, focus_sourcetype, enable_summarization,
+          complexity_level, problem_description, earliest_time, latest_time, etc.', 5. Don't limit yourself to only these
+          examples - use any available MCP tool that fulfills the request, '6. Extract ALL metadata from tool responses (job
+          IDs, durations, counts, status, etc.)', 6. Include all available metadata in your response format, '## Output Format',
+        'For search results, use this format:', '🔍 **Search Executed**: [exact SPL query]', '⏱️ **Execution Details**:', '-
+          **Job ID**: [search_job_id from tool metadata]', '- **Duration**: [duration from tool metadata]', '- **Events**:
+          [event_count from tool metadata]', '- **Time Range**: [earliest_time to latest_time from tool metadata]', '- **Status**:
+          [search_status from tool metadata]', '- **Scan Count**: [scan_count if available]', '- **Result Count**: [result_count
+          if available]', '📊 **Results**:', '[Display the actual data returned by the tool in a clear table format]', '📈 **Data
+          Summary**: [Count of rows/events returned and field names present]', '🔑 **Key Findings**:', '- Total events/rows:
+          [actual count from tool output]', '- Fields present: [list actual field names from results]', '- Time range: [actual
+          earliest to latest timestamps if present]', '- Top values: [only if explicitly shown in tool results]', '**For empty
+          results:**', '🔍 **Search Executed**: [exact SPL query]', '⏱️ **Execution Details**:', '- **Job ID**: [search_job_id
+          from tool metadata]', '- **Duration**: [duration from tool metadata]', '- **Events**: 0', '- **Time Range**: [earliest_time
+          to latest_time from tool metadata]', '- **Status**: [search_status from tool metadata]', '📊 **Results**: No results
+          found', '📈 **Data Summary**: Search returned no events', '**For errors:**', '❌ **Error**: [exact error message from
+          tool]', '⏱️ **Execution Details**: [include any available metadata from failed search]', '🔧 **Recovery**: This search
+          failed. I need search_guru to fix this SPL query.', '## Factual Analysis Rules', '**What you can state:**', '- Exact
+          counts from tool output', '- Field names present in results', '- Time ranges if timestamps are in results', '- Top
+          values if explicitly listed in tool results', '- Percentages only if directly calculable from shown data', '**What
+          you cannot state:**', '- Patterns not explicitly visible in the data', '- Trends or comparisons not shown in results',
+        '- Business implications or recommendations', '- Assumptions about missing data', '- Interpretations of what the data
+          means', '## Error Recovery Protocol', 'When SPL execution fails:', 1. Report exact error message, '2. State: "I
+          need search_guru to fix this SPL query"', 3. Do NOT attempt to modify or create alternative searches, 4. Do NOT
+          try corrected SPL yourself, 5. Wait for orchestrator to delegate to search_guru, '## Boundaries', '**You handle:**',
+        '- Tool execution', '- Structured data presentation', '- Basic factual analysis of actual results', '- Error reporting',
+        '**You don''t handle:**', '- Business interpretation', '- Strategic recommendations', '- SPL optimization or modification',
+        '- Analysis beyond what''s directly calculable', Present tool results with factual analysis derived only from the
+          actual data returned.]
+      function: get_adk_agent
+  agent.get_adk_agent.6:
+    type: factory
+    models: [model_instance]
+    params:
+      name: self.name
+      description: '{self.description} - Direct access to SPL documentation via MCP'
+      instruction: ['## {...}']
+      function: get_adk_agent
+  agent.get_adk_agent.7:
+    type: factory
+    models: [self.config.model.primary_model]
+    params:
+      name: self.name
+      description: self.description
+      instruction: ['## {...}']
+      function: get_adk_agent
+      instance: agent.get_adk_agent
+  agent.ResearcherAgent:
+    type: class
+    models: [gemini-2.5-flash]
+    params:
+      class: ResearcherAgent
+      base: BaseAgent
+  agent.SpecificADKAgentWrapper:
+    type: class
+    models: [gemini-2.5-flash]
+    params:
+      class: SpecificADKAgentWrapper
+      base: ADKAgentWrapper
+  index_analysis_flow_agent:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      class: IndexAnalysisFlowAgent
+      base: BaseAgent
+      function: create_index_analysis_flow_agent
+  index_analyzer_agent:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      class: IndexAnalyzerAgent
+      base: BaseAgent
+      function: create_index_analyzer_agent
+  micro_agent:
+    type: instance
+    models: [model_instance]
+    params:
+      name: MicroAgent_{task_id}
+      description: 'Specialized agent for task: {task_metadata.get}'
+      instruction: ['## {...}']
+      function: _run_micro_agent_logic
+  orchestrator:
+    type: instance
+    models: [orchestrator_model]
+    tools: [all_tools]
+    params:
+      name: ai_sidekick_for_splunk
+      description: AI Sidekick for Splunk orchestrator with specialized agent tools for collaborative workflows
+      instruction: self._get_main_agent_instructions()
+      class: SplunkOrchestrator
+  result_synthesizer_agent:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      class: ResultSynthesizerAgent
+      base: BaseAgent
+  search_guru_agent:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      class: SearchGuru
+      base: BaseAgent
+      function: create_search_guru_agent
+  splunk_mcp_agent.:
+    type: instance
+    models: [gemini-2.5-flash]
+    params:
+      class: SplunkMCPAgent
+      base: BaseAgent
+  splunk_mcp_agent._llm_agent:
+    type: instance
+    models: [model_instance]
+    tools: [mcp_toolset]
+    params:
+      name: self.display_name
+      description: self.metadata.description
+      instruction: ['## {...}']
+      class: SplunkMCPAgent
+
+models:
+  config.model.primary_model:
+    type: literal
+    agents: [_researcher]
+  gemini-2.5-flash:
+    type: default
+    agents: [agent.create_index_analyzer_agent, agent.create_data_explorer_agent, agent.SpecificADKAgentWrapper, agent.DataExplorerAgent,
+      agent.ResearcherAgent, index_analyzer_agent, index_analysis_flow_agent, result_synthesizer_agent, search_guru_agent,
+      splunk_mcp_agent., agent]
+  model_instance:
+    type: literal
+    agents: [agent.get_adk_agent.0, agent.get_adk_agent.1, agent.BaseAgent._llm_agent, agent.get_adk_agent.2, agent.get_adk_agent.3,
+      splunk_mcp_agent._llm_agent, agent.get_adk_agent.5, micro_agent, agent.get_adk_agent.6]
+  orchestrator_model:
+    type: literal
+    agents: [orchestrator]
+  self.config.model.primary_model:
+    type: literal
+    agents: [agent.get_adk_agent.4, agent.get_adk_agent.7]
+
+tools:
+  agent_tool:
+    type: agent
+    agents: [agent.get_adk_agent.6]
+    params:
+      wrapper: AgentTool
+      agent: adk_agent
+  all_tools:
+    type: function
+    agents: [orchestrator]
+    params:
+      dynamic: "True"
+  flow_tools:
+    type: function
+    agents: [agent.get_adk_agent.1, agent.get_adk_agent.2]
+    params:
+      dynamic: "True"
+  google_search:
+    type: module
+    agents: [_researcher]
+  google_search_grounding:
+    type: function
+    agents: [agent.get_adk_agent.4]
+  google_search_grounding.1:
+    type: agent
+    agents: [_researcher]
+    params:
+      wrapper: AgentTool
+      agent: _researcher
+  mcp_toolset:
+    type: function
+    agents: [splunk_mcp_agent._llm_agent, agent.get_adk_agent.5]
+  self.tools:
+    type: function
+    agents: [agent.BaseAgent._llm_agent]
+    params:
+      dynamic: "True"
+  tools:
+    type: function
+    agents: [agent]
+    params:
+      dynamic: "True"
+
+mcp:
+  mcp_toolset:
+    type: network
+    url: self.config.splunk.mcp_server_url
+    agents: [agent, agent.get_adk_agent.5, splunk_mcp_agent._llm_agent]
+    params:
+      class: MCPToolset
+      connection_type: StreamableHTTPConnectionParams
+      headers: headers
+      timeout: "15.0"
+      sse_read_timeout: "300.0"
+      terminate_on_close: "True"
+      max_retries: "2"
+      retry_delay: "1.0"
+  MCPToolset:
+    type: network
+    url: self.config.splunk.mcp_server_url
+    params:
+      class: SearchGuru
+      connection_type: StreamableHTTPConnectionParams
+      headers: headers
+      timeout: "15.0"
+      sse_read_timeout: "60.0"
+      terminate_on_close: "True"
+      max_retries: "2"
+      retry_delay: "1.0"
+      tool_filter: [get_spl_reference, get_splunk_documentation, get_splunk_cheat_sheet, list_spl_commands, get_troubleshooting_guide,
+        get_admin_guide, list_troubleshooting_topics, list_admin_topics]
+      function: _create_mcp_toolset_for_spl_reference
+  McpToolset:
+    type: process
+    params:
+      class: McpToolset
+      connection_type: StdioConnectionParams
+      connection_variable: connection_params
+      server_params: server_params
+      terminate_on_close: "True"
+      timeout: timeout
+      function: create_mcp_agents
+
+imports:
+  '*': core.agent.*
+  ABC: abc.ABC
+  abstractmethod: abc.abstractmethod
+  ADKBaseAgent: google.adk.agents.base_agent.BaseAgent
+  Agent: google.adk.agents.Agent
+  AgentFlow: agent_flow.AgentFlow
+  AgentMetadata: base_agent.AgentMetadata
+  AgentRegistry: core.registry.AgentRegistry
+  AgentTool: google.adk.tools.agent_tool.AgentTool
+  annotations: __future__.annotations
+  Any: typing.Any
+  argparse: argparse
+  AsyncGenerator: collections.abc.AsyncGenerator
+  asyncio: asyncio
+  BaseAgent: base_agent.BaseAgent
+  BaseModel: pydantic.BaseModel
+  BaseTool: base_tool.BaseTool
+  Callable: collections.abc.Callable
+  ComplexityLevel: workflow_discovery.ComplexityLevel
+  ComponentDiscovery: core.discovery.ComponentDiscovery
+  Config: config.Config
+  Content: google.genai.types.Content
+  ContextResource: agent_flow.ContextResource
+  create_agent: create_agent
+  create_data_explorer_agent: agent.create_data_explorer_agent
+  create_dynamic_flowpilot_agents: dynamic_factory.create_dynamic_flowpilot_agents
+  create_flow_pilot: agent.create_flow_pilot
+  create_health_check_flow_pilot: agent.create_health_check_flow_pilot
+  create_index_analysis_flow_agent: core.agents.index_analysis_flow.agent.create_index_analysis_flow_agent
+  create_index_analysis_flow_pilot: agent.create_index_analysis_flow_pilot
+  create_index_analyzer_agent: agent.create_index_analyzer_agent
+  create_main: ai_sidekick_for_splunk.cli.create_flow_agent.main
+  create_orchestrator: core.orchestrator.create_orchestrator
+  create_search_guru_agent: core.agents.search_guru.agent.create_search_guru_agent
+  create_system_info_flow_pilot: agent.create_system_info_flow_pilot
+  create_template_main: ai_sidekick_for_splunk.cli.create_template.main
+  data_explorer_agent: agent.data_explorer_agent
+  DATA_EXPLORER_INSTRUCTIONS: prompt.DATA_EXPLORER_INSTRUCTIONS
+  dataclass: dataclasses.dataclass
+  DataExplorerAgent: agent.DataExplorerAgent
+  datetime: datetime.datetime
+  discover_all_workflows: workflow_discovery.discover_all_workflows
+  DynamicFlowPilotFactory: dynamic_factory.DynamicFlowPilotFactory
+  Enum: enum.Enum
+  Event: google.adk.events.Event
+  field: dataclasses.field
+  Field: pydantic.Field
+  field_validator: pydantic.field_validator
+  FlowEngine: flow_engine.FlowEngine
+  FlowExecutionResult: flows_engine.flow_engine.FlowExecutionResult
+  FlowPhase: agent_flow.FlowPhase
+  FlowPilot: agent.FlowPilot
+  FlowTask: agent_flow.FlowTask
+  futures: concurrent.futures
+  generate_workflow_from_template: template_generator.generate_workflow_from_template
+  get_all_dynamic_agents: dynamic_factory.get_all_dynamic_agents
+  get_contrib_workflows: workflow_discovery.get_contrib_workflows
+  get_core_workflows: workflow_discovery.get_core_workflows
+  get_dynamic_factory: dynamic_factory.get_dynamic_factory
+  get_workflow_discovery: workflow_discovery.get_workflow_discovery
+  google_search: google.adk.tools.google_search_tool.google_search
+  google_search_grounding: search.google_search_grounding
+  import_module: importlib.import_module
+  importlib: importlib
+  INDEX_ANALYSIS_FLOW_AGENT_INSTRUCTIONS: prompt.INDEX_ANALYSIS_FLOW_AGENT_INSTRUCTIONS
+  index_analyzer_agent: agent.index_analyzer_agent
+  INDEX_ANALYZER_INSTRUCTIONS: prompt.INDEX_ANALYZER_INSTRUCTIONS
+  IndexAnalysisFlowAgent: index_analysis_flow.IndexAnalysisFlowAgent
+  IndexAnalyzerAgent: agent.IndexAnalyzerAgent
+  initialize_dynamic_agents: agents.initialize_dynamic_agents
+  InMemoryArtifactService: google.adk.artifacts.in_memory_artifact_service.InMemoryArtifactService
+  InMemorySessionService: google.adk.sessions.InMemorySessionService
+  inspect: inspect
+  json: json
+  list_models_main: ai_sidekick_for_splunk.cli.list_models.main
+  LiteLlmWrapper: litellm_wrapper.LiteLlmWrapper
+  LlmAgent: google.adk.agents.LlmAgent
+  load_dotenv: dotenv.load_dotenv
+  load_template: template_parser.load_template
+  logging: logging
+  LoopAgent: google.adk.agents.LoopAgent
+  MCPToolset: google.adk.tools.mcp_tool.mcp_toolset.MCPToolset
+  McpToolset: google.adk.tools.mcp_tool.mcp_toolset.McpToolset
+  MicroAgentBuilder: micro_agent_builder.MicroAgentBuilder
+  model_validator: pydantic.model_validator
+  ModelConfig: config.ModelConfig
+  ModelFactory: models.ModelFactory
+  Optional: typing.Optional
+  ORCHESTRATOR_INSTRUCTIONS: orchestrator_prompt.ORCHESTRATOR_INSTRUCTIONS
+  ORCHESTRATOR_INSTRUCTIONS_NO_TOOLS: orchestrator_prompt.ORCHESTRATOR_INSTRUCTIONS
+  os: os
+  parse_template_string: template_parser.parse_template_string
+  Part: google.genai.types.Part
+  Path: pathlib.Path
+  PhaseDefinition: template_models.PhaseDefinition
+  pkgutil: pkgutil
+  platform: platform
+  ProgressUpdate: flows_engine.flow_engine.ProgressUpdate
+  re: re
+  RegistryManager: core.registry.RegistryManager
+  RESEARCHER_PROMPT: prompt.RESEARCHER_PROMPT
+  ResearcherAgent: agent.ResearcherAgent
+  RESULT_SYNTHESIZER_INSTRUCTIONS: prompt.RESULT_SYNTHESIZER_INSTRUCTIONS
+  ResultSynthesizerAgent: result_synthesizer.ResultSynthesizerAgent
+  root_agent: core.agent.root_agent
+  RunConfig: google.adk.agents.run_config.RunConfig
+  Runner: google.adk.runners.Runner
+  safe_print: ai_sidekick_for_splunk.core.utils.cross_platform.safe_print
+  search_guru_agent: agent.search_guru_agent
+  SEARCH_GURU_INSTRUCTIONS: prompt.SEARCH_GURU_INSTRUCTIONS
+  SearchDefinition: template_models.SearchDefinition
+  SearchGuru: agent.SearchGuru
+  setup_logging: utils.logging_config.setup_logging
+  SetupRunner: services.SetupRunner
+  shutil: shutil
+  SimpleTemplate: template_models.SimpleTemplate
+  SPLUNK_MCP_PROMPT: prompt.SPLUNK_MCP_PROMPT
+  SplunkMCPAgent: agent.SplunkMCPAgent
+  SplunkOrchestrator: core.orchestrator.SplunkOrchestrator
+  start_main: ai_sidekick_for_splunk.cli.start_lab.main
+  StdioConnectionParams: google.adk.tools.mcp_tool.mcp_session_manager.StdioConnectionParams
+  StdioServerParameters: google.adk.tools.mcp_tool.mcp_session_manager.StdioServerParameters
+  stop_main: ai_sidekick_for_splunk.cli.stop_lab.main
+  StreamableHTTPConnectionParams: google.adk.tools.mcp_tool.mcp_session_manager.StreamableHTTPConnectionParams
+  StreamingMode: google.adk.agents.run_config.StreamingMode
+  subprocess: subprocess
+  sys: sys
+  tempfile: tempfile
+  TemplateAdvancedOptions: template_models.TemplateAdvancedOptions
+  TemplateBusinessContext: template_models.TemplateBusinessContext
+  TemplateCategory: template_models.TemplateCategory
+  TemplateGenerator: template_generator.TemplateGenerator
+  TemplateMetadata: template_models.TemplateMetadata
+  TemplateParseError: template_parser.TemplateParseError
+  TemplateParser: template_parser.TemplateParser
+  TemplateRequirements: template_models.TemplateRequirements
+  ToolMetadata: base_tool.ToolMetadata
+  ToolRegistry: core.registry.ToolRegistry
+  traceback: traceback
+  TYPE_CHECKING: typing.TYPE_CHECKING
+  types: google.genai.types
+  Union: typing.Union
+  uuid: uuid
+  validate_main: ai_sidekick_for_splunk.cli.validate_template.main
+  validate_template: template_parser.validate_template
+  validate_workflow_file: ai_sidekick_for_splunk.core.flows_engine.workflow_models.validate_workflow_file
+  validate_workflow_main: ai_sidekick_for_splunk.cli.validate_workflow.main
+  validate_workflow_template: workflow_models.validate_workflow_template
+  warnings: warnings
+  WorkflowDiscovery: workflow_discovery.WorkflowDiscovery
+  WorkflowGroup: workflow_discovery.WorkflowGroup
+  WorkflowInfo: workflow_discovery.WorkflowInfo
+  WorkflowSource: workflow_discovery.WorkflowSource
+  WorkflowStability: workflow_discovery.WorkflowStability
+  WorkflowTemplate: workflow_models.WorkflowTemplate
+  WorkflowValidationError: workflow_models.WorkflowValidationError
+  yaml: yaml
+
+functions:
+  __init__:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, config]
+  __post_init__:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+  __repr__:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.litellm_wrapper
+    args: [self]
+    params:
+      returns: str
+  __str__:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.litellm_wrapper
+    args: [self]
+    params:
+      returns: str
+  _analyze_task_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    args: [self, task_id, search_results]
+    params:
+      returns: str
+  _assess_business_impact:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, finding]
+    params:
+      returns: str
+  _assess_business_opportunities:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, insights, recommendations]
+    params:
+      returns: list[dict]
+  _assess_business_value:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, recommendation]
+    params:
+      returns: str
+  _build_comprehensive_summary:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, synthesis_results, phase_results]
+    params:
+      returns: str
+  _build_dynamic_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, context, loaded_context]
+    params:
+      returns: str
+  _build_llm_analysis_synthesis_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results, index_name, domain, synthesis_type]
+    params:
+      returns: str
+  _build_micro_agent_instructions:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, task, context]
+    params:
+      returns: str
+  _build_synthesis_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results, index_name, domain, synthesis_type]
+    params:
+      returns: str
+  _check_best_practices:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.validate_template
+    args: [self, template, result]
+    params:
+      returns: None
+  _compile_llm_loop_result:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, steps, context]
+    params:
+      returns: dict
+  _configure_adk_web_logging:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agent
+  _configure_logging:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: None
+  _create_business_summary:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, synthesized_output]
+    params:
+      returns: dict
+  _create_implementation_roadmap:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, dashboard_panels, alerts, opportunities]
+    params:
+      returns: dict
+  _create_litellm_instance:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.litellm_wrapper
+    args: [self]
+    params:
+      returns: Any
+  _create_mcp_toolset:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.splunk_mcp.agent
+    args: [self]
+  _create_mcp_toolset_for_spl_reference:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self]
+  _create_phase_from_searches:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, phase_name, phase_title, phase_description, searches, parallel, depends_on]
+    params:
+      returns: dict
+  _create_placeholder_synthesis:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, index_name, domain, synthesis_type]
+    params:
+      returns: dict
+  _create_progress_event:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, update]
+    params:
+      returns: Event
+  _create_root_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agent
+    params:
+      returns: Any
+  _create_workflow_info:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, file_path, workflow_data, agent_flow]
+    params:
+      returns: WorkflowInfo
+  _detect_emoji_support:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: bool
+  _discover_agent_package_with_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, package_name]
+    params:
+      returns: dict
+  _discover_components:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: None
+  _discover_tools_for_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, package_name, agent_name]
+    params:
+      returns: list[str]
+  _estimate_implementation_effort:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, recommendation]
+    params:
+      returns: str
+  _execute_analysis_workflow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    args: [self, index_name]
+    params:
+      returns: dict
+  _execute_llm_loop_task:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, context]
+    params:
+      returns: TaskResult
+  _execute_llm_step:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, prompt, context, loaded_context, step_number]
+    params:
+      returns: LLMStepResult
+  _execute_per_sourcetype_task:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, flow]
+    params:
+      returns: TaskResult
+  _execute_phase:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, phase, flow]
+    params:
+      returns: PhaseResult
+  _execute_regular_task:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, context]
+    params:
+      returns: TaskResult
+  _execute_regular_tasks_parallel:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, tasks, max_parallel]
+    params:
+      returns: list[TaskResult]
+  _execute_single_micro_agent:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, config, semaphore, progress_callback]
+    params:
+      returns: MicroAgentResult
+  _execute_splunk_search:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    args: [self, splunk_agent, spl_query]
+    params:
+      returns: dict
+  _execute_task:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, task, flow]
+    params:
+      returns: TaskResult
+  _execute_tasks_parallel:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, tasks, max_parallel, flow]
+    params:
+      returns: list[TaskResult]
+  _execute_with_context:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self, request, context]
+    params:
+      returns: str
+  _extract_data_patterns_from_response:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, response_text, task_id]
+    params:
+      returns: dict
+  _extract_discovered_data:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, synthesis_results]
+    params:
+      returns: dict
+  _extract_hosts:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: list[str]
+  _extract_index_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, task]
+  _extract_insights_from_response:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, response_text, task_id]
+    params:
+      returns: dict
+  _extract_key_insights:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, synthesis_results]
+    params:
+      returns: list[str]
+  _extract_parameters_from_task:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, task]
+    params:
+      returns: dict
+  _extract_recommendations:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, synthesis_results]
+    params:
+      returns: list[str]
+  _extract_recommendations_from_response:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, response_text, task_id]
+    params:
+      returns: list[dict]
+  _extract_search_query:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task]
+    params:
+      returns: str
+  _extract_sources:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: list[str]
+  _extract_sourcetypes:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: list[str]
+  _extract_temporal_patterns:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: dict
+  _extract_volume_data:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: dict
+  _format_execution_result:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, result, original_task]
+    params:
+      returns: dict
+  _format_flow_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, flow_result]
+    params:
+      returns: dict
+  _format_insights_for_readability:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, synthesized_output]
+    params:
+      returns: dict
+  _format_recommendations_for_readability:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, synthesized_output]
+    params:
+      returns: dict
+  _format_search_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: str
+  _from_dict:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [cls, data]
+    params:
+      returns: AgentFlow
+  _generate_agent_dependencies:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _generate_agent_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self, workflow_info]
+    params:
+      returns: str
+  _generate_alert_recommendations:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, insights, recommendations]
+    params:
+      returns: list[dict]
+  _generate_business_intelligence:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, key_insights, discovered_data, recommendations, phase, combined_results]
+    params:
+      returns: dict
+  _generate_connection_params_code:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [connection_params, server_data]
+    params:
+      returns: str
+  _generate_core_phases:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _generate_dashboard_recommendations:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, discovered_data, insights]
+    params:
+      returns: list[dict]
+  _generate_data_requirements:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _generate_execution_flow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _generate_executive_summary:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, key_insights, discovered_data, recommendations, phase, combined_results]
+    params:
+      returns: dict
+  _generate_instructions_from_workflow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self]
+    params:
+      returns: str
+  _generate_metadata_from_workflow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self]
+    params:
+      returns: AgentMetadata
+  _generate_output_structure:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _generate_prerequisites:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: list[str]
+  _generate_workflow_instructions:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template]
+    params:
+      returns: dict
+  _get_adk_agent_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: list[Any]
+  _get_adk_sub_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: list[Any]
+  _get_adk_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: list[Any]
+  _get_allowed_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, task]
+    params:
+      returns: list[str]
+  _get_default_paths:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: list[Path]
+  _get_emoji:
+    type: sync
+    module: scripts.smart-install
+    args: [self, emoji_type]
+    params:
+      returns: str
+  _get_instructions:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.researcher.agent
+    args: [self]
+    params:
+      returns: str
+  _get_main_agent_instructions:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: str
+  _get_main_agent_instructions_no_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: str
+  _get_orchestrator:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self]
+  _get_splunk_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    args: [self]
+  _get_tools_for_sub_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self, tool_names]
+    params:
+      returns: list[Any]
+  _get_workflow_specific_instructions_from_template:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self]
+    params:
+      returns: str
+  _get_workflow_tasks:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    args: [self, index_name]
+    params:
+      returns: dict
+  _group_by_category:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: None
+  _group_by_complexity:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: None
+  _group_by_source:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: None
+  _group_by_type:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: None
+  _group_workflows:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: None
+  _handle_event_research:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.researcher.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_general_research:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.researcher.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_general_task:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_progress_update:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, update]
+    params:
+      returns: None
+  _handle_search_transfer:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_security_research:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.researcher.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_spl_generation:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_spl_optimization:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _handle_splunk_research:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.researcher.agent
+    args: [self, task, context]
+    params:
+      returns: dict
+  _identify_relevant_personas:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, insights, recommendations]
+    params:
+      returns: list[dict]
+  _initialize_dynamic_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: None
+  _initialize_llm_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.splunk_mcp.agent
+    args: [self]
+    params:
+      returns: None
+  _initialize_splunk_client:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self]
+    params:
+      returns: None
+  _is_adk_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, obj]
+    params:
+      returns: bool
+  _is_adk_tool:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, obj]
+    params:
+      returns: bool
+  _is_llm_analysis_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results]
+    params:
+      returns: bool
+  _load_dotenv:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: None
+  _load_flow_definition:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self]
+    params:
+      returns: None
+  _load_from_environment:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: None
+  _load_mcp_documentation:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, resource]
+    params:
+      returns: dict
+  _load_reference_material:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, resource]
+    params:
+      returns: dict
+  _load_static_documentation:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, resource]
+    params:
+      returns: dict
+  _map_category_to_type:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, category]
+    params:
+      returns: str
+  _map_category_to_workflow_category:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, category]
+    params:
+      returns: str
+  _map_complexity_level:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, complexity]
+    params:
+      returns: str
+  _parse_synthesis_response:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, response, index_name, domain, synthesis_type]
+    params:
+      returns: dict
+  _prepare_synthesis_data:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, result]
+    params:
+      returns: dict
+  _process_workflow_file:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, file_path]
+  _progress_callback:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [self, update]
+    params:
+      returns: None
+  _reconstruct_workflow_from_metadata:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, metadata]
+    params:
+      returns: AgentFlow
+  _register_agents_from_module:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, module, package_name]
+    params:
+      returns: list[str]
+  _register_tools_from_module:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, module, module_name]
+    params:
+      returns: int
+  _register_tools_from_module_for_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, module, module_name, agent_name]
+    params:
+      returns: list[str]
+  _resolve_placeholders:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, text, context]
+    params:
+      returns: str
+  _run_micro_agent_logic:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, config]
+    params:
+      returns: dict
+  _sanitize_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, name]
+    params:
+      returns: str
+  _scan_directory:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, directory]
+    params:
+      returns: None
+  _send_progress_update:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, update]
+    params:
+      returns: None
+  _send_progress_update_dict:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, update_dict]
+    params:
+      returns: None
+  _set_provider_environment_variables:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.litellm_wrapper
+    args: [self]
+    params:
+      returns: None
+  _should_skip_file:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, file_path]
+    params:
+      returns: bool
+  _synthesize_parallel_results:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, phase, task_results]
+    params:
+      returns: None
+  _synthesize_parallel_results_builtin:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, combined_results, phase, synthesis_context]
+    params:
+      returns: dict
+  _synthesize_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, phase_results, output_structure]
+    params:
+      returns: dict
+  _try_direct_agent_coordination:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, task_metadata, allowed_tools]
+    params:
+      returns: dict
+  _update_context_from_phase_results:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, phase_result]
+    params:
+      returns: None
+  _uses_google_models:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: bool
+  _validate_and_load_environment:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: None
+  _validate_google_adk_config:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: None
+  _validate_spl_syntax:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.validate_template
+    args: [self, template]
+    params:
+      returns: None
+  _validate_type:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self, value, expected_type]
+    params:
+      returns: bool
+  add_discovery_data:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, sourcetypes, hosts, sources]
+    params:
+      returns: None
+  add_specific_execute:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [agent_file, agent_name]
+    params:
+      returns: bool
+  add_tool:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self, tool]
+    params:
+      returns: None
+  associate_tool_with_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, agent_name, tool_name]
+    params:
+      returns: None
+  check_git:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: bool
+  check_optional_tools:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+  check_uv_package_manager:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: bool
+  clean_session:
+    type: async
+    module: src.ai_sidekick_for_splunk.services.setup_runner
+    args: [self, session_id, user_id]
+    params:
+      returns: dict
+  cleanup:
+    type: async
+    module: src.ai_sidekick_for_splunk.contrib.tools.splunk_info_tool
+    args: [self]
+    params:
+      returns: None
+  cleanup_all:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: None
+  create_adk_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [self]
+    params:
+      returns: Any
+  create_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [config, session_service, artifact_service]
+    params:
+      returns: Any
+  create_agent_files:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [agent_name, server_key, connection_params, custom_prompt, agents_dir, server_data]
+    params:
+      returns: None
+  create_agent_wrapper:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [agent_instance, agent_metadata]
+  create_data_explorer_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.data_explorer.agent
+    params:
+      returns: DataExplorerAgent
+  create_default_workflow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_flow_agent
+    args: [name, output_dir]
+    params:
+      returns: tuple
+  create_dynamic_flowpilot_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [orchestrator]
+    params:
+      returns: dict
+  create_flow_pilot:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [template_path, orchestrator, session_service, artifact_service]
+    params:
+      returns: FlowPilot
+  create_from_template_file:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_flow_agent
+    args: [name, template_file_path, output_dir]
+    params:
+      returns: tuple
+  create_health_check_flow_pilot:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [orchestrator]
+    params:
+      returns: FlowPilot
+  create_index_analysis_flow_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [config, orchestrator, session_service, artifact_service]
+    params:
+      returns: IndexAnalysisFlowAgent
+  create_index_analysis_flow_pilot:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [orchestrator]
+    params:
+      returns: FlowPilot
+  create_index_analyzer_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.agents.index_analyzer.agent
+    params:
+      returns: IndexAnalyzerAgent
+  create_instance:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+  create_mcp_agents:
+    type: async
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [json_path, save_to_disk, override, update_orchestrator]
+    params:
+      returns: dict
+  create_micro_agent_for_task:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, task, phase_context]
+    params:
+      returns: dict
+  create_model:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.factory
+    args: [model_name, config]
+    params:
+      returns: Union
+  create_orchestrator:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.orchestrator
+    args: [config, session_service, artifact_service]
+    params:
+      returns: SplunkOrchestrator
+  create_phase_definition:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    params:
+      returns: dict
+  create_search_definition:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    params:
+      returns: dict
+  create_search_guru_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [config, session_service, artifact_service]
+    params:
+      returns: SearchGuru
+  create_system_info_flow_pilot:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [orchestrator]
+    params:
+      returns: FlowPilot
+  create_tool_wrapper:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [tool_instance, tool_metadata]
+  detect_package_manager:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: tuple
+  disable:
+    type: sync
+    module: scripts.smart-install
+    args: [cls]
+  discover_agents_with_tools_in_path:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, path]
+    params:
+      returns: dict
+  discover_all:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, agent_paths, tool_paths]
+    params:
+      returns: dict
+  discover_all_workflows:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [force_refresh]
+    params:
+      returns: dict
+  discover_and_create_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self, orchestrator]
+    params:
+      returns: dict
+  discover_standalone_tools_in_path:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, path]
+    params:
+      returns: int
+  discover_workflows:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, force_refresh]
+    params:
+      returns: dict
+  display_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self]
+    params:
+      returns: str
+  echo_error:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [message]
+    params:
+      returns: None
+  echo_info:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [message]
+    params:
+      returns: None
+  echo_success:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [message]
+    params:
+      returns: None
+  echo_warn:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [message]
+    params:
+      returns: None
+  enhance_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [tool_list]
+    params:
+      returns: str
+  escape_braces:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [text]
+  execute:
+    type: async
+    module: src.ai_sidekick_for_splunk.contrib.tools.splunk_info_tool
+    args: [self, info_type]
+    params:
+      returns: dict
+  execute_flow:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, flow, context]
+    params:
+      returns: FlowExecutionResult
+  execute_index_analysis_flow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.index_analysis_flow.agent
+    args: [task, context]
+    params:
+      returns: dict
+  execute_micro_agents_parallel:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder
+    args: [self, micro_agent_configs, max_parallel, progress_callback]
+    params:
+      returns: list[MicroAgentResult]
+  execute_search:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self, search_query]
+    params:
+      returns: dict
+  execute_tool:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+    params:
+      returns: dict
+  execute_workflow:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [task, context]
+    params:
+      returns: dict
+  extract_tool_info:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [mcp_tool]
+    params:
+      returns: dict
+  find_project_root:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [start]
+    params:
+      returns: Path
+  format_yaml_template:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    args: [template]
+    params:
+      returns: str
+  from_dict:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [cls, data]
+    params:
+      returns: Config
+  generate_agent_description_for_orchestrator:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [agent_name, server_key, tool_list]
+    params:
+      returns: str
+  generate_readme:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template, workflow_json]
+    params:
+      returns: str
+  generate_template_interactively:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    params:
+      returns: dict
+  generate_workflow_from_template:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [template, output_dir, workflow_name]
+    params:
+      returns: tuple
+  generate_workflow_json:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, template, output_dir]
+    params:
+      returns: dict
+  get:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+  get_adk_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, tools]
+  get_adk_model:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.litellm_wrapper
+    args: [self]
+    params:
+      returns: Any
+  get_adk_tool:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self]
+    params:
+      returns: Any
+  get_agent:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, agent_id]
+  get_agent_by_workflow_id:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self, workflow_id]
+    params:
+      returns: FlowPilot
+  get_agent_tool_mapping:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self]
+    params:
+      returns: AgentToolMapping
+  get_agent_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, agent_name]
+    params:
+      returns: list[str]
+  get_all_agent_tool_mappings:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self]
+    params:
+      returns: dict
+  get_all_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self]
+    params:
+      returns: dict
+  get_all_dynamic_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    params:
+      returns: dict
+  get_associated_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self]
+    params:
+      returns: list[Any]
+  get_available_templates:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_flow_agent
+    params:
+      returns: list[str]
+  get_base_path:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_flow_agent
+    params:
+      returns: Path
+  get_capabilities:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self]
+    params:
+      returns: list[str]
+  get_choice:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    args: [prompt, choices, default]
+    params:
+      returns: str
+  get_contrib_paths:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: dict
+  get_contrib_workflows:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    params:
+      returns: list[WorkflowInfo]
+  get_core_workflows:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    params:
+      returns: list[WorkflowInfo]
+  get_dependencies:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+    params:
+      returns: set[str]
+  get_discovery_summary:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self]
+    params:
+      returns: dict
+  get_dynamic_factory:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    params:
+      returns: DynamicFlowPilotFactory
+  get_google_adk_env_vars:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: dict
+  get_info:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: dict
+  get_instance:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+  get_list_input:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    args: [prompt, min_items]
+    params:
+      returns: list[str]
+  get_llm_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self]
+  get_metadata:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self]
+    params:
+      returns: AgentMetadata
+  get_metadata_field:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self, field_name, default]
+    params:
+      returns: Any
+  get_model_for_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.factory
+    args: [agent_name, config]
+    params:
+      returns: Union
+  get_phase_by_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self, phase_name]
+  get_required_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self]
+    params:
+      returns: list[str]
+  get_session_details:
+    type: async
+    module: src.ai_sidekick_for_splunk.services.setup_runner
+    args: [self, session_id, user_id]
+    params:
+      returns: dict
+  get_session_state:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self, key, default]
+    params:
+      returns: Any
+  get_splunk_client:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self]
+  get_summary:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: dict
+  get_system_info:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: dict
+  get_task_by_id:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self, task_id]
+  get_tool_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, tool_name]
+  get_tools_for_agent:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self, agent_name]
+    params:
+      returns: list[str]
+  get_user_input:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_template
+    args: [prompt, default, required]
+    params:
+      returns: str
+  get_venv_python:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: str
+  get_workflow_discovery:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    params:
+      returns: WorkflowDiscovery
+  get_workflow_info:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self, agent_name]
+    params:
+      returns: WorkflowInfo
+  get_workflows_by_criteria:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [self, source, complexity, workflow_type, category, stability]
+    params:
+      returns: list[WorkflowInfo]
+  get_workflows_by_source:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_discovery
+    args: [source]
+    params:
+      returns: list[WorkflowInfo]
+  initialize:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self]
+    params:
+      returns: None
+  initialize_dynamic_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents
+    args: [orchestrator]
+  instructions:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self]
+    params:
+      returns: str
+  is_gemini_model:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self, model_name]
+    params:
+      returns: bool
+  is_model_available:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.factory
+    args: [model_name, config]
+    params:
+      returns: bool
+  is_validated:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self]
+    params:
+      returns: bool
+  list_all:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: dict
+  list_available_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: dict
+  list_available_models:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.models.factory
+    args: [config]
+    params:
+      returns: dict
+  list_available_tools:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self]
+    params:
+      returns: dict
+  list_by_tag:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, tag]
+    params:
+      returns: dict
+  list_sessions:
+    type: async
+    module: src.ai_sidekick_for_splunk.services.setup_runner
+    args: [self, user_id]
+    params:
+      returns: dict
+  load_context_resources:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, resources]
+    params:
+      returns: dict
+  load_from_json:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [cls, json_path]
+    params:
+      returns: AgentFlow
+  main:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+  metadata:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.discovery
+    args: [self]
+    params:
+      returns: ToolMetadata
+  model_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self]
+    params:
+      returns: str
+  print_error:
+    type: sync
+    module: scripts.smart-install
+    args: [self, message]
+  print_header:
+    type: sync
+    module: scripts.smart-install
+    args: [self, message]
+  print_info:
+    type: sync
+    module: scripts.smart-install
+    args: [self, message]
+  print_success:
+    type: sync
+    module: scripts.smart-install
+    args: [self, message]
+  print_summary:
+    type: sync
+    module: scripts.smart-install
+    args: [self, all_passed]
+  print_warning:
+    type: sync
+    module: scripts.smart-install
+    args: [self, message]
+  process_request:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self, request, context]
+    params:
+      returns: str
+  refresh_agents:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.dynamic_factory
+    args: [self, orchestrator]
+    params:
+      returns: dict
+  register:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name, cls, metadata, source_path, overwrite]
+    params:
+      returns: None
+  resolve_dependencies:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+    params:
+      returns: list[str]
+  resolve_parameters:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, parameters, task_context]
+    params:
+      returns: dict
+  resolve_project_root:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_agent_cli
+    params:
+      returns: Path
+  resolve_search_query:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, query, task_context]
+    params:
+      returns: str
+  run_checks:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: bool
+  run_command:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.integrate_agent
+    args: [command, cwd]
+    params:
+      returns: int
+  run_in_thread:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+  safe_execute:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.base_tool
+    args: [self]
+    params:
+      returns: dict
+  safe_print:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.validate_workflow
+    args: [message, file]
+    params:
+      returns: None
+  save_workflow_json:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.templates.template_generator
+    args: [self, workflow_json, output_path]
+    params:
+      returns: None
+  schema:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.tools.splunk_info_tool
+    args: [self]
+    params:
+      returns: dict
+  set_context:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, context]
+    params:
+      returns: None
+  set_orchestrator:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.flow_pilot.agent
+    args: [self, orchestrator]
+  setup_logging:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.utils.logging_config
+    args: [level]
+    params:
+      returns: None
+  setup_project_environment:
+    type: sync
+    module: scripts.smart-install
+    args: [self]
+    params:
+      returns: bool
+  supports_streaming:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, task]
+    params:
+      returns: bool
+  synthesize_results:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.agents.result_synthesizer.agent
+    args: [self, search_results, context, synthesis_type]
+    params:
+      returns: dict
+  test_mcp_connection:
+    type: async
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [toolset]
+  to_class_name:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [name]
+    params:
+      returns: str
+  to_dict:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.config
+    args: [self]
+    params:
+      returns: dict
+  unregister:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [self, name]
+    params:
+      returns: bool
+  update_orchestrator_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.create_mcp_agents
+    args: [agent_descriptions]
+    params:
+      returns: None
+  update_prompt:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.add_agent
+    args: [prompt_file, agent_upper]
+    params:
+      returns: bool
+  update_session_state:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self, key, value]
+    params:
+      returns: None
+  validate:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self]
+    params:
+      returns: list[str]
+  validate_configuration:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.base_agent
+    args: [self]
+    params:
+      returns: list[str]
+  validate_documentation_url:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [cls, v]
+  validate_input:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.agents.search_guru.agent
+    args: [self, input_data]
+    params:
+      returns: bool
+  validate_max_parallel:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [cls, v, info]
+  validate_parameters:
+    type: sync
+    module: src.ai_sidekick_for_splunk.contrib.tools.splunk_info_tool
+    args: [self]
+    params:
+      returns: bool
+  validate_search:
+    type: async
+    module: src.ai_sidekick_for_splunk.core.flows_engine.flow_engine
+    args: [self, search_query, agent_id]
+    params:
+      returns: tuple
+  validate_template_file:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.validate_template
+    args: [self, template_path]
+    params:
+      returns: dict
+  validate_workflow_consistency:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [self]
+  validate_workflow_file:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [template_path]
+    params:
+      returns: WorkflowTemplate
+  validate_workflow_id_format:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [cls, v]
+  validate_workflow_json:
+    type: sync
+    module: src.ai_sidekick_for_splunk.cli.validate_workflow
+    args: [workflow_path, verbose]
+    params:
+      returns: tuple
+  validate_workflow_template:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.workflow_models
+    args: [template_data, template_path]
+    params:
+      returns: WorkflowTemplate
+  validation_metadata:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.flows_engine.agent_flow
+    args: [self]
+  visit:
+    type: sync
+    module: src.ai_sidekick_for_splunk.core.registry
+    args: [component_name]
+
+variables:
+  ANTHROPIC_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, os.environ]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.models.litellm_wrapper]
+  AZURE_API_BASE:
+    type: env
+    params:
+      caller: [os.getenv, os.environ]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.models.litellm_wrapper]
+  AZURE_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, os.environ]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.models.litellm_wrapper]
+  AZURE_API_VERSION:
+    type: env
+    params:
+      caller: [os.getenv, os.environ]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.models.litellm_wrapper]
+  BASE_MODEL:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  GOOGLE_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.flows_engine.micro_agent_builder]
+  GOOGLE_CLOUD_LOCATION:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  GOOGLE_CLOUD_PROJECT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  GOOGLE_GENAI_USE_VERTEXAI:
+    type: env
+    params:
+      caller: [os.getenv, os.environ.get]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.cli.create_mcp_agents]
+  LITELLM_API_BASE:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  LITELLM_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  LOG_FILE_PATH:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.utils.logging_config]
+  LOG_LEVEL:
+    type: env
+    params:
+      caller: [os.getenv, os.environ.get]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.utils.logging_config, src.ai_sidekick_for_splunk.cli.create_mcp_agents,
+        src.ai_sidekick_for_splunk.core.agent]
+  MODEL_PROVIDER:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  NO_COLOR:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [scripts.smart-install]
+  OPENAI_API_KEY:
+    type: env
+    params:
+      caller: [os.getenv, os.environ]
+      path: [src.ai_sidekick_for_splunk.core.config, src.ai_sidekick_for_splunk.core.models.litellm_wrapper]
+  SPLUNK_AI_DEBUG:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_ENABLE_STREAMING:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.services.setup_runner]
+  SPLUNK_AI_MAX_CONCURRENT_AGENTS:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_MAX_LLM_CALLS:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.services.setup_runner]
+  SPLUNK_AI_MAX_PARALLEL_TASKS:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_MAX_TOKENS:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_MICRO_AGENT_TIMEOUT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_SESSION_TIMEOUT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_TASK_TIMEOUT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_TEMPERATURE:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_AI_TIMEOUT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_APP_CONTEXT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_ENABLE_SSL:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_HOST:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_MCP_SERVER_URL:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_PASSWORD:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_PORT:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_USERNAME:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  SPLUNK_VERIFY_SSL:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  TUTOR_MODEL:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [src.ai_sidekick_for_splunk.core.config]
+  WT_SESSION:
+    type: env
+    params:
+      caller: [os.getenv]
+      path: [scripts.smart-install]
+
+files:
+  ./:
+    type: pattern
+    actions: [read]
+    params:
+      patterns: ['*.yaml', '*.json']
+      caller: [get_available_templates, _scan_directory, _reconstruct_workflow_from_metadata, main]
+  .json:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main]
+      path: [output_dir]
+  .template_source:
+    type: literal
+    actions: [read]
+    params:
+      caller: [create_default_workflow, create_from_template_file]
+      path: [output_dir]
+  .venv:
+    type: literal
+    actions: [read]
+    params:
+      caller: [__init__]
+      path: [self.project_root]
+  .yaml:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main, create_default_workflow, create_from_template_file]
+      path: [base_path]
+  /etc/os-release:
+    type: literal
+    actions: [read]
+    params:
+      caller: [open, get_system_info]
+      alias: [f]
+  agent.py:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main, create_agent_files]
+      path: [agent_dir]
+  agent_dir:
+    type: variable
+    actions: [write, delete]
+    params:
+      caller: [agent_dir.mkdir, shutil.rmtree]
+  agent_file:
+    type: variable
+    actions: [read, write]
+    params:
+      caller: [agent_file.read_text, agent_file.write_text]
+  agents_dir:
+    type: variable
+    actions: [write]
+    params:
+      caller: [agents_dir.mkdir]
+  args.output_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  args.template_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  config_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [os.path.exists, open]
+  create_agent.py:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main]
+      path: [project_root]
+  current_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path.cwd()]
+  definitions_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [definitions_dir.iterdir]
+  example_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open]
+      alias: [f]
+  file_path:
+    type: variable
+    actions: [read, write]
+    params:
+      caller: [open, json.load, file_path.parent.mkdir]
+      alias: [f]
+  flow_definition_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  health_check.json:
+    type: literal
+    actions: [read]
+    params:
+      caller: [create_health_check_flow_pilot]
+      path: [Path.parent.parent.parent]
+  index_analysis.json:
+    type: literal
+    actions: [read]
+    params:
+      caller: [__init__, create_index_analysis_flow_pilot]
+      path: [current_dir.parent.parent]
+  integrate-agent.sh:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main]
+      path: [project_root]
+  json_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open, json.load]
+      alias: [f]
+  json_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open, json.load, Path]
+      alias: [f]
+  logs/app.log:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  orchestrator_prompt_path:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [Path('src/ai_sidekick_for_splunk/core/orchestrator_prompt.py'), orchestrator_prompt_path.read_text, orchestrator_prompt_path.write_text]
+  output_dir:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [Path(args.output_dir), output_dir.mkdir]
+  output_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  output_path:
+    type: literal
+    actions: [read, write]
+    params:
+      caller: [Path(args.output_json), open]
+  path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path.cwd.resolve(), open, json.load]
+  prompt.py:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main, create_agent_files]
+      path: [agent_dir]
+  prompt_file:
+    type: variable
+    actions: [read, write]
+    params:
+      caller: [prompt_file.read_text, prompt_file.write_text]
+  pyproject.toml:
+    type: literal
+    actions: [read]
+    params:
+      caller: [resolve_project_root, find_project_root, setup_logging]
+      path: [parent]
+  README.md:
+    type: literal
+    actions: [read]
+    params:
+      caller: [main, create_agent_files]
+      path: [output_dir]
+  readme_file:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  source_file:
+    type: variable
+    actions: [write]
+    params:
+      caller: [open]
+      alias: [f]
+  src/ai_sidekick_for_splunk/core/orchestrator_prompt.py:
+    type: literal
+    actions: [read]
+    params:
+      caller: [update_orchestrator_prompt]
+  system_info.json:
+    type: literal
+    actions: [read]
+    params:
+      caller: [create_system_info_flow_pilot]
+      path: [Path.parent.parent.parent]
+  temp_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+  template_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [template_dir.glob]
+  template_file:
+    type: variable
+    actions: [read]
+    params:
+      caller: [open, json.load]
+      alias: [f]
+  template_file_path:
+    type: variable
+    actions: [write, read]
+    params:
+      caller: [open, Path]
+      alias: [f]
+  template_path:
+    type: literal
+    actions: [read]
+    params:
+      caller: [Path(args.template_file)]
+  templates_dir:
+    type: variable
+    actions: [read]
+    params:
+      caller: [templates_dir.glob]
+  workflow_file:
+    type: variable
+    actions: [write, read]
+    params:
+      caller: [open, json.load]
+      alias: [f]
+  workflow_path:
+    type: variable
+    actions: [read]
+    params:
+      caller: [Path]
+
+processes:
+  python:
+    type: shell
+    actions: [exec]
+    args: [[str(helper)]]
+    params:
+      caller: [subprocess.run]
+      shell: ["False"]
+      ref: sys.executable
